@@ -6,10 +6,10 @@ from .data import GundamDataFile
 class PKDArchive(GundamDataFile):
     header = b"\x20\x44\x4B\x50\x00\x01\x03\x00"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 

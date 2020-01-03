@@ -7,10 +7,10 @@ class AbilitySpecList(GundamDataFile):
     default_filename = "AbilitySpecList.cdb"
     header = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -21,10 +21,10 @@ class ActAbilityEffectList(GundamDataFile):
     default_filename = "ActAbilityEffectList.cdb"
     header = b"\x4C\x45\x41\x41\x00\x00\x01\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -44,10 +44,10 @@ class BattleBgList(GundamDataFile):
     default_filename = "BattleBgList.cdb"
     header = b"\x47\x42\x54\x42\x00\x00\x00\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -68,10 +68,10 @@ class CellAttributeList(GundamDataFile):
     default_filename = "CellAttributeList.cdb"
     header = b"\x4C\x54\x41\x43\x00\x00\x03\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -92,10 +92,10 @@ class CharacterConversionList(GundamDataFile):
     default_filename = "CharacterConversionList.cdb"
     header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -115,10 +115,10 @@ class CharacterGrowthList(GundamDataFile):
     default_filename = "CharacterGrowthList.cdb"
     header = b"\x52\x47\x48\x43\x00\x00\x00\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -129,10 +129,10 @@ class CharacterSpecList(GundamDataFile):
     default_filename = "CharacterSpecList.cdb"
     header = b"\x4C\x53\x48\x43\x00\x00\x07\x02"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -143,10 +143,10 @@ class CreditBgmList(GundamDataFile):
     default_filename = "CreditBgmList.cdb"
     header = b""
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -158,10 +158,10 @@ class DatabaseCalculation(GundamDataFile):
     default_filename = "DatabaseCalcuclation.cdb"
     header = b"\x43\x4C\x41\x43\x00\x00\x06\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -172,10 +172,10 @@ class GalleryMovieList(GundamDataFile):
     default_filename = "GalleryMovieList.cdb"
     header = b"\x4C\x56\x4D\x47\x00\x00\x00\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -186,10 +186,10 @@ class GetUnitList(GundamDataFile):
     default_filename = "GetUnitList.cdb"
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -207,10 +207,10 @@ class GroupSendingMissionList(GundamDataFile):
     default_filename = "GroupSendingMissionList.cdb"
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -228,10 +228,10 @@ class MachineConversionList(GundamDataFile):
     default_filename = "MachineConversionList.cdb"
     header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -251,10 +251,10 @@ class MachineDesignList(GundamDataFile):
     default_filename = "MachineDesignList.cdb"
     header = b"\x49\x53\x44\x4D\x00\x00\x02\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -275,10 +275,10 @@ class MachineDevelopmentList(GundamDataFile):
     default_filename = "MachineDevelopmentList.cdb"
     header = b"\x56\x45\x44\x4D\x00\x00\x02\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -313,10 +313,10 @@ class MachineGrowthList(GundamDataFile):
     default_filename = "MachineGrowthList.cdb"
     header = b"\x4C\x53\x43\x4D\x03\x00\x05\x02"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -327,10 +327,10 @@ class MapTypes(GundamDataFile):
     default_filename = "MapTypes.cdb"
     header = b"\x02\x00\x05\x01\x50\x59\x54\x4D"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -341,10 +341,10 @@ class MyCharacterConfigurations(GundamDataFile):
     default_filename = "MyCharacterConfigurations.cdb"
     header = b"\x43\x48\x43\x4D\x01\x00\x02\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -355,10 +355,10 @@ class PersonalMachineList(GundamDataFile):
     default_filename = "PersonalMachineList.cdb"
     header = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -369,10 +369,10 @@ class QuestList(GundamDataFile):
     default_filename = "QuestList.cdb"
     header = b"\x4C\x54\x45\x51\x00\x00\x02\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -383,14 +383,14 @@ class RangeDataList(GundamDataFile):
     default_filename = "RangeDataList.cdb"
     header = b"\x4C\x47\x4E\x52\x01\x00\x00\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
         # unknown, long int = 16?
-        # _ = int.from_bytes(buffer.read(4), byteorder="little")
+        # _ = int.from_bytes(buffer.read_file(4), byteorder="little")
 
         for _ in range(record_count):
             records.append(
@@ -416,10 +416,10 @@ class SeriesList(GundamDataFile):
     default_filename = "SeriesList.cdb"
     header = b"\x4C\x52\x45\x53\x01\x00\x02\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -449,10 +449,10 @@ class SeriesProfileList(GundamDataFile):
     default_filename = "SeriesProfileList.cdb"
     header = b"\x4C\x50\x52\x53\x00\x00\x01\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -463,10 +463,10 @@ class StageList(GundamDataFile):
     default_filename = "StageList.cdb"
     header = b"\x4C\x47\x54\x53\x00\x00\x0B\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -513,10 +513,10 @@ class SkillAcquisitionPatternList(GundamDataFile):
     default_filename = "SkillAcquisitionPatternList.cdb"
     header = b"\x4C\x51\x41\x53\x00\x00\x00\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -527,10 +527,10 @@ class SpecProfileList(GundamDataFile):
     default_filename = "SpecProfileList.cdb"
     header = b"\x4C\x50\x50\x53\x00\x00\x03\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -541,10 +541,10 @@ class TitleBgmList(GundamDataFile):
     default_filename = "TitleBgmList.cdb"
     header = b""
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -555,10 +555,10 @@ class TutorialList(GundamDataFile):
     default_filename = "TutorialList.cdb"
     header = b"\x4F\x54\x55\x54\x00\x00\x01\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -569,10 +569,10 @@ class WeaponSpecList(GundamDataFile):
     default_filename = "WeaponSpecList.cdb"
     header = b"\x4C\x53\x50\x57\x00\x00\x01\x01"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         pass
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 

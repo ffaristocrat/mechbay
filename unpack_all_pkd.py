@@ -20,7 +20,7 @@ def main():
     for pkd_filename in paths:
         print(pkd_filename)
         path, _, filename = pkd_filename.rpartition("/")
-        records = PKDArchive().read(pkd_filename)
+        records = PKDArchive().read_file(pkd_filename)
         for record in records:
             output_path = os.path.join(path, record["filename"])
             with open(output_path, "wb") as f:

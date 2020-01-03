@@ -9,6 +9,7 @@ class GundamDataFile:
 
     def __init__(self, filename: str = None):
         self.filename = filename or self.default_filename
+        self._start_pos = 0
 
     @staticmethod
     def read_unit_bytes(byte_string: bytes) -> str:
@@ -35,10 +36,9 @@ class GundamDataFile:
 
         return unit_bytes
 
-    @staticmethod
-    def read_string(buffer: BinaryIO, offset: int) -> str:
+    def read_string(self, buffer: BinaryIO, offset: int) -> str:
         all_bytes = bytes()
-        buffer.seek(offset)
+        buffer.seek(offset + self._start_pos)
         while True:
             char = buffer.read(1)
             if char == b"\x00":
@@ -49,6 +49,7 @@ class GundamDataFile:
         return output_string
 
     def read_header(self, buffer: BinaryIO) -> int:
+        self._start_pos = buffer.tell()
         header = buffer.read(len(self.header))
         assert header == self.header
         record_count = int.from_bytes(
@@ -59,20 +60,20 @@ class GundamDataFile:
     def dump(self, filename: str = None, output_filename: str = None):
         filename = filename or self.filename
         output_filename = output_filename or filename.replace(".tbl", ".json")
-        data = {filename: self.read(filename)}
+        data = {filename: self.read_file(filename)}
         json.dump(open(output_filename, "wt"), data, indent=4)
 
-    def read(self, filename: str) -> List[Dict]:
+    def read_file(self, filename: str) -> List[Dict]:
         with open(filename, "rb") as buffer:
-            records = self._read(buffer)
+            records = self.read(buffer)
         return records
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         raise NotImplementedError
 
-    def write(self, records: List[Dict], filename: str):
+    def write_file(self, records: List[Dict], filename: str):
         with open(filename, "wb") as buffer:
-            buffer.write(self._write(records))
+            buffer.write(self.write(records))
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         raise NotImplementedError
