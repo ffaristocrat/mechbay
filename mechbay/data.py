@@ -4,11 +4,11 @@ from typing import List, Dict, ByteString, BinaryIO
 
 class GundamDataFile:
     header: ByteString = None
-    filename: str = None
+    default_filename: str = None
     record_count_length: int = 4
 
-    def __init__(self):
-        pass
+    def __init__(self, filename: str = None):
+        self.filename = filename or self.default_filename
 
     @staticmethod
     def read_unit_bytes(byte_string: bytes) -> str:
@@ -58,7 +58,7 @@ class GundamDataFile:
 
     def dump(self, output_filename: str, filename: str = None):
         filename = filename or self.filename
-        data = {self.filename: self.read(filename)}
+        data = {filename: self.read(filename)}
         json.dump(open(output_filename, "wt"), data, indent=4)
 
     def read(self, filename: str) -> List[Dict]:

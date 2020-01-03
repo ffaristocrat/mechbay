@@ -4,7 +4,7 @@ from .data import GundamDataFile
 
 
 class CockpitBgTable(GundamDataFile):
-    filename = "cockpit_bg_table.atp"
+    default_filename = "cockpit_bg_table.atp"
     header = b"\xC2\x3E\x10\x0A"
     record_count_length = 0
 

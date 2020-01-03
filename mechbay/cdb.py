@@ -4,7 +4,7 @@ from .data import GundamDataFile
 
 
 class AbilitySpecList(GundamDataFile):
-    filename = "AbilitySpecList.cdb"
+    default_filename = "AbilitySpecList.cdb"
     header = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -18,7 +18,7 @@ class AbilitySpecList(GundamDataFile):
 
 
 class ActAbilityEffectList(GundamDataFile):
-    filename = "ActAbilityEffectList.cdb"
+    default_filename = "ActAbilityEffectList.cdb"
     header = b"\x4C\x45\x41\x41\x00\x00\x01\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -41,7 +41,7 @@ class ActAbilityEffectList(GundamDataFile):
 
 
 class BattleBgList(GundamDataFile):
-    filename = "BattleBgList.cdb"
+    default_filename = "BattleBgList.cdb"
     header = b"\x47\x42\x54\x42\x00\x00\x00\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -65,7 +65,7 @@ class BattleBgList(GundamDataFile):
 
 
 class CellAttributeList(GundamDataFile):
-    filename = "CellAttributeList.cdb"
+    default_filename = "CellAttributeList.cdb"
     header = b"\x4C\x54\x41\x43\x00\x00\x03\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -89,7 +89,7 @@ class CellAttributeList(GundamDataFile):
 
 
 class CharacterConversionList(GundamDataFile):
-    filename = "CharacterConversionList.cdb"
+    default_filename = "CharacterConversionList.cdb"
     header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -112,7 +112,7 @@ class CharacterConversionList(GundamDataFile):
 
 
 class CharacterGrowthList(GundamDataFile):
-    filename = "CharacterGrowthList.cdb"
+    default_filename = "CharacterGrowthList.cdb"
     header = b"\x52\x47\x48\x43\x00\x00\x00\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -126,7 +126,7 @@ class CharacterGrowthList(GundamDataFile):
 
 
 class CharacterSpecList(GundamDataFile):
-    filename = "CharacterSpecList.cdb"
+    default_filename = "CharacterSpecList.cdb"
     header = b"\x4C\x53\x48\x43\x00\x00\x07\x02"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -140,7 +140,7 @@ class CharacterSpecList(GundamDataFile):
 
 
 class CreditBgmList(GundamDataFile):
-    filename = "CreditBgmList.cdb"
+    default_filename = "CreditBgmList.cdb"
     header = b""
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -155,7 +155,7 @@ class CreditBgmList(GundamDataFile):
 
 class DatabaseCalculation(GundamDataFile):
     # The source file is misspelled
-    filename = "DatabaseCalcuclation.cdb"
+    default_filename = "DatabaseCalcuclation.cdb"
     header = b"\x43\x4C\x41\x43\x00\x00\x06\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -169,7 +169,7 @@ class DatabaseCalculation(GundamDataFile):
 
 
 class GalleryMovieList(GundamDataFile):
-    filename = "GalleryMovieList.cdb"
+    default_filename = "GalleryMovieList.cdb"
     header = b"\x4C\x56\x4D\x47\x00\x00\x00\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -183,7 +183,7 @@ class GalleryMovieList(GundamDataFile):
 
 
 class GetUnitList(GundamDataFile):
-    filename = "GetUnitList.cdb"
+    default_filename = "GetUnitList.cdb"
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -204,7 +204,7 @@ class GetUnitList(GundamDataFile):
 
 
 class GroupSendingMissionList(GundamDataFile):
-    filename = "GroupSendingMissionList.cdb"
+    default_filename = "GroupSendingMissionList.cdb"
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -225,7 +225,7 @@ class GroupSendingMissionList(GundamDataFile):
 
 
 class MachineConversionList(GundamDataFile):
-    filename = "MachineConversionList.cdb"
+    default_filename = "MachineConversionList.cdb"
     header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -248,7 +248,7 @@ class MachineConversionList(GundamDataFile):
 
 
 class MachineDesignList(GundamDataFile):
-    filename = "MachineDesignList.cdb"
+    default_filename = "MachineDesignList.cdb"
     header = b"\x49\x53\x44\x4D\x00\x00\x02\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -272,7 +272,7 @@ class MachineDesignList(GundamDataFile):
 
 
 class MachineDevelopmentList(GundamDataFile):
-    filename = "MachineDevelopmentList.cdb"
+    default_filename = "MachineDevelopmentList.cdb"
     header = b"\x56\x45\x44\x4D\x00\x00\x02\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -310,7 +310,7 @@ class MachineDevelopmentList(GundamDataFile):
 
 
 class MachineGrowthList(GundamDataFile):
-    filename = "MachineGrowthList.cdb"
+    default_filename = "MachineGrowthList.cdb"
     header = b"\x4C\x53\x43\x4D\x03\x00\x05\x02"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -324,7 +324,7 @@ class MachineGrowthList(GundamDataFile):
 
 
 class MapTypes(GundamDataFile):
-    filename = "MapTypes.cdb"
+    default_filename = "MapTypes.cdb"
     header = b"\x02\x00\x05\x01\x50\x59\x54\x4D"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -338,7 +338,7 @@ class MapTypes(GundamDataFile):
 
 
 class MyCharacterConfigurations(GundamDataFile):
-    filename = "MyCharacterConfigurations.cdb"
+    default_filename = "MyCharacterConfigurations.cdb"
     header = b"\x43\x48\x43\x4D\x01\x00\x02\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -352,7 +352,7 @@ class MyCharacterConfigurations(GundamDataFile):
 
 
 class PersonalMachineList(GundamDataFile):
-    filename = "PersonalMachineList.cdb"
+    default_filename = "PersonalMachineList.cdb"
     header = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -366,7 +366,7 @@ class PersonalMachineList(GundamDataFile):
 
 
 class QuestList(GundamDataFile):
-    filename = "QuestList.cdb"
+    default_filename = "QuestList.cdb"
     header = b"\x4C\x54\x45\x51\x00\x00\x02\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -380,7 +380,7 @@ class QuestList(GundamDataFile):
 
 
 class RangeDataList(GundamDataFile):
-    filename = "RangeDataList.cdb"
+    default_filename = "RangeDataList.cdb"
     header = b"\x4C\x47\x4E\x52\x01\x00\x00\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -413,7 +413,7 @@ class RangeDataList(GundamDataFile):
 
 
 class SeriesList(GundamDataFile):
-    filename = "SeriesList.cdb"
+    default_filename = "SeriesList.cdb"
     header = b"\x4C\x52\x45\x53\x01\x00\x02\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -446,7 +446,7 @@ class SeriesList(GundamDataFile):
 
 
 class SeriesProfileList(GundamDataFile):
-    filename = "SeriesProfileList.cdb"
+    default_filename = "SeriesProfileList.cdb"
     header = b"\x4C\x50\x52\x53\x00\x00\x01\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -460,7 +460,7 @@ class SeriesProfileList(GundamDataFile):
 
 
 class StageList(GundamDataFile):
-    filename = "StageList.cdb"
+    default_filename = "StageList.cdb"
     header = b"\x4C\x47\x54\x53\x00\x00\x0B\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -510,7 +510,7 @@ class StageList(GundamDataFile):
 
 
 class SkillAcquisitionPatternList(GundamDataFile):
-    filename = "SkillAcquisitionPatternList.cdb"
+    default_filename = "SkillAcquisitionPatternList.cdb"
     header = b"\x4C\x51\x41\x53\x00\x00\x00\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -524,7 +524,7 @@ class SkillAcquisitionPatternList(GundamDataFile):
 
 
 class SpecProfileList(GundamDataFile):
-    filename = "SpecProfileList.cdb"
+    default_filename = "SpecProfileList.cdb"
     header = b"\x4C\x50\x50\x53\x00\x00\x03\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -538,7 +538,7 @@ class SpecProfileList(GundamDataFile):
 
 
 class TitleBgmList(GundamDataFile):
-    filename = "TitleBgmList.cdb"
+    default_filename = "TitleBgmList.cdb"
     header = b""
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -552,7 +552,7 @@ class TitleBgmList(GundamDataFile):
 
 
 class TutorialList(GundamDataFile):
-    filename = "TutorialList.cdb"
+    default_filename = "TutorialList.cdb"
     header = b"\x4F\x54\x55\x54\x00\x00\x01\x01"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -566,7 +566,7 @@ class TutorialList(GundamDataFile):
 
 
 class WeaponSpecList(GundamDataFile):
-    filename = "WeaponSpecList.cdb"
+    default_filename = "WeaponSpecList.cdb"
     header = b"\x4C\x53\x50\x57\x00\x00\x01\x01"
 
     def _write(self, records: List[Dict]) -> bytes:

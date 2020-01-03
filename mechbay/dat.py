@@ -4,7 +4,7 @@ from .data import GundamDataFile
 
 
 class DlcList(GundamDataFile):
-    filename = "DlcList.dat"
+    default_filename = "DlcList.dat"
     header = b"\x08\x80\x80\x80\x08\x12\x04\x08"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -18,7 +18,7 @@ class DlcList(GundamDataFile):
 
 
 class EffectList(GundamDataFile):
-    filename = "effectList.dat"
+    default_filename = "effectList.dat"
     header = b"\x4C\x45\x4D\x54"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -40,7 +40,7 @@ class EffectList(GundamDataFile):
 
 
 class MapWeaponList(GundamDataFile):
-    filename = "mapWeaponList.dat"
+    default_filename = "mapWeaponList.dat"
     header = b"\x57\x4D\x4D\x54"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -67,7 +67,7 @@ class MapWeaponList(GundamDataFile):
 
 
 class MovieList(GundamDataFile):
-    filename = "movieList.dat"
+    default_filename = "movieList.dat"
     header = b"\x4C\x4D\x4D\x54"
     record_count_length = 2
 
@@ -82,7 +82,7 @@ class MovieList(GundamDataFile):
 
 
 class PowerUpList(GundamDataFile):
-    filename = "powerUpList.dat"
+    default_filename = "powerUpList.dat"
     header = b"\x44\x4C\x55\x50"
 
     def _write(self, records: List[Dict]) -> bytes:
@@ -96,7 +96,7 @@ class PowerUpList(GundamDataFile):
 
 
 class ScoutMessageId(GundamDataFile):
-    filename = "scoutMessageid.dat"
+    default_filename = "scoutMessageid.dat"
     header = b"\x4D\x53\x4D\x54"
     record_count_length = 2
 
@@ -111,7 +111,7 @@ class ScoutMessageId(GundamDataFile):
 
 
 class SteamDlcGroupList(GundamDataFile):
-    filename = "SteamDlcGroupList.dat"
+    default_filename = "SteamDlcGroupList.dat"
     header = b""
 
     def _write(self, records: List[Dict]) -> bytes:
