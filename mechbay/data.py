@@ -56,8 +56,9 @@ class GundamDataFile:
         )
         return record_count
 
-    def dump(self, output_filename: str, filename: str = None):
+    def dump(self, filename: str = None, output_filename: str = None):
         filename = filename or self.filename
+        output_filename = output_filename or filename.replace(".tbl", ".json")
         data = {filename: self.read(filename)}
         json.dump(open(output_filename, "wt"), data, indent=4)
 
