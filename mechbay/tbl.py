@@ -40,14 +40,31 @@ class StringTBL(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
-        for _ in range(record_count):
+        for i in range(record_count):
             record = {
+                "__order": i,
                 "index": int.from_bytes(buffer.read(4), byteorder="little"),
-                "pointer": int.from_bytes(buffer.read(4), byteorder="little"),
+                "__pointer": int.from_bytes(buffer.read(4), byteorder="little"),
             }
             records.append(record)
 
         for record in records:
-            record["string"] = self.read_string(buffer, record["pointer"])
+            record["string"] = self.read_string(buffer, record["__pointer"])
+
+        return records
+
+
+class StageVoiceTable(StringTBL):
+    header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
+
+    def _read(self, buffer: BinaryIO) -> List[Dict]:
+        records = super()._read(buffer)
+
+        for record in records:
+            unpack = record["string"].split(",")
+            record["voice_id"] = unpack[0]
+            record["val1"] = int(unpack[1])
+            record["val2"] = int(unpack[2])
+            record["val3"] = int(unpack[3])
 
         return records
