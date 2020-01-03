@@ -7,9 +7,14 @@ class GundamDataFile:
     default_filename: str = None
     record_count_length: int = 4
 
-    def __init__(self, filename: str = None):
+    def __init__(self, filename: str = None, header: ByteString = None,
+                 record_count_length: int = None):
         self.filename = filename or self.default_filename
         self._start_pos = 0
+        if header:
+            self.header = header
+        if record_count_length is not None:
+            self.record_count_length = record_count_length
 
     @staticmethod
     def read_unit_bytes(byte_string: bytes) -> str:
