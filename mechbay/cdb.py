@@ -57,6 +57,7 @@ class BattleBgList(GundamDataFile):
                 + len(self.header)
                 + 4
             }
+            records.append(record)
 
         for record in records:
             record["bg_name"] = self.read_string(buffer, record["pointer"])
@@ -93,7 +94,18 @@ class CharacterConversionList(GundamDataFile):
     header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+    
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+    
+        for record in records:
+            string_bytes += self.write_unit_bytes(record["first_unit_id"])
+            string_bytes += self.write_unit_bytes(record["second_unit_id"])
+            string_bytes += int(record["index"]).to_bytes(4, byteorder="little")
+    
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -187,7 +199,17 @@ class GetUnitList(GundamDataFile):
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+    
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+
+        for record in records:
+            string_bytes += self.write_unit_bytes(record["unit_id"])
+            string_bytes += int(record["cost"]).to_bytes(4, byteorder="little")
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -205,7 +227,36 @@ class GetUnitList(GundamDataFile):
 
 class GroupSendingMissionList(GundamDataFile):
     default_filename = "GroupSendingMissionList.cdb"
-    header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
+    header = b"\x4C\x53\x50\x47\x00\x00\x07\x01"
+
+    def write(self, records: List[Dict]) -> bytes:
+        pass
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        records = []
+
+        for _ in range(record_count):
+            record = {}
+            records.append(record)
+
+        return records
+
+
+class MachineConversionList(GundamDataFile):
+    default_filename = "MachineConversionList.cdb"
+    header = b"\x56\x4E\x43\x4D\x00\x00\x02\x01"
+
+    conversion_types = {
+        19: "",
+        16: "transform",
+        2: "refit_1",
+        3: "refit_2",
+        4: "refit_3",
+        5: "",
+        6: "",
+        8: "",
+    }
 
     def write(self, records: List[Dict]) -> bytes:
         pass
@@ -217,32 +268,12 @@ class GroupSendingMissionList(GundamDataFile):
         for _ in range(record_count):
             record = {
                 "unit_id": self.read_unit_bytes(buffer.read(8)),
-                "cost": int.from_bytes(buffer.read(4), byteorder="little"),
+                "transform_unit_id": self.read_unit_bytes(buffer.read(8)),
+                "conversion_type_id": int.from_bytes(buffer.read(4), byteorder="little"),
             }
+            record["conversion_type"] = self.conversion_types[record["conversion_type_id"]]
+
             records.append(record)
-
-        return records
-
-
-class MachineConversionList(GundamDataFile):
-    default_filename = "MachineConversionList.cdb"
-    header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
-
-    def write(self, records: List[Dict]) -> bytes:
-        pass
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for _ in range(record_count):
-            records.append(
-                {
-                    "first_unit_id": self.read_unit_bytes(buffer.read(8)),
-                    "second_unit_id": self.read_unit_bytes(buffer.read(8)),
-                    "index": int.from_bytes(buffer.read(4), byteorder="little"),
-                }
-            )
 
         return records
 
@@ -356,7 +387,18 @@ class PersonalMachineList(GundamDataFile):
     header = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+    
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+    
+        for record in records:
+            string_bytes += self.write_unit_bytes(record["unit_id"])
+            string_bytes += self.write_unit_bytes(record["pilot_id"])
+            string_bytes += self.write_unit_bytes(record["custom_unit_id"])
+    
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -463,6 +505,36 @@ class SeriesProfileList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        return records
+
+
+class StageClearGetList(GundamDataFile):
+    default_filename = "StageClearGetList.cdb"
+    header = b"\x43\x47\x54\x53\x00\x00\x00\x01"
+
+    def write(self, records: List[Dict]) -> bytes:
+        pass
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        records = []
+        
+        for _ in range(record_count):
+            record = {
+                "stage_id": int.from_bytes(buffer.read(4), byteorder="little"),
+                "get_count": int.from_bytes(buffer.read(4), byteorder="little"),
+                "pointer": int.from_bytes(buffer.read(4), byteorder="little"),
+                "location": buffer.tell(),
+                "get_units": [],
+            }
+            records.append(record)
+
+        for record in records:
+            # not sure what hte pointer is exactly yet
+            # buffer.seek(record["pointer"])
+            for _ in range(record["get_count"]):
+                record["get_units"].append(self.read_unit_bytes(buffer.read(8)))
 
         return records
 
