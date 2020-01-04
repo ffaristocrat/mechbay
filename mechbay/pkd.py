@@ -22,12 +22,14 @@ class PKDArchive(GundamDataFile):
             record = {
                 "__file_pointer": int.from_bytes(buffer.read(4), byteorder="little"),
                 "__file_size": int.from_bytes(buffer.read(4), byteorder="little"),
-                "__name_pointer": int.from_bytes(buffer.read(4), byteorder="little"),
+                # +20 for header bytes
+                "__name_pointer":
+                    int.from_bytes(buffer.read(4), byteorder="little") + 20,
             }
             records.append(record)
 
         for record in records:
-            record["filename"] = self.read_string(buffer, record["__name_pointer"] + 20)
+            record["filename"] = self.read_string(buffer, record["__name_pointer"])
 
         for record in records:
             buffer.seek(record["__file_pointer"])
