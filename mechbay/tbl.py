@@ -8,9 +8,9 @@ class TBLData(GundamDataFile):
 
 
 class StringTBL(GundamDataFile):
-    header = b"\x00\x00\x00\x00\x00\x01\x01\x00"
+    header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
 
-    def _write(self, records: List[Dict]) -> bytes:
+    def write(self, records: List[Dict]) -> bytes:
         string_bytes = bytes()
 
         string_bytes += self.header
@@ -36,7 +36,7 @@ class StringTBL(GundamDataFile):
 
         return string_bytes
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -57,8 +57,8 @@ class StringTBL(GundamDataFile):
 class StageVoiceTable(StringTBL):
     header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
 
-    def _read(self, buffer: BinaryIO) -> List[Dict]:
-        records = super()._read(buffer)
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        records = super().read(buffer)
 
         for record in records:
             unpack = record["string"].split(",")
