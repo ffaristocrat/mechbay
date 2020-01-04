@@ -575,5 +575,10 @@ class WeaponSpecList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+        
+        # series of data
+        # followed by two small blocks
+        # 8 * (value, index)
+        # 31 * (value, value, index)
 
         return records
