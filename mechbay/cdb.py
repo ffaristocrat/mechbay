@@ -361,6 +361,14 @@ class PersonalMachineList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+        
+        for _ in range(record_count):
+            record = {
+                "unit_id": self.read_unit_bytes(buffer.read(8)),
+                "pilot_id": self.read_unit_bytes(buffer.read(8)),
+                "custom_unit_id": self.read_unit_bytes(buffer.read(8)),
+            }
+            records.append(record)
 
         return records
 
