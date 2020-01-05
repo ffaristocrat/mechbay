@@ -64,7 +64,7 @@ class GundamDataFile:
 
     def dump(self, filename: str = None, output_filename: str = None):
         filename = filename or self.filename
-        output_filename = output_filename or filename.replace(".tbl", ".json")
+        output_filename = output_filename or (filename.rpartition(".")[0] + ".json")
         data = {filename: self.read_file(filename)}
         json.dump(open(output_filename, "wt"), data, indent=4)
 
