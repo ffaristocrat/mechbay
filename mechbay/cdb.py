@@ -283,7 +283,19 @@ class MachineDesignList(GundamDataFile):
     header = b"\x49\x53\x44\x4D\x00\x00\x02\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+
+        for record in records:
+            string_bytes += self.write_unit_bytes(record["first_unit_id"])
+            string_bytes += self.write_unit_bytes(record["second_unit_id"])
+            string_bytes += self.write_unit_bytes(record["result_unit_id"])
+            string_bytes += int(record["index"]).to_bytes(4, byteorder="little")
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
