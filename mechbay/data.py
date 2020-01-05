@@ -31,7 +31,6 @@ class GundamDataFile:
 
     @staticmethod
     def write_unit_bytes(unit_string: str) -> bytes:
-        print(unit_string)
         unit_bytes = bytes()
         unit_bytes += int(unit_string[1:5]).to_bytes(2, byteorder="little")
         unit_bytes += bytes(unit_string[0], encoding="utf-8")
@@ -63,11 +62,17 @@ class GundamDataFile:
         )
         return record_count
 
-    def dump(self, filename: str = None, output_filename: str = None):
-        filename = filename or self.filename
-        output_filename = output_filename or (filename.rpartition(".")[0] + ".json")
-        data = {self.filename or os.path.split(filename)[1]: self.read_file(filename)}
-        json.dump(data, open(output_filename, "wt"), indent=4)
+    def dump(self, data_filename: str = None, json_filename: str = None):
+        data_filename = data_filename or self.filename
+        json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")
+        data = {self.filename or os.path.split(data_filename)[1]: self.read_file(data_filename)}
+        json.dump(data, open(json_filename, "wt"), indent=4)
+
+    def load(self, json_filename: str = None, data_filename: str = None):
+        data_filename = data_filename or self.filename
+        json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")
+        records = json.load(open(json_filename, "rt"))[self.filename or os.path.split(data_filename)[1]]
+        self.write_file(records, data_filename)
 
     def read_file(self, filename: str) -> List[Dict]:
         with open(filename, "rb") as buffer:
