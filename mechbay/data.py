@@ -1,4 +1,5 @@
 import json
+import os
 from typing import List, Dict, ByteString, BinaryIO
 
 
@@ -65,8 +66,8 @@ class GundamDataFile:
     def dump(self, filename: str = None, output_filename: str = None):
         filename = filename or self.filename
         output_filename = output_filename or (filename.rpartition(".")[0] + ".json")
-        data = {filename: self.read_file(filename)}
-        json.dump(open(output_filename, "wt"), data, indent=4)
+        data = {self.filename or os.path.split(filename)[1]: self.read_file(filename)}
+        json.dump(data, open(output_filename, "wt"), indent=4)
 
     def read_file(self, filename: str) -> List[Dict]:
         with open(filename, "rb") as buffer:
