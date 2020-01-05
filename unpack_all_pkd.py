@@ -18,11 +18,12 @@ def main():
     print(search_path)
     paths = glob.glob(search_path, recursive=True)
     for pkd_filename in paths:
-        print(pkd_filename)
-        path, _, filename = pkd_filename.rpartition("/")
+        path, filename = os.path.split(pkd_filename)
+        print(filename)
         records = PKDArchive().read_file(pkd_filename)
         for record in records:
             output_path = os.path.join(path, record["filename"])
+            print(record["filename"])
             with open(output_path, "wb") as f:
                 f.write(record["bytes"])
 
