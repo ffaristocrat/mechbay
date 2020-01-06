@@ -259,7 +259,18 @@ class MachineConversionList(GundamDataFile):
     }
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+
+        for record in records:
+            string_bytes += self.write_unit_bytes(record["unit_id"])
+            string_bytes += self.write_unit_bytes(record["transform_unit_id"])
+            string_bytes += int(record["conversion_type_id"]).to_bytes(4, byteorder="little")
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
