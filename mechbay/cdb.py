@@ -522,10 +522,8 @@ class SeriesList(GundamDataFile):
         string_bytes += record_count.to_bytes(4, byteorder="little")
 
         for record in records:
-            string_bytes += int(record["logo1"][-4:]).to_bytes(2, byteorder="little")
-            string_bytes += ord(record["logo1"][0]).to_bytes(2, byteorder="little")
-            string_bytes += int(record["logo2"][-4:]).to_bytes(2, byteorder="little")
-            string_bytes += ord(record["logo2"][0]).to_bytes(2, byteorder="little")
+            string_bytes += self.write_series_bytes(record["series1"])
+            string_bytes += self.write_series_bytes(record["series2"])
             string_bytes += record["index"].to_bytes(2, byteorder="little")
             string_bytes += record["value"].to_bytes(1, byteorder="little")
             string_bytes += record["flag"].to_bytes(1, byteorder="little")
@@ -537,16 +535,9 @@ class SeriesList(GundamDataFile):
         records = []
 
         for _ in range(record_count):
-            logo_num = int.from_bytes(buffer.read(2), byteorder="little")
-            logo_g = chr(int.from_bytes(buffer.read(2), byteorder="little"))
-            logo1 = f"{logo_g}{logo_num:04}"
-            logo_num = int.from_bytes(buffer.read(2), byteorder="little")
-            logo_g = chr(int.from_bytes(buffer.read(2), byteorder="little"))
-            logo2 = f"{logo_g}{logo_num:04}"
-
             record = {
-                "logo1": logo1,
-                "logo2": logo2,
+                "series1": self.read_series_bytes(buffer.read(4)),
+                "series2": self.read_series_bytes(buffer.read(4)),
                 "index": int.from_bytes(buffer.read(2), byteorder="little"),
                 # Ranges from 0-4
                 "value": int.from_bytes(buffer.read(1), byteorder="little"),
@@ -570,7 +561,9 @@ class SeriesProfileList(GundamDataFile):
         string_bytes += int(record_count).to_bytes(4, byteorder="little")
 
         for record in records:
-            string_bytes += self.write_unit_bytes(record["unit_id"])
+            string_bytes += self.write_series_bytes(record["series"])
+            string_bytes += record["value"].to_bytes(2, byteorder="little")
+            string_bytes += record["series_string_index"].to_bytes(2, byteorder="little")
 
         return string_bytes
 
@@ -580,7 +573,9 @@ class SeriesProfileList(GundamDataFile):
 
         for _ in range(record_count):
             record = {
-                "unit_id": self.read_unit_bytes(buffer.read(8)),
+                "series": self.read_series_bytes(buffer.read(4)),
+                "value": int.from_bytes(buffer.read(2), byteorder="little"),
+                "series_string_index": int.from_bytes(buffer.read(2), byteorder="little"),
             }
             records.append(record)
 
@@ -633,12 +628,11 @@ class StageList(GundamDataFile):
         for _ in range(record_count):
             location = buffer.tell()
             stage_id = int.from_bytes(buffer.read(4), byteorder="little")
-            logo_num = int.from_bytes(buffer.read(2), byteorder="little")
-            logo_g = chr(int.from_bytes(buffer.read(2), byteorder="little"))
+            series = self.read_series_bytes(buffer.read(4))
             required_stage_id = int.from_bytes(buffer.read(4), byteorder="little")
             record = {
                 "stage_id": stage_id,
-                "series_logo": f"{logo_g}{logo_num:04}",
+                "series": series,
                 "required_stage_id": required_stage_id,
                 "rewards": [int.from_bytes(buffer.read(4), byteorder="little") for _ in range(6)],
                 "__units_available_count": int.from_bytes(buffer.read(4), byteorder="little"),
