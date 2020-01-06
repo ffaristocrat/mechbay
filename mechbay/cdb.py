@@ -78,7 +78,8 @@ class CellAttributeList(GundamDataFile):
 
         for _ in range(record_count):
             record = {
-                "pointer": int.from_bytes(buffer.read(4), byteorder="little"),
+                "__location": buffer.tell(),
+                "__pointer": int.from_bytes(buffer.read(4), byteorder="little"),
                 "values": [
                     int.from_bytes(buffer.read(1), byteorder="little", signed=False)
                     for _ in range(20)
@@ -200,14 +201,14 @@ class GetUnitList(GundamDataFile):
 
     def write(self, records: List[Dict]) -> bytes:
         string_bytes = bytes()
-    
+
         string_bytes += self.header
         record_count = len(records)
         string_bytes += int(record_count).to_bytes(4, byteorder="little")
 
         for record in records:
             string_bytes += self.write_unit_bytes(record["unit_id"])
-            string_bytes += int(record["cost"]).to_bytes(4, byteorder="little")
+            string_bytes += int(record["value"]).to_bytes(4, byteorder="little")
 
         return string_bytes
 
@@ -218,7 +219,7 @@ class GetUnitList(GundamDataFile):
         for _ in range(record_count):
             record = {
                 "unit_id": self.read_unit_bytes(buffer.read(8)),
-                "cost": int.from_bytes(buffer.read(4), byteorder="little"),
+                "value": int.from_bytes(buffer.read(4), byteorder="little"),
             }
             records.append(record)
 
@@ -435,16 +436,16 @@ class PersonalMachineList(GundamDataFile):
 
     def write(self, records: List[Dict]) -> bytes:
         string_bytes = bytes()
-    
+
         string_bytes += self.header
         record_count = len(records)
         string_bytes += int(record_count).to_bytes(4, byteorder="little")
-    
+
         for record in records:
             string_bytes += self.write_unit_bytes(record["unit_id"])
             string_bytes += self.write_unit_bytes(record["pilot_id"])
             string_bytes += self.write_unit_bytes(record["custom_unit_id"])
-    
+
         return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
@@ -581,13 +582,14 @@ class StageClearGetList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
-        
+
         for _ in range(record_count):
+            location = buffer.tell()
             record = {
                 "stage_id": int.from_bytes(buffer.read(4), byteorder="little"),
-                "get_count": int.from_bytes(buffer.read(4), byteorder="little"),
-                "pointer": int.from_bytes(buffer.read(4), byteorder="little"),
-                "location": buffer.tell(),
+                "__get_count": int.from_bytes(buffer.read(4), byteorder="little"),
+                "__pointer": int.from_bytes(buffer.read(4), byteorder="little"),
+                "__location": location,
                 "get_units": [],
             }
             records.append(record)
@@ -595,7 +597,7 @@ class StageClearGetList(GundamDataFile):
         for record in records:
             # not sure what hte pointer is exactly yet
             # buffer.seek(record["pointer"])
-            for _ in range(record["get_count"]):
+            for _ in range(record.pop("__get_count")):
                 record["get_units"].append(self.read_unit_bytes(buffer.read(8)))
 
         return records
@@ -609,44 +611,43 @@ class StageList(GundamDataFile):
         pass
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
+        difficulties = ["NORMAL", "HARD", "EXTRA"]
         record_count = self.read_header(buffer)
         records = []
 
         for _ in range(record_count):
+            location = buffer.tell()
             stage_id = int.from_bytes(buffer.read(4), byteorder="little")
             logo_num = int.from_bytes(buffer.read(2), byteorder="little")
             logo_g = chr(int.from_bytes(buffer.read(2), byteorder="little"))
-            req_stage_id = int.from_bytes(buffer.read(4), byteorder="little")
+            required_stage_id = int.from_bytes(buffer.read(4), byteorder="little")
             record = {
                 "stage_id": stage_id,
                 "series_logo": f"{logo_g}{logo_num:04}",
-                "req_stage_id": req_stage_id,
-                "rewards": [
-                    int.from_bytes(buffer.read(4), byteorder="little") for _ in range(6)
-                ],
-                "guest_unit_count": int.from_bytes(buffer.read(4), byteorder="little"),
-                # The pointer is garbage so we don't use it.
-                "pointer": int.from_bytes(buffer.read(4), byteorder="little"),
-                "null": int.from_bytes(buffer.read(2), byteorder="little"),
+                "required_stage_id": required_stage_id,
+                "rewards": [int.from_bytes(buffer.read(4), byteorder="little") for _ in range(6)],
+                "__units_available_count": int.from_bytes(buffer.read(4), byteorder="little"),
+                "__pointer": int.from_bytes(buffer.read(4), byteorder="little") + location,
+                "__null": int.from_bytes(buffer.read(2), byteorder="little"),
                 "index": int.from_bytes(buffer.read(2), byteorder="little"),
                 "bgm": int.from_bytes(buffer.read(2), byteorder="little"),
                 "movie": int.from_bytes(buffer.read(2), byteorder="little"),
                 "values": [
-                    int.from_bytes(buffer.read(2), byteorder="little")
-                    for _ in range(24)
+                    int.from_bytes(buffer.read(2), byteorder="little") for _ in range(24)
                 ],
                 "series_end": int.from_bytes(buffer.read(4), byteorder="little"),
-                "guest_units": [],
+                "units_available": [],
             }
             records.append(record)
 
         for record in records:
-            for _ in range(record.pop("guest_unit_count")):
-                guest_unit = {
+            buffer.seek(record.pop("__pointer"))
+            for _ in range(record.pop("__units_available_count")):
+                unit_available = {
                     "unit_id": self.read_unit_bytes(buffer.read(8)),
-                    "unit_count": int.from_bytes(buffer.read(4), byteorder="little"),
+                    "available_type": int.from_bytes(buffer.read(4), byteorder="little"),
                 }
-                record["guest_units"].append(guest_unit)
+                record["units_available"].append(unit_available)
 
         return records
 
