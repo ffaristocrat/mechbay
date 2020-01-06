@@ -598,15 +598,13 @@ class StageClearGetList(GundamDataFile):
             record = {
                 "stage_id": int.from_bytes(buffer.read(4), byteorder="little"),
                 "__get_count": int.from_bytes(buffer.read(4), byteorder="little"),
-                "__pointer": int.from_bytes(buffer.read(4), byteorder="little"),
-                "__location": location,
+                "__pointer": int.from_bytes(buffer.read(4), byteorder="little") + location,
                 "get_units": [],
             }
             records.append(record)
 
         for record in records:
-            # not sure what hte pointer is exactly yet
-            # buffer.seek(record["pointer"])
+            buffer.seek(record.pop("__pointer"))
             for _ in range(record.pop("__get_count")):
                 record["get_units"].append(self.read_unit_bytes(buffer.read(8)))
 
