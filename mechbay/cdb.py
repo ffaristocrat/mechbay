@@ -208,7 +208,7 @@ class GetUnitList(GundamDataFile):
 
         for record in records:
             string_bytes += self.write_unit_bytes(record["unit_id"])
-            string_bytes += int(record["value"]).to_bytes(4, byteorder="little")
+            string_bytes += int(record["get_cost"]).to_bytes(4, byteorder="little")
 
         return string_bytes
 
@@ -219,7 +219,7 @@ class GetUnitList(GundamDataFile):
         for _ in range(record_count):
             record = {
                 "unit_id": self.read_unit_bytes(buffer.read(8)),
-                "value": int.from_bytes(buffer.read(4), byteorder="little"),
+                "get_cost": int.from_bytes(buffer.read(4), byteorder="little"),
             }
             records.append(record)
 
