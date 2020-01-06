@@ -17,11 +17,11 @@ def main():
     search_path = os.path.join(args.path, "**", args.tbl)
     print(search_path)
     paths = glob.glob(search_path, recursive=True)
-    for pkd_filename in paths:
-        print(pkd_filename)
+    for string_filename in paths:
+        print(string_filename)
         try:
-            StringTBL().dump(pkd_filename)
-        except ValueError:
+            StringTBL().dump(string_filename)
+        except AssertionError:
             continue
 
 
