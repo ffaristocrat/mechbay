@@ -25,20 +25,16 @@ RESIDENT = {
         "DatabaseCaluclation.cdb",
         "SeriesList.cdb",
         "GroupSendingMissionList.cdb",
-        "TutorialList.cdb",
-        "StageList.pkd",
-        "StageList.cdb",
-        "QuestList.cdb",
-        "GetUnitList.cdb",
-    ],
-    "CellAttributeList.pkd": [
-        "CellAttributeList.cdb",
-        "BattleBgList.cdb",
+        "TutorialList.cdb"
     ],
     "StageList.pkd": [
         "StageList.cdb",
         "QuestList.cdb",
-        "GetUnitList.cdb",
+        "GetUnitList.cdb"
+    ],
+    "CellAttributeList.pkd": [
+        "CellAttributeList.cdb",
+        "BattleBgList.cdb",
     ],
 }
 
