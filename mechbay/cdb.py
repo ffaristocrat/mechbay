@@ -330,30 +330,54 @@ class MachineDevelopmentList(GundamDataFile):
     header = b"\x56\x45\x44\x4D\x00\x00\x02\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+
+        child_start = len(string_bytes) + (record_count * 16)
+        for record in records:
+            pointer = child_start - len(string_bytes)
+            child_count = len(record["children"])
+            string_bytes += self.write_unit_bytes(record["unit_id"])
+            string_bytes += int(pointer).to_bytes(4, byteorder="little")
+            string_bytes += int(record["index"]).to_bytes(4, byteorder="little")
+            string_bytes += int(child_count).to_bytes(4, byteorder="little")
+            child_start += child_count * 12
+
+        for record in records:
+            for child in record["children"]:
+                string_bytes += self.write_unit_bytes(child["unit_id"])
+                string_bytes += int(child["level"]).to_bytes(4, byteorder="little")
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
         for i in range(record_count):
+            location = buffer.tell()
             unit_id = self.read_unit_bytes(buffer.read(8))
-            # The pointer is garbage so we don't use it.
+            # Pointer is relative to the start of this index record
             pointer = int.from_bytes(buffer.read(4), byteorder="little")
             index = int.from_bytes(buffer.read(2), byteorder="little")
             child_count = int.from_bytes(buffer.read(2), byteorder="little")
 
             record = {
+                "__pointer": pointer + location,
                 "unit_id": unit_id,
                 "index": index,
-                "child_count": child_count,
+                "__child_count": child_count,
                 "children": [],
             }
             records.append(record)
 
         # Proceed immediately into reading the next block
         for record in records:
-            for _ in range(record["child_count"]):
+            buffer.seek(record.pop("__pointer"))
+            for _ in range(record.pop("__child_count")):
                 child = {
                     "unit_id": self.read_unit_bytes(buffer.read(8)),
                     "level": int.from_bytes(buffer.read(4), byteorder="little"),
