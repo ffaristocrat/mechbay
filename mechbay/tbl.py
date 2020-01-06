@@ -17,7 +17,7 @@ class StringTBL(GundamDataFile):
         record_count = len(records)
         string_bytes += int(record_count).to_bytes(4, byteorder="little")
 
-        string_start = 12 + (record_count * 8)
+        string_start = len(string_bytes) + (record_count * 8)
 
         # We pad out a 16 byte row with null bytes
         # after the index
@@ -27,6 +27,7 @@ class StringTBL(GundamDataFile):
         for record in records:
             string_bytes += int(record["index"]).to_bytes(4, byteorder="little")
             string_bytes += int(string_start).to_bytes(4, byteorder="little")
+
             string_start += len(record["string"].encode("utf-8")) + 1
 
         string_bytes += b"\x00" * padding
@@ -49,7 +50,7 @@ class StringTBL(GundamDataFile):
             records.append(record)
 
         for record in records:
-            record["string"] = self.read_string(buffer, record["__pointer"])
+            record["string"] = self.read_string(buffer, record.pop("__pointer"))
 
         return records
 
