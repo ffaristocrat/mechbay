@@ -18,6 +18,22 @@ class GundamDataFile:
             self.record_count_length = record_count_length
 
     @staticmethod
+    def read_series_bytes(byte_string: bytes) -> str:
+        num = int.from_bytes(byte_string[0:2], byteorder="little")
+        g = chr(int.from_bytes(byte_string[2:], byteorder="little"))
+
+        series = f"{g}{num:04}"
+        return series
+
+    @staticmethod
+    def write_series_bytes(series_string: str) -> bytes:
+        string_bytes = bytes()
+        string_bytes += int(series_string[1:]).to_bytes(2, byteorder="little")
+        string_bytes += ord(series_string[0]).to_bytes(2, byteorder="little")
+
+        return string_bytes
+
+    @staticmethod
     def read_unit_bytes(byte_string: bytes) -> str:
         series = int.from_bytes(byte_string[0:2], byteorder="little")
         gundam = chr(byte_string[2])
