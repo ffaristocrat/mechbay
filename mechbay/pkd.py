@@ -1,6 +1,46 @@
+import os
 from typing import List, Dict, BinaryIO
 
 from .data import GundamDataFile
+
+
+RESIDENT = {
+    "CharacterSpecList.pkd": [
+        "CharacterSpecList.cdb",
+        "CharacterGrowthList.cdb",
+        "SkillAcquisitionPatternList.cdb",
+        "MyCharacterConfigurations.cdb",
+    ],
+    "MachineSpecList.pkd": [
+        "RangeDataList.cdb",
+        "MachineGrowthList.cdb",
+        "WeaponSpecList.cdb",
+        "MachineSpecList.cdb",
+        "MachineConversionList.cdb",
+        "PersonalMachineList.cdb",
+        "MachineDevelopmentList.cdb",
+        "MachineDesignList.cdb",
+    ],
+    "MiscData.pkd": [
+        "DatabaseCaluclation.cdb",
+        "SeriesList.cdb",
+        "GroupSendingMissionList.cdb",
+        "TutorialList.cdb",
+        "StageList.pkd",
+        "StageList.cdb",
+        "QuestList.cdb",
+        "GetUnitList.cdb",
+    ],
+    "CellAttributeList.pkd": [
+        "CellAttributeList.cdb",
+        "BattleBgList.cdb",
+    ],
+    "StageList.pkd": [
+        "StageList.cdb",
+        "QuestList.cdb",
+        "GetUnitList.cdb",
+    ],
+}
 
 
 class PKDArchive(GundamDataFile):
@@ -75,3 +115,15 @@ class PKDArchive(GundamDataFile):
             record["bytes"] = buffer.read(record["__file_size"])
 
         return records
+
+    def pack_files(self, filenames) -> bytes:
+        records = []
+        for filename in filenames:
+            with open(filename, "rb") as file:
+                record = {
+                    "filename": os.path.split(filename)[1],
+                    "bytes": file.read(),
+                }
+                records.append(record)
+
+        return self.write(records)
