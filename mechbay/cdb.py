@@ -627,13 +627,10 @@ class StageList(GundamDataFile):
 
         for _ in range(record_count):
             location = buffer.tell()
-            stage_id = int.from_bytes(buffer.read(4), byteorder="little")
-            series = self.read_series_bytes(buffer.read(4))
-            required_stage_id = int.from_bytes(buffer.read(4), byteorder="little")
             record = {
-                "stage_id": stage_id,
-                "series": series,
-                "required_stage_id": required_stage_id,
+                "stage_id": int.from_bytes(buffer.read(4), byteorder="little"),
+                "series": self.read_series_bytes(buffer.read(4)),
+                "required_stage_id":  int.from_bytes(buffer.read(4), byteorder="little"),
                 "rewards": [int.from_bytes(buffer.read(4), byteorder="little") for _ in range(6)],
                 "__units_available_count": int.from_bytes(buffer.read(4), byteorder="little"),
                 "__pointer": int.from_bytes(buffer.read(4), byteorder="little") + location,
