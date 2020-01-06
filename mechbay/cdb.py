@@ -621,12 +621,12 @@ class StageList(GundamDataFile):
                     for _ in range(24)
                 ],
                 "series_end": int.from_bytes(buffer.read(4), byteorder="little"),
+                "guest_units": [],
             }
             records.append(record)
 
         for record in records:
-            record["guest_units"] = []
-            for _ in range(record["guest_unit_count"]):
+            for _ in range(record.pop("guest_unit_count")):
                 guest_unit = {
                     "unit_id": self.read_unit_bytes(buffer.read(8)),
                     "unit_count": int.from_bytes(buffer.read(4), byteorder="little"),
