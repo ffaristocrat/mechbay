@@ -514,7 +514,22 @@ class SeriesList(GundamDataFile):
     header = b"\x4C\x52\x45\x53\x01\x00\x02\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += record_count.to_bytes(4, byteorder="little")
+
+        for record in records:
+            string_bytes += int(record["logo1"][-4:]).to_bytes(2, byteorder="little")
+            string_bytes += ord(record["logo1"][0]).to_bytes(2, byteorder="little")
+            string_bytes += int(record["logo2"][-4:]).to_bytes(2, byteorder="little")
+            string_bytes += ord(record["logo2"][0]).to_bytes(2, byteorder="little")
+            string_bytes += record["index"].to_bytes(2, byteorder="little")
+            string_bytes += record["value"].to_bytes(1, byteorder="little")
+            string_bytes += record["flag"].to_bytes(1, byteorder="little")
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -533,7 +548,7 @@ class SeriesList(GundamDataFile):
                 "logo2": logo2,
                 "index": int.from_bytes(buffer.read(2), byteorder="little"),
                 # Ranges from 0-4
-                "val": int.from_bytes(buffer.read(1), byteorder="little"),
+                "value": int.from_bytes(buffer.read(1), byteorder="little"),
                 # 0 or 1
                 "flag": int.from_bytes(buffer.read(1), byteorder="little"),
             }
