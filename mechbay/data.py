@@ -89,9 +89,7 @@ class GundamDataFile:
         self._start_pos = buffer.tell()
         header = buffer.read(len(self.header))
         assert header == self.header
-        record_count = int.from_bytes(
-            buffer.read(self.record_count_length), byteorder="little"
-        )
+        record_count = self.read_int(buffer.read(self.record_count_length))
         return record_count
 
     def dump(self, data_filename: str = None, json_filename: str = None):
