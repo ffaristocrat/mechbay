@@ -104,7 +104,7 @@ class PKDArchive(GundamDataFile):
             records.append(record)
 
         for record in records:
-            record["filename"] = self.read_string(buffer, record["__name_pointer"])
+            record["filename"] = self.read_string_null_term(buffer, record["__name_pointer"])
 
         for record in records:
             buffer.seek(record["__file_pointer"])

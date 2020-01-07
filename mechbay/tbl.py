@@ -50,7 +50,7 @@ class StringTBL(GundamDataFile):
             records.append(record)
 
         for record in records:
-            record["string"] = self.read_string(buffer, record.pop("__pointer"))
+            record["string"] = self.read_string_null_term(buffer, record.pop("__pointer"))
 
         return records
 

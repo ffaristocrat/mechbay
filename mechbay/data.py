@@ -18,6 +18,16 @@ class GundamDataFile:
             self.record_count_length = record_count_length
 
     @staticmethod
+    def read_int(byte_string: bytes, byteorder: str = "little", signed: bool = False
+                 ) -> int:
+        return int.from_bytes(byte_string, byteorder=byteorder, signed=signed)
+
+    @staticmethod
+    def write_int(value: int, length: int, byteorder: str = "little",
+                  signed: bool = False) -> bytes:
+        return value.to_bytes(length, byteorder=byteorder, signed=signed)
+
+    @staticmethod
     def read_series_bytes(byte_string: bytes) -> str:
         num = int.from_bytes(byte_string[0:2], byteorder="little")
         g = chr(int.from_bytes(byte_string[2:], byteorder="little"))
@@ -57,7 +67,7 @@ class GundamDataFile:
 
         return unit_bytes
 
-    def read_string(self, buffer: BinaryIO, offset: int) -> str:
+    def read_string_null_term(self, buffer: BinaryIO, offset: int) -> str:
         all_bytes = bytes()
         buffer.seek(offset + self._start_pos)
         while True:
@@ -66,6 +76,12 @@ class GundamDataFile:
                 break
             all_bytes += char
         output_string = all_bytes.decode("utf-8")
+
+        return output_string
+
+    def read_string_length(self, buffer: BinaryIO) -> str:
+        length = self.read_int(buffer.read(1))
+        output_string = buffer.read(length).decode("utf-8")
 
         return output_string
 
