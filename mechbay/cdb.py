@@ -60,7 +60,7 @@ class BattleBgList(GundamDataFile):
             records.append(record)
 
         for record in records:
-            record["bg_name"] = self.read_string(buffer, record["pointer"])
+            record["bg_name"] = self.read_string_null_term(buffer, record["pointer"])
 
         return records
 
@@ -133,7 +133,41 @@ class CharacterGrowthList(GundamDataFile):
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
+        profile_count = self.read_int(buffer.read(4))
+        pointer = self.read_int(buffer.read(4))
+        
         records = []
+        level_up_stats = []
+
+        for i in range(record_count):
+            # 198 byte blocks
+
+            # first value is always 332
+            self.read_int(buffer.read(2))
+            record = {
+                "__order": i,
+                "stats_increase": [self.read_int(buffer.read(2)) for _ in range(98)],
+            }
+            records.append(record)
+
+        buffer.seek(pointer)
+        for i in range(profile_count):
+            # 11 byte blocks
+            level_up_stat = {
+                "__order": i,
+                "cmd": self.read_int(buffer.read(1)),
+                "rng": self.read_int(buffer.read(1)),
+                "mel": self.read_int(buffer.read(1)),
+                "def": self.read_int(buffer.read(1)),
+                "rct": self.read_int(buffer.read(1)),
+                "awk": self.read_int(buffer.read(1)),
+                "aux": self.read_int(buffer.read(1)),
+                "com": self.read_int(buffer.read(1)),
+                "nav": self.read_int(buffer.read(1)),
+                "mnt": self.read_int(buffer.read(1)),
+                "chr": self.read_int(buffer.read(1)),
+            }
+            records.append(level_up_stat)
 
         return records
 
@@ -398,6 +432,47 @@ class MachineGrowthList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        return records
+
+
+class MachineSpecList(GundamDataFile):
+    default_filename = "MachineSpecList.cdb"
+    header = b"\x4C\x53\x43\x4D\x03\x00\x05\x02"
+
+    def write(self, records: List[Dict]) -> bytes:
+        pass
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        unit_count = self.read_header(buffer)
+        records = []
+        units = []
+        value1 = int.from_bytes(buffer.read(4), byteorder="little")
+        value2 = int.from_bytes(buffer.read(4), byteorder="little")
+        value3 = int.from_bytes(buffer.read(4), byteorder="little")
+        value4 = int.from_bytes(buffer.read(4), byteorder="little")
+        value5 = int.from_bytes(buffer.read(4), byteorder="little")
+
+        for _ in range(unit_count):
+            # 108 byte chunk
+            unit = {
+                "unit_id1": self.read_unit_bytes(buffer.read(8)),
+                "unit_id2": self.read_unit_bytes(buffer.read(8)),
+                "unit_id3": self.read_unit_bytes(buffer.read(8)),
+                "cost?": int.from_bytes(buffer.read(4), byteorder="little"),
+                "index1": int.from_bytes(buffer.read(2), byteorder="little"),
+                "index2": int.from_bytes(buffer.read(2), byteorder="little"),
+                "index3": int.from_bytes(buffer.read(2), byteorder="little"),
+                "values2": [
+                    int.from_bytes(buffer.read(2), byteorder="little", signed=False)
+                    for _ in range(20)
+                ],
+                "values1": [
+                    int.from_bytes(buffer.read(1), byteorder="little", signed=True)
+                    for _ in range(34)
+                ],
+            }
+            records.append(unit)
 
         return records
 
