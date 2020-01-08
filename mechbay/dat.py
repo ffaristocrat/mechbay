@@ -14,6 +14,12 @@ class DlcList(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
         return records
 
 
@@ -78,6 +84,12 @@ class MovieList(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
         return records
 
 
@@ -91,6 +103,12 @@ class PowerUpList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
 
         return records
 
@@ -107,6 +125,12 @@ class ScoutMessageId(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
         return records
 
 
@@ -120,5 +144,11 @@ class SteamDlcGroupList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
 
         return records
