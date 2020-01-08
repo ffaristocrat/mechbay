@@ -314,8 +314,16 @@ class GroupSendingMissionList(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
-        for _ in range(record_count):
-            record = {}
+        unknown = self.read_int(buffer.read(4))
+        unknown = self.read_int(buffer.read(4))
+        pointer = self.read_int(buffer.read(4))
+
+        for i in range(record_count):
+            # 92 byte records
+            record = {
+                "__order": i,
+                "data": buffer.read(92),
+            }
             records.append(record)
 
         return records
