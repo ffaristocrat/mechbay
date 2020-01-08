@@ -14,6 +14,12 @@ class AbilitySpecList(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
         return records
 
 
@@ -182,6 +188,25 @@ class CharacterSpecList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+        
+        unknown1 = self.read_int(buffer.read(4))
+        pointer1 = self.read_int(buffer.read(4))
+        pointer2 = self.read_int(buffer.read(4))
+        unknown2 = self.read_int(buffer.read(4))
+        
+        # block 1
+        # 112 bytes per record
+        # block 2
+        # 184 byte per record
+        # block 3
+        #
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
 
         return records
 
@@ -196,6 +221,12 @@ class CreditBgmList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
 
         return records
 
@@ -212,6 +243,12 @@ class DatabaseCalculation(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
         return records
 
 
@@ -225,6 +262,12 @@ class GalleryMovieList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
 
         return records
 
@@ -433,6 +476,12 @@ class MachineGrowthList(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
         return records
 
 
@@ -488,6 +537,12 @@ class MapTypes(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
         return records
 
 
@@ -501,6 +556,12 @@ class MyCharacterConfigurations(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
 
         return records
 
@@ -548,6 +609,12 @@ class QuestList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
 
         return records
 
@@ -694,7 +761,7 @@ class StageList(GundamDataFile):
         pass
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
-        difficulties = ["NORMAL", "HARD", "EXTRA"]
+        difficulties = ["NORMAL", "HARD", "EXTRA", "HELL"]
         record_count = self.read_header(buffer)
         records = []
 
@@ -742,6 +809,12 @@ class SkillAcquisitionPatternList(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
         return records
 
 
@@ -755,6 +828,12 @@ class SpecProfileList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
 
         return records
 
@@ -770,6 +849,12 @@ class TitleBgmList(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
+
         return records
 
 
@@ -783,6 +868,12 @@ class TutorialList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
 
         return records
 
@@ -802,5 +893,11 @@ class WeaponSpecList(GundamDataFile):
         # followed by two small blocks
         # 8 * (value, index)
         # 31 * (value, value, index)
+
+        for i in range(record_count):
+            record = {
+                "__order": i,
+            }
+            records.append(record)
 
         return records
