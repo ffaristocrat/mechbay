@@ -37,9 +37,7 @@ class ActAbilityEffectList(GundamDataFile):
         for _ in range(record_count):
             record = {
                 "unit_id": self.read_unit_bytes(buffer.read(8)),
-                "values": [
-                    int.from_bytes(buffer.read(4), byteorder="little") for _ in range(2)
-                ],
+                "values": [self.read_int(buffer.read(4)) for _ in range(2)],
             }
             records.append(record)
 
@@ -59,14 +57,13 @@ class BattleBgList(GundamDataFile):
 
         for _ in range(record_count):
             record = {
-                "pointer": int.from_bytes(buffer.read(4), byteorder="little")
-                + len(self.header)
-                + 4
+                "__pointer": self.read_int(buffer.read(4)) + len(self.header) + 4
             }
             records.append(record)
 
         for record in records:
-            record["bg_name"] = self.read_string_null_term(buffer, record["pointer"])
+            record["bg_name"] = self.read_string_null_term(
+                buffer, record.pop("__pointer"))
 
         return records
 
@@ -85,11 +82,8 @@ class CellAttributeList(GundamDataFile):
         for _ in range(record_count):
             record = {
                 "__location": buffer.tell(),
-                "__pointer": int.from_bytes(buffer.read(4), byteorder="little"),
-                "values": [
-                    int.from_bytes(buffer.read(1), byteorder="little", signed=False)
-                    for _ in range(20)
-                ],
+                "__pointer": self.read_int(buffer.read(4)),
+                "values": [self.read_int(buffer.read(1)) for _ in range(20)],
             }
             records.append(record)
 
@@ -110,7 +104,7 @@ class CharacterConversionList(GundamDataFile):
         for record in records:
             string_bytes += self.write_unit_bytes(record["first_unit_id"])
             string_bytes += self.write_unit_bytes(record["second_unit_id"])
-            string_bytes += int(record["index"]).to_bytes(4, byteorder="little")
+            string_bytes += record["index"].to_bytes(4, byteorder="little")
     
         return string_bytes
 
@@ -123,7 +117,7 @@ class CharacterConversionList(GundamDataFile):
                 {
                     "first_unit_id": self.read_unit_bytes(buffer.read(8)),
                     "second_unit_id": self.read_unit_bytes(buffer.read(8)),
-                    "index": int.from_bytes(buffer.read(4), byteorder="little"),
+                    "index": self.read_int(buffer.read(4)),
                 }
             )
 
@@ -296,7 +290,7 @@ class GetUnitList(GundamDataFile):
         for _ in range(record_count):
             record = {
                 "unit_id": self.read_unit_bytes(buffer.read(8)),
-                "get_cost": int.from_bytes(buffer.read(4), byteorder="little"),
+                "get_cost": self.read_int(buffer.read(4)),
             }
             records.append(record)
 
@@ -366,7 +360,7 @@ class MachineConversionList(GundamDataFile):
             record = {
                 "unit_id": self.read_unit_bytes(buffer.read(8)),
                 "transform_unit_id": self.read_unit_bytes(buffer.read(8)),
-                "conversion_type_id": int.from_bytes(buffer.read(4), byteorder="little"),
+                "conversion_type_id": self.read_int(buffer.read(4)),
             }
             record["conversion_type"] = self.conversion_types[record["conversion_type_id"]]
 
@@ -404,7 +398,7 @@ class MachineDesignList(GundamDataFile):
                     "first_unit_id": self.read_unit_bytes(buffer.read(8)),
                     "second_unit_id": self.read_unit_bytes(buffer.read(8)),
                     "result_unit_id": self.read_unit_bytes(buffer.read(8)),
-                    "index": int.from_bytes(buffer.read(4), byteorder="little"),
+                    "index": self.read_int(buffer.read(4)),
                 }
             )
 
@@ -447,9 +441,9 @@ class MachineDevelopmentList(GundamDataFile):
             location = buffer.tell()
             unit_id = self.read_unit_bytes(buffer.read(8))
             # Pointer is relative to the start of this index record
-            pointer = int.from_bytes(buffer.read(4), byteorder="little")
-            index = int.from_bytes(buffer.read(2), byteorder="little")
-            child_count = int.from_bytes(buffer.read(2), byteorder="little")
+            pointer = self.read_int(buffer.read(4))
+            index = self.read_int(buffer.read(2))
+            child_count = self.read_int(buffer.read(2))
 
             record = {
                 "__pointer": pointer + location,
@@ -466,7 +460,7 @@ class MachineDevelopmentList(GundamDataFile):
             for _ in range(record.pop("__child_count")):
                 child = {
                     "unit_id": self.read_unit_bytes(buffer.read(8)),
-                    "level": int.from_bytes(buffer.read(4), byteorder="little"),
+                    "level": self.read_int(buffer.read(4)),
                 }
                 record["children"].append(child)
 
@@ -504,11 +498,11 @@ class MachineSpecList(GundamDataFile):
         unit_count = self.read_header(buffer)
         records = []
         units = []
-        value1 = int.from_bytes(buffer.read(4), byteorder="little")
-        value2 = int.from_bytes(buffer.read(4), byteorder="little")
-        value3 = int.from_bytes(buffer.read(4), byteorder="little")
-        value4 = int.from_bytes(buffer.read(4), byteorder="little")
-        value5 = int.from_bytes(buffer.read(4), byteorder="little")
+        value1 = self.read_int(buffer.read(4))
+        value2 = self.read_int(buffer.read(4))
+        value3 = self.read_int(buffer.read(4))
+        value4 = self.read_int(buffer.read(4))
+        value5 = self.read_int(buffer.read(4))
 
         for _ in range(unit_count):
             # 108 byte chunk
@@ -516,16 +510,16 @@ class MachineSpecList(GundamDataFile):
                 "unit_id1": self.read_unit_bytes(buffer.read(8)),
                 "unit_id2": self.read_unit_bytes(buffer.read(8)),
                 "unit_id3": self.read_unit_bytes(buffer.read(8)),
-                "cost?": int.from_bytes(buffer.read(4), byteorder="little"),
-                "index1": int.from_bytes(buffer.read(2), byteorder="little"),
-                "index2": int.from_bytes(buffer.read(2), byteorder="little"),
-                "index3": int.from_bytes(buffer.read(2), byteorder="little"),
+                "cost?": self.read_int(buffer.read(4)),
+                "index1": self.read_int(buffer.read(2)),
+                "index2": self.read_int(buffer.read(2)),
+                "index3": self.read_int(buffer.read(2)),
                 "values2": [
-                    int.from_bytes(buffer.read(2), byteorder="little", signed=False)
+                    self.read_int(buffer.read(2))
                     for _ in range(20)
                 ],
                 "values1": [
-                    int.from_bytes(buffer.read(1), byteorder="little", signed=True)
+                    self.read_int(buffer.read(1), signed=True)
                     for _ in range(34)
                 ],
             }
@@ -583,7 +577,7 @@ class PersonalMachineList(GundamDataFile):
 
         string_bytes += self.header
         record_count = len(records)
-        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        string_bytes += self.write_int(record_count, 4)
 
         for record in records:
             string_bytes += self.write_unit_bytes(record["unit_id"])
@@ -643,17 +637,17 @@ class RangeDataList(GundamDataFile):
         for _ in range(record_count):
             records.append(
                 {
-                    "length": int.from_bytes(buffer.read(2), byteorder="little"),
-                    "mask": int.from_bytes(buffer.read(2), byteorder="little"),
+                    "length": self.read_int(buffer.read(2)),
+                    "mask": self.read_int(buffer.read(2)),
                     # pointer is probably garbage
-                    "pointer": int.from_bytes(buffer.read(4), byteorder="little"),
+                    "pointer": self.read_int(buffer.read(4)),
                 }
             )
 
         for record in records:
             buffer.seek(record["pointer"] + record["length"])
             record["data"] = [
-                int.from_bytes(buffer.read(1), byteorder="little")
+                self.read_int(buffer.read(1))
                 for _ in range(record["length"])
             ]
 
@@ -688,11 +682,11 @@ class SeriesList(GundamDataFile):
             record = {
                 "series1": self.read_series_bytes(buffer.read(4)),
                 "series2": self.read_series_bytes(buffer.read(4)),
-                "index": int.from_bytes(buffer.read(2), byteorder="little"),
+                "index": self.read_int(buffer.read(2)),
                 # Ranges from 0-4
-                "value": int.from_bytes(buffer.read(1), byteorder="little"),
+                "value": self.read_int(buffer.read(1)),
                 # 0 or 1
-                "flag": int.from_bytes(buffer.read(1), byteorder="little"),
+                "flag": self.read_int(buffer.read(1)),
             }
             records.append(record)
 
@@ -724,8 +718,8 @@ class SeriesProfileList(GundamDataFile):
         for _ in range(record_count):
             record = {
                 "series": self.read_series_bytes(buffer.read(4)),
-                "value": int.from_bytes(buffer.read(2), byteorder="little"),
-                "series_string_index": int.from_bytes(buffer.read(2), byteorder="little"),
+                "value": self.read_int(buffer.read(2)),
+                "series_string_index": self.read_int(buffer.read(2)),
             }
             records.append(record)
 
@@ -746,9 +740,9 @@ class StageClearGetList(GundamDataFile):
         for _ in range(record_count):
             location = buffer.tell()
             record = {
-                "stage_id": int.from_bytes(buffer.read(4), byteorder="little"),
-                "__get_count": int.from_bytes(buffer.read(4), byteorder="little"),
-                "__pointer": int.from_bytes(buffer.read(4), byteorder="little") + location,
+                "stage_id": self.read_int(buffer.read(4)),
+                "__get_count": self.read_int(buffer.read(4)),
+                "__pointer": self.read_int(buffer.read(4)) + location,
                 "get_units": [],
             }
             records.append(record)
@@ -776,20 +770,20 @@ class StageList(GundamDataFile):
         for _ in range(record_count):
             location = buffer.tell()
             record = {
-                "stage_id": int.from_bytes(buffer.read(4), byteorder="little"),
+                "stage_id": self.read_int(buffer.read(4)),
                 "series": self.read_series_bytes(buffer.read(4)),
-                "required_stage_id":  int.from_bytes(buffer.read(4), byteorder="little"),
-                "rewards": [int.from_bytes(buffer.read(4), byteorder="little") for _ in range(6)],
-                "__units_available_count": int.from_bytes(buffer.read(4), byteorder="little"),
-                "__pointer": int.from_bytes(buffer.read(4), byteorder="little") + location,
-                "__null": int.from_bytes(buffer.read(2), byteorder="little"),
-                "index": int.from_bytes(buffer.read(2), byteorder="little"),
-                "bgm": int.from_bytes(buffer.read(2), byteorder="little"),
-                "movie": int.from_bytes(buffer.read(2), byteorder="little"),
+                "required_stage_id": self.read_int(buffer.read(4)),
+                "rewards": [self.read_int(buffer.read(4)) for _ in range(6)],
+                "__units_available_count": self.read_int(buffer.read(4)),
+                "__pointer": self.read_int(buffer.read(4)) + location,
+                "__null": self.read_int(buffer.read(2)),
+                "index": self.read_int(buffer.read(2)),
+                "bgm": self.read_int(buffer.read(2)),
+                "movie": self.read_int(buffer.read(2)),
                 "values": [
-                    int.from_bytes(buffer.read(2), byteorder="little") for _ in range(24)
+                    self.read_int(buffer.read(2)) for _ in range(24)
                 ],
-                "series_end": int.from_bytes(buffer.read(4), byteorder="little"),
+                "series_end": self.read_int(buffer.read(4)),
                 "units_available": [],
             }
             records.append(record)
@@ -799,7 +793,7 @@ class StageList(GundamDataFile):
             for _ in range(record.pop("__units_available_count")):
                 unit_available = {
                     "unit_id": self.read_unit_bytes(buffer.read(8)),
-                    "available_type": int.from_bytes(buffer.read(4), byteorder="little"),
+                    "available_type": self.read_int(buffer.read(4)),
                 }
                 record["units_available"].append(unit_available)
 
