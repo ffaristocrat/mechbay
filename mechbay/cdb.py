@@ -155,17 +155,17 @@ class CharacterGrowthList(GundamDataFile):
             # 11 byte blocks
             level_up_stat = {
                 "__order": i,
-                "cmd": self.read_int(buffer.read(1)),
-                "rng": self.read_int(buffer.read(1)),
-                "mel": self.read_int(buffer.read(1)),
-                "def": self.read_int(buffer.read(1)),
-                "rct": self.read_int(buffer.read(1)),
-                "awk": self.read_int(buffer.read(1)),
-                "aux": self.read_int(buffer.read(1)),
-                "com": self.read_int(buffer.read(1)),
-                "nav": self.read_int(buffer.read(1)),
-                "mnt": self.read_int(buffer.read(1)),
-                "chr": self.read_int(buffer.read(1)),
+                "cmd": self.read_int(buffer.read(1), signed=True),
+                "rng": self.read_int(buffer.read(1), signed=True),
+                "mel": self.read_int(buffer.read(1), signed=True),
+                "def": self.read_int(buffer.read(1), signed=True),
+                "rct": self.read_int(buffer.read(1), signed=True),
+                "awk": self.read_int(buffer.read(1), signed=True),
+                "aux": self.read_int(buffer.read(1), signed=True),
+                "com": self.read_int(buffer.read(1), signed=True),
+                "nav": self.read_int(buffer.read(1), signed=True),
+                "mnt": self.read_int(buffer.read(1), signed=True),
+                "chr": self.read_int(buffer.read(1), signed=True),
             }
             records.append(level_up_stat)
 
