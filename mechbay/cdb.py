@@ -59,15 +59,24 @@ class BattleBgList(GundamDataFile):
         record_count = self.read_header(buffer)
         records = []
 
-        for _ in range(record_count):
+        for i in range(record_count):
+            location = buffer.tell()
             record = {
-                "__pointer": self.read_int(buffer.read(4)) + len(self.header) + 4
+                "__order" : i,
+                "__pointers": [
+                    location + self.read_int(buffer.read(4)) for _ in range(3)
+                ],
+                "value": self.read_int(buffer.read(4)),
             }
             records.append(record)
 
         for record in records:
-            record["bg_name"] = self.read_string_null_term(
-                buffer, record.pop("__pointer"))
+            pointers = record.pop("__pointers")
+            record["bg_name"] = [
+                self.read_string_null_term(buffer, p)
+                for p in pointers
+            ]
+            print(record)
 
         return records
 
