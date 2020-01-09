@@ -2,6 +2,10 @@ from typing import List, Dict, BinaryIO
 
 from .data import GundamDataFile
 
+CHARACTER_STATS = [
+    "cmd", "rng", "mel", "def", "rct", "awk", "aux", "com", "nav", "mnt", "chr"
+]
+
 
 class AbilitySpecList(GundamDataFile):
     default_filename = "AbilitySpecList.cdb"
@@ -149,7 +153,6 @@ class CharacterGrowthList(GundamDataFile):
                 "stats_increase": [self.read_int(buffer.read(2)) for _ in range(98)],
             }
             records.append(record)
-
         buffer.seek(pointer)
         for i in range(profile_count):
             # 11 byte blocks
@@ -188,19 +191,40 @@ class CharacterSpecList(GundamDataFile):
         pointer2 = self.read_int(buffer.read(4))
         unknown2 = self.read_int(buffer.read(4))
         
+        print(unknown1, unknown2)
+        
         # block 1
         # 112 bytes per record
         # block 2
         # 184 byte per record
         # block 3
-        #
+        # 1 byte per record?
 
         for i in range(record_count):
             record = {
                 "__order": i,
+                "unit1": self.read_unit_bytes(buffer.read(8)),
+                "unit2": self.read_unit_bytes(buffer.read(8)),
+                "unit3": self.read_unit_bytes(buffer.read(8)),
+                "unkonwn2": self.read_int(buffer.read(2), signed=True),
+                "unknown": self.read_int(buffer.read(2), signed=True),
+                # in language/*/CharacterSpecList.tbl
+                "name_index": self.read_int(buffer.read(2), signed=True),
+                "unknown3": self.read_int(buffer.read(2), signed=True),
+                "stats": {s: self.read_int(buffer.read(2), signed=True) for s in CHARACTER_STATS},
+                "unknown6": self.read_int(buffer.read(2), signed=True),
+                "unknown7": self.read_int(buffer.read(2), signed=True),
+                # in resident/CharacterGrowth.cdb
+                "growth_profile": self.read_int(buffer.read(2), signed=True),
+                "values1": [self.read_int(buffer.read(2), signed=True) for _ in range(6)],
+                "unit4": self.read_unit_bytes(buffer.read(8)),
+                "unknown4": self.read_int(buffer.read(2), signed=True),
+                "unknown5": self.read_int(buffer.read(2), signed=False),
+                "values2": [self.read_int(buffer.read(2), signed=True) for _ in range(5)],
+                "values3": [self.read_int(buffer.read(2), signed=True) for _ in
+                    range(9)],
             }
             records.append(record)
-
 
         return records
 
