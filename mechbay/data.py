@@ -45,6 +45,9 @@ class GundamDataFile:
 
     @staticmethod
     def read_unit_bytes(byte_string: bytes) -> str:
+        if byte_string == b"\x00\x00\x00\x00\x00\x00\x00\x00":
+            return None
+
         series = int.from_bytes(byte_string[0:2], byteorder="little")
         gundam = chr(byte_string[2])
         unit_type = chr(byte_string[4])
@@ -57,6 +60,9 @@ class GundamDataFile:
 
     @staticmethod
     def write_unit_bytes(unit_string: str) -> bytes:
+        if not unit_string:
+            return b"\x00\x00\x00\x00\x00\x00\x00\x00"
+
         unit_bytes = bytes()
         unit_bytes += int(unit_string[1:5]).to_bytes(2, byteorder="little")
         unit_bytes += bytes(unit_string[0], encoding="utf-8")
