@@ -163,9 +163,9 @@ class CharacterConversionList(GundamDataFile):
         string_bytes += self.write_int(record_count, 4)
 
         for record in records:
-            string_bytes += self.write_unit_bytes(record["first_unit_id"])
-            string_bytes += self.write_unit_bytes(record["second_unit_id"])
-            string_bytes += self.write_int(record["index"], 4)
+            string_bytes += self.write_unit_bytes(record["character_id"])
+            string_bytes += self.write_unit_bytes(record["new_character_id"])
+            string_bytes += self.write_int(record["change_type"], 4)
 
         return string_bytes
 
@@ -177,9 +177,9 @@ class CharacterConversionList(GundamDataFile):
             records.append(
                 {
                     "__order": i,
-                    "first_unit_id": self.read_unit_bytes(buffer.read(8)),
-                    "second_unit_id": self.read_unit_bytes(buffer.read(8)),
-                    "index": self.read_int(buffer.read(4)),
+                    "character_id": self.read_unit_bytes(buffer.read(8)),
+                    "new_character_id": self.read_unit_bytes(buffer.read(8)),
+                    "change_type": self.read_int(buffer.read(4)),
                 }
             )
 
