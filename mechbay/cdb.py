@@ -53,7 +53,44 @@ class BattleBgList(GundamDataFile):
     header = b"\x47\x42\x54\x42\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+    
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        
+        # Consolidate all the bgm string ids into a set
+        all_music = set()
+        for r in records:
+            for b in r["bg_name"]:
+                all_music.add(b)
+        all_music = list(all_music)
+
+        # then calculate pointer offsets for each string
+        row = {b: i for i, b in enumerate(all_music)}
+        location = 0
+        locations = {}
+        for b, i in row.items():
+            locations[b] = location
+            location += len(b.encode("utf-8")) + 1
+        index_size = (record_count * 16) + len(string_bytes)
+
+        # and then assign them to the records
+        for r in records:
+            r["__locations"] = [locations[b] + index_size for b in r["bg_name"]]
+
+        for record in records:
+            location = len(string_bytes)
+            for l in record.pop("__locations"):
+                # pointers are relative to the location of the *first* pointer
+                string_bytes += self.write_int(l - location, 4)
+
+            string_bytes += self.write_int(record["value"], 4)
+            location += 16
+
+        string_bytes += b"\x00".join([b.encode("utf-8") for b in all_music]) + b"\x00"
+    
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -76,7 +113,6 @@ class BattleBgList(GundamDataFile):
                 self.read_string_null_term(buffer, p)
                 for p in pointers
             ]
-            print(record)
 
         return records
 
