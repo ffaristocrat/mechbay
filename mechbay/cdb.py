@@ -58,7 +58,7 @@ class BattleBgList(GundamDataFile):
     
         string_bytes += self.header
         record_count = len(records)
-        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        string_bytes += self.write_int(record_count, 4)
         
         # Consolidate all the bgm string ids into a set
         all_music = set()
@@ -153,13 +153,13 @@ class CharacterConversionList(GundamDataFile):
     
         string_bytes += self.header
         record_count = len(records)
-        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        string_bytes += self.write_int(record_count, 4)
     
         for record in records:
             string_bytes += self.write_unit_bytes(record["first_unit_id"])
             string_bytes += self.write_unit_bytes(record["second_unit_id"])
-            string_bytes += record["index"].to_bytes(4, byteorder="little")
-    
+            string_bytes += self.write_int(record["index"], 4)
+
         return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
@@ -182,9 +182,49 @@ class CharacterConversionList(GundamDataFile):
 class CharacterGrowthList(GundamDataFile):
     default_filename = "CharacterGrowthList.cdb"
     header = b"\x52\x47\x48\x43\x00\x00\x00\x01"
+    level_ups = 98
+    profile_constant = 332
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+    
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += self.write_int(record_count, 4)
+        
+        # make a unique list of stat increases
+        # replace their entries with the index to those increases
+        # then write both blocks
+        
+        level_up_stats = set()
+        for record in records:
+            assert len(record["level_up_stats"]) == self.level_ups
+
+            # have to convert to a string for the set
+            record["__stats_strings"] = [
+                ",".join([str(int(level[s])) for s in CHARACTER_STATS])
+                for level in record["level_up_stats"]
+            ]
+            level_up_stats |= set(record["__stats_strings"])
+
+        level_up_stats = list(level_up_stats)
+        stat_count = len(level_up_stats)
+        string_bytes += self.write_int(stat_count, 4)
+
+        pointer = (record_count * 2 * (self.level_ups + 1)) + 20
+        string_bytes += self.write_int(pointer, 4)
+
+        index_lookup = {s: i for i, s in enumerate(level_up_stats)}
+        for record in records:
+            string_bytes += self.write_int(self.profile_constant, 2)
+            for s in record.pop("__stats_strings"):
+                string_bytes += self.write_int(index_lookup[s], 2)
+
+        for stats in level_up_stats:
+            for s in stats.split(","):
+                string_bytes += self.write_int(int(s), 1)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -193,17 +233,20 @@ class CharacterGrowthList(GundamDataFile):
 
         records = []
         level_up_stats = []
-        
+
         # characters have an index to one of these profiles
-        # each profile has 99 indexes to a list of stats
+        # each profile has 98 indexes to a list of stats
         # the stats list states the increase of each stat
 
         for i in range(record_count):
             # first value is always 332
-            self.read_int(buffer.read(2))
+            assert self.read_int(buffer.read(2)) == self.profile_constant
             record = {
                 "__order": i,
-                "__stats_index": [self.read_int(buffer.read(2)) for _ in range(98)],
+                "__stats_index": [
+                    self.read_int(buffer.read(2))
+                    for _ in range(self.level_ups)
+                ],
             }
             records.append(record)
 
@@ -211,10 +254,9 @@ class CharacterGrowthList(GundamDataFile):
         for i in range(stat_count):
             # 11 byte blocks
             level_up_stat = {
-                stat: self.read_int(buffer.read(1), signed=True)
+                stat: self.read_int(buffer.read(1))
                 for stat in CHARACTER_STATS
             }
-
             level_up_stats.append(level_up_stat)
 
         for record in records:
