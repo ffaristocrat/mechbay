@@ -203,16 +203,17 @@ class CharacterGrowthList(GundamDataFile):
         # replace their entries with the index to those increases
         # then write both blocks
 
-        level_up_stats = set()
+        level_up_stats = []
         for record in records:
             assert len(record["level_up_stats"]) == self.level_ups
+            record["__stats_strings"] = []
 
             # have to convert to a string for the set
-            record["__stats_strings"] = [
-                ",".join([str(int(level[s])) for s in CHARACTER_STATS])
-                for level in record["level_up_stats"]
-            ]
-            level_up_stats |= set(record["__stats_strings"])
+            for level in record["level_up_stats"]:
+                stat_string = ",".join([str(int(level[s])) for s in CHARACTER_STATS])
+                if stat_string not in level_up_stats:
+                    level_up_stats.append(stat_string)
+                record["__stats_strings"].append(stat_string)
 
         level_up_stats = list(level_up_stats)
         stat_count = len(level_up_stats)
