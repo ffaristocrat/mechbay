@@ -40,7 +40,18 @@ class ActAbilityEffectList(GundamDataFile):
     header = b"\x4C\x45\x41\x41\x00\x00\x01\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += self.write_int(record_count, 4)
+
+        for record in records:
+            string_bytes += self.write_unit_bytes(record["unit_id"])
+            for v in record["values"]:
+                string_bytes += self.write_int(v, 4)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
