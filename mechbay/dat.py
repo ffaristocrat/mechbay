@@ -35,11 +35,10 @@ class EffectList(GundamDataFile):
         records = []
 
         for _ in range(record_count):
-            stage_id = int.from_bytes(buffer.read(4), byteorder="little")
-            length = int.from_bytes(buffer.read(1), byteorder="little")
-            effect_id = buffer.read(length).decode(encoding="utf-8")
-
-            record = {"effect_id": stage_id, "effect_name": effect_id}
+            record = {
+                "effect_id": self.read_int(buffer.read(4)),
+                "effect_name": self.read_string_length(buffer),
+            }
             records.append(record)
 
         return records
@@ -57,16 +56,15 @@ class MapWeaponList(GundamDataFile):
         records = []
 
         for _ in range(record_count):
-            length = int.from_bytes(buffer.read(1), byteorder="little")
-            unit_id = buffer.read(length).decode(encoding="utf-8")
-            length = int.from_bytes(buffer.read(1), byteorder="little")
-            weapon_id = buffer.read(length).decode(encoding="utf-8")
-            record = {"unit_id": unit_id, "weapon_id": weapon_id}
+            record = {
+                "unit_id": self.read_string_length(buffer),
+                "weapon_id": self.read_string_length(buffer),
+            }
             records.append(record)
 
         for record in records:
             record["values"] = [
-                int.from_bytes(buffer.read(1), byteorder="little") for _ in range(4)
+                self.read_int(buffer.read(1)) for _ in range(4)
             ]
 
         return records
@@ -128,6 +126,10 @@ class ScoutMessageId(GundamDataFile):
         for i in range(record_count):
             record = {
                 "__order": i,
+                "string": self.read_string_length(buffer),
+                "value1": self.read_int(buffer.read(1)),
+                "value2": self.read_int(buffer.read(1)),
+                "value3": self.read_int(buffer.read(1)),
             }
             records.append(record)
 
