@@ -25,17 +25,10 @@ RESIDENT = {
         "DatabaseCaluclation.cdb",
         "SeriesList.cdb",
         "GroupSendingMissionList.cdb",
-        "TutorialList.cdb"
+        "TutorialList.cdb",
     ],
-    "StageList.pkd": [
-        "StageList.cdb",
-        "QuestList.cdb",
-        "GetUnitList.cdb"
-    ],
-    "CellAttributeList.pkd": [
-        "CellAttributeList.cdb",
-        "BattleBgList.cdb",
-    ],
+    "StageList.pkd": ["StageList.cdb", "QuestList.cdb", "GetUnitList.cdb"],
+    "CellAttributeList.pkd": ["CellAttributeList.cdb", "BattleBgList.cdb"],
 }
 
 
@@ -53,7 +46,9 @@ class PKDArchive(GundamDataFile):
         string_bytes += (64).to_bytes(4, byteorder="little")
 
         # index size
-        index_size = (record_count * 12) + sum([len(r["filename"].encode("utf-8")) + 1 for r in records])
+        index_size = (record_count * 12) + sum(
+            [len(r["filename"].encode("utf-8")) + 1 for r in records]
+        )
         string_bytes += index_size.to_bytes(4, byteorder="little")
 
         # initial pointers
@@ -98,13 +93,15 @@ class PKDArchive(GundamDataFile):
                 "__file_pointer": int.from_bytes(buffer.read(4), byteorder="little"),
                 "__file_size": int.from_bytes(buffer.read(4), byteorder="little"),
                 # +20 for header bytes
-                "__name_pointer":
-                    int.from_bytes(buffer.read(4), byteorder="little") + 20,
+                "__name_pointer": int.from_bytes(buffer.read(4), byteorder="little")
+                + 20,
             }
             records.append(record)
 
         for record in records:
-            record["filename"] = self.read_string_null_term(buffer, record["__name_pointer"])
+            record["filename"] = self.read_string_null_term(
+                buffer, record["__name_pointer"]
+            )
 
         for record in records:
             buffer.seek(record["__file_pointer"])
@@ -116,10 +113,7 @@ class PKDArchive(GundamDataFile):
         records = []
         for filename in filenames:
             with open(filename, "rb") as file:
-                record = {
-                    "filename": os.path.split(filename)[1],
-                    "bytes": file.read(),
-                }
+                record = {"filename": os.path.split(filename)[1], "bytes": file.read()}
                 records.append(record)
 
         return self.write(records)
