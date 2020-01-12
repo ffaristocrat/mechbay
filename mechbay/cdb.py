@@ -414,7 +414,7 @@ class GetUnitList(GundamDataFile):
 
         for record in records:
             string_bytes += self.write_unit_bytes(record["unit_id"])
-            string_bytes += int(record["get_cost"]).to_bytes(4, byteorder="little")
+            string_bytes += int(record["score_cost"]).to_bytes(4, byteorder="little")
 
         return string_bytes
 
@@ -426,7 +426,7 @@ class GetUnitList(GundamDataFile):
             record = {
                 "__order": i,
                 "unit_id": self.read_unit_bytes(buffer.read(8)),
-                "get_cost": self.read_int(buffer.read(4)),
+                "score_cost": self.read_int(buffer.read(4)),
             }
             records.append(record)
 
@@ -609,7 +609,7 @@ class MachineDevelopmentList(GundamDataFile):
 
 class MachineGrowthList(GundamDataFile):
     default_filename = "MachineGrowthList.cdb"
-    header = b"\x4C\x53\x43\x4D\x03\x00\x05\x02"
+    header = b"\x00\x00\x01\x01\x52\x47\x43\x4D"
 
     def write(self, records: List[Dict]) -> bytes:
         pass
@@ -619,7 +619,9 @@ class MachineGrowthList(GundamDataFile):
         records = []
 
         for i in range(record_count):
-            record = {"__order": i}
+            record = {
+                "__order": i
+            }
             records.append(record)
 
         return records
@@ -924,6 +926,8 @@ class StageList(GundamDataFile):
             records.append(record)
 
         for record in records:
+            # available units appears to be only for informational purposes in the
+            # stage screen
             buffer.seek(record.pop("__pointer"))
             for _ in range(record.pop("__units_available_count")):
                 unit_available = {
@@ -947,7 +951,12 @@ class SkillAcquisitionPatternList(GundamDataFile):
         records = []
 
         for i in range(record_count):
-            record = {"__order": i}
+            record = {
+                "__order": i,
+                "values": [
+                    self.read_int(buffer.read(2)) for _ in range(18)
+                ]
+            }
             records.append(record)
 
         return records
