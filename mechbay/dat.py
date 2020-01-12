@@ -154,3 +154,54 @@ class SteamDlcGroupList(GundamDataFile):
             records.append(record)
 
         return records
+
+
+class Stage(GundamDataFile):
+    default_filename = "Stage.dat"
+    header = b"\x49\x53\x4D\x54\x2F\x01\x00\x00"
+
+    def write(self, records: List[Dict]) -> bytes:
+        pass
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        records = []
+        
+        #incomplete mess
+
+        for i in range(record_count):
+            values = [self.read_int(buffer.read(1)) for _ in range(2)]
+            size_x = self.read_int(buffer.read(1))
+            size_y = self.read_int(buffer.read(1))
+            print(size_x, size_y)
+            record = {
+                "__order": i,
+                "values": values,
+                "size_x": size_x,
+                "size_y": size_y,
+                "minimap": self.read_string_length(buffer),
+                "background": self.read_string_length(buffer),
+                "values2": [self.read_int(buffer.read(1), signed=True) for _ in range(36)],
+                "map_tiles": [
+                    [self.read_int(buffer.read(4)) for x in range(size_x)]
+                    for y in range(size_y)
+                ],
+                "values3": [self.read_int(buffer.read(1)) for _ in
+                    range(59)],
+                "bytething": buffer.read(self.read_int(buffer.read(1))),
+                "null": buffer.read(2),
+                "bytething2": buffer.read(self.read_int(buffer.read(1))),
+                "null2": buffer.read(1),
+                "unk": self.read_int(buffer.read(1)),
+                "bytething3": buffer.read(self.read_int(buffer.read(1))),
+                "null3": buffer.read(1),
+                "values4": [self.read_int(buffer.read(1)) for _ in range(4)],
+                "bytething4": buffer.read(self.read_int(buffer.read(1))),
+                
+                "valuesz": [self.read_int(buffer.read(1)) for _ in
+                    range(8)],
+    
+            }
+            records.append(record)
+
+        return records
