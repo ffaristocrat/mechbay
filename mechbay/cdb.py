@@ -866,7 +866,26 @@ class StageClearGetList(GundamDataFile):
     header = b"\x43\x47\x54\x53\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        string_bytes = bytes()
+    
+        string_bytes += self.header
+        record_count = len(records)
+        string_bytes += self.write_int(record_count, 4)
+
+        units_start = len(string_bytes) + (record_count * 12)
+        for record in records:
+            pointer = units_start - len(string_bytes)
+            unit_count = len(record["get_units"])
+            string_bytes += self.write_unit_bytes(record["stage_id"])
+            string_bytes += self.write_int(unit_count, 4)
+            string_bytes += self.write_int(pointer, 4)
+            units_start += unit_count * 8
+
+        for record in records:
+            for get_unit in record["get_units"]:
+                string_bytes += self.write_unit_bytes(get_unit)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
