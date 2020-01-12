@@ -65,7 +65,7 @@ values over multiple files but the game doesn't seem to otherwise care as long a
 is correctly formatted.
 
 Ideally, a mod manager will handle this behind the scenes so modders only have to
-edit JSON that gets combined and recompiled with the existing data.
+organize assets and edit JSON that gets combined with the base data.
 
 
 ### Characters
@@ -101,22 +101,27 @@ edit JSON that gets combined and recompiled with the existing data.
 * data/battle/table/cutin.tbl
 
 
+### Series
+
+* data/language/*/SeriesProfileList.tbl
+* data/images/series_logo_l/{series}_l.txd
+* data/images/series_logo_s/{series}_s.txd
+* data/gallery/gallery.txd/{series}_gallery.dds
+* data/gallery/*/gallery.txd/{series}_gallery.dds
+* data/resident/MiscData.pkd/SeriesList.cdb
+
+
 ### Stages
 
 * data/tmap/bg/map_###.zip
 * data/tmap/bg/map_###.zip/*.dds
 * data/tmap/bg/map_###.zip/map_###.pmdl
 
-* data/language/*/SeriesProfileList.tbl
 * data/language/*/MiscData.tbl
 * data/language/*/StageList.tbl
 
-* data/images/series_logo_l/{series}_l.txd
-* data/images/series_logo_s/{series}_s.txd
 * data/images/stage_img/l/st_###_##_l.txd
 * data/images/stage_img/s/st_###_##_s.txd
-* data/gallery/gallery.txd/{series}_gallery.dds
-* data/gallery/*/gallery.txd/{series}_gallery.dds
 
 * data/stageComment/###_##0/StageCommentVoiceTable.tbl
 * data/stageComment/###_##0/*/StageCommentStringTable.tbl
@@ -144,10 +149,14 @@ edit JSON that gets combined and recompiled with the existing data.
 * data/resident/StageList.pkd/StageList.cdb
 * data/resident/StageList.pkd/GetUnitList.cdb
 * data/resident/StageList.pkd/QuestList.cdb
-* data/resident/MiscData.pkd/SeriesList.cdb
+* data/tmap/stage/StageClearGetList.cdb
 
 
-### Environments
+### Battle Environments
 
 
 ### Mobile Suits, Warships and other units
+
+
+### Dispatches
+
