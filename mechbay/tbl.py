@@ -15,7 +15,7 @@ class StringTBL(GundamDataFile):
 
         string_bytes += self.header
         record_count = len(records)
-        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        string_bytes += self.write_int(record_count, 4)
 
         string_start = len(string_bytes) + (record_count * 8)
 
@@ -25,8 +25,8 @@ class StringTBL(GundamDataFile):
         string_start += padding
 
         for record in records:
-            string_bytes += int(record["index"]).to_bytes(4, byteorder="little")
-            string_bytes += int(string_start).to_bytes(4, byteorder="little")
+            string_bytes += self.write_int(record["index"], 4)
+            string_bytes += self.write_int(string_start, 4)
 
             string_start += len(record["string"].encode("utf-8")) + 1
 
@@ -44,18 +44,20 @@ class StringTBL(GundamDataFile):
         for i in range(record_count):
             record = {
                 "__order": i,
-                "index": int.from_bytes(buffer.read(4), byteorder="little"),
-                "__pointer": int.from_bytes(buffer.read(4), byteorder="little"),
+                "index": self.read_int(buffer.read(4)),
+                "__pointer": self.read_int(buffer.read(4)),
             }
             records.append(record)
 
         for record in records:
-            record["string"] = self.read_string_null_term(buffer, record.pop("__pointer"))
+            record["string"] = self.read_string_null_term(
+                buffer, record.pop("__pointer")
+            )
 
         return records
 
 
-class StageVoiceTable(StringTBL):
+class VoiceTable(StringTBL):
     header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
@@ -74,10 +76,10 @@ class StageVoiceTable(StringTBL):
 class WeaponTBL(GundamDataFile):
     header = b"\x54\x4E\x50\x57\x00\x00\x02\x00"
     default_filename = "weapon.tbl"
-    
+
     def write(self, records: List[Dict]) -> bytes:
         pass
-    
+
     def read(self, buffer: BinaryIO) -> List[Dict]:
         """
         Weapons table
@@ -87,49 +89,37 @@ class WeaponTBL(GundamDataFile):
         weapon_count = self.read_header(buffer)
         record_count = int.from_bytes(buffer.read(4), byteorder="little")
         records = []
-        
+
         for i in range(record_count):
             record = {
                 "__order": i,
-                "unit_id": int.from_bytes(buffer.read(4), byteorder="little"),
-                "weapons_count": int.from_bytes(buffer.read(4), byteorder="little"),
-                "__weapons_offset": int.from_bytes(buffer.read(4), byteorder="little"),
+                "unit_id": self.read_int(buffer.read(4)),
+                "weapons_count": self.read_int(buffer.read(4)),
+                "__weapons_offset": self.read_int(buffer.read(4)),
                 "weapons": [],
             }
             records.append(record)
             print(record)
-        
+
         # Now read_file the weapons
         weapons = []
         for i in range(weapon_count):
             # 80
             weapon = {
-                "values": [
-                    int.from_bytes(buffer.read(1), byteorder="little", signed=False) for
-                    _ in range(6)],
-                "values2": [
-                    int.from_bytes(buffer.read(2), byteorder="little", signed=False) for
-                    _ in range(1)],
-                "values3": [
-                    int.from_bytes(buffer.read(1), byteorder="little", signed=False) for
-                    _ in range(12)],
-                "unit_id": int.from_bytes(buffer.read(4), byteorder="little"),
-                "values5": [
-                    int.from_bytes(buffer.read(1), byteorder="little", signed=True) for
-                    _ in range(20)],
-                "values6": [
-                    int.from_bytes(buffer.read(4), byteorder="little", signed=True) for
-                    _ in range(2)],
-                "values7": [
-                    int.from_bytes(buffer.read(1), byteorder="little", signed=True) for
-                    _ in range(28)],
+                "values": [self.read_int(buffer.read(1)) for _ in range(6)],
+                "values2": [self.read_int(buffer.read(1)) for _ in range(1)],
+                "values3": [self.read_int(buffer.read(1)) for _ in range(12)],
+                "unit_id": self.read_int(buffer.read(4)),
+                "values5": [self.read_int(buffer.read(1)) for _ in range(20)],
+                "values6": [self.read_int(buffer.read(1)) for _ in range(2)],
+                "values7": [self.read_int(buffer.read(1)) for _ in range(28)],
             }
             weapons.append(weapon)
             print(weapon)
-        
+
         # Now read_file the lookup table
         lookup = StringTBL().read(buffer)
         for l in lookup:
             print(l)
-        
+
         return records
