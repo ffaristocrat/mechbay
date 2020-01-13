@@ -919,6 +919,12 @@ class StageList(GundamDataFile):
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         difficulties = ["NORMAL", "HARD", "EXTRA", "HELL"]
+        SPACE = 1
+        AIR = 2
+        LAND = 4
+        SURFACE = 8
+        UNDERWATER = 16
+        
         record_count = self.read_header(buffer)
         records = []
 
@@ -935,11 +941,20 @@ class StageList(GundamDataFile):
                 "__null": self.read_int(buffer.read(2)),
                 "index": self.read_int(buffer.read(2)),
                 "bgm": self.read_int(buffer.read(2)),
-                "movie": self.read_int(buffer.read(2)),
-                "values": [self.read_int(buffer.read(2)) for _ in range(24)],
+                "series2": self.read_int(buffer.read(2)),
+                "values": [self.read_int(buffer.read(2)) for _ in range(21)],
+                "values2": [self.read_int(buffer.read(1)) for _ in range(5)],
+                "terrain": self.read_int(buffer.read(1)),
                 "series_end": self.read_int(buffer.read(4)),
                 "units_available": [],
             }
+            record["terrain_space"] = 1 if record["terrain"] & SPACE else 0
+            record["terrain_air"] = 1 if record["terrain"] & AIR else 0
+            record["terrain_land"] = 1 if record["terrain"] & LAND else 0
+            record["terrain_surface"] = 1 if record["terrain"] & SURFACE else 0
+            record["terrain_underwater"] = 1 if record["terrain"] & UNDERWATER else 0
+            del record["terrain"]
+
             records.append(record)
 
         for record in records:
