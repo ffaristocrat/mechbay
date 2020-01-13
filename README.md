@@ -68,7 +68,24 @@ Ideally, a mod manager will handle this behind the scenes so modders only have t
 organize assets and edit JSON that gets combined with the base data.
 
 
-### Characters
+
+### What to mod
+
+In-progress catalog of the assets and data files edits required to add something to the game.
+
+#### Characters & NPCs
+
+Playable characters have an id in the format of G###C#####. The first 4 characters
+are the series ID the character belongs to. The next 5 identify the character in that series
+and the last character identifies the variant.
+
+Variants are generally used for playable guest units. For example, there are multiple versions of "Heero Yuy"
+that are identical except for their stats & images. Only the first is recruitable. The others are used for
+different versions during a campaign. As such, "Heero Yuy (EW)" is *not* a variant of "Heero Yuy" since it has
+an entirely different unit id. As far as the game is concerned, they have as little in common as Duo and Treize.
+
+Non-playable characters, including pilots without cutins and characters who only speak in cut-scenes,
+have the same format except it's an N instead a C.
 
 * data/battle/cutin/general_chara/{unitid}_lip.zip
 * data/battle/cutin/scene_chara/f####{unitid}/f####.zip
@@ -78,85 +95,254 @@ organize assets and edit JSON that gets combined with the base data.
 * data/battle/cutin/scene_chara/f####{unitid}/mask_f####.zip
 * data/battle/cutin/scene_chara/f####{unitid}/*
 
-* data/images/chara_org/m/{unitid}_m.txd
-* data/images/chara_org/s/{unitid}_s.txd
+Images and animation data for battle cutins. Only used for characters. Not sure what
+f#### represents. They're generally static images with smaller images of the lips to use for
+speaking animation. The rest is placement, effects, etc.
+
+* data/images/chara_org/m/{unitid}_m.txd/{unitid}_m.dds
+
+156 x 216 DDS in a TXD
+
+* data/images/chara_org/s/{unitid}_s.txd/{unitid}_s.dds
+
+156 x 88 DDS in a TXD
+
 * data/images/chara_org/st/{unitid}_st.txd
+
+768 × 1024 DDS in a TXD of the character standing.
+
 * data/images/chara_pick_up/{unitid}_pu.txd
+
+256 × 768 DDS in a TXD
+
 * data/images/chara_status/{unitid}_status.txd
+
+1024 × 768 DDS in a TXD
+
+* data/images/schips.txd/{unitid}
+
+128 × 64 DDS (extension stripped) in a TXD
+
 * data/tmap/txds/talkChara/{unitid}.txd
 
+Images used for VN scenes. Variants are used for different poses, ids, etc. Referenced by Lua scripts.
+
 * data/sound/voice/BTL/{unitid}/*.hca
+
+Voiced lines used in battle animations.
+
 * data/sound/voice/EVM/{unitid}/{unitid}_*.hca
-* data/sound/voice/BTL/{unitid}/*.hca
+* data/sound/voice/EVT/{unitid}/*.hca
+
+Voiced lines used for movies and cut-scenes.
 
 * data/language/*/CharacterSpecList.tbl
-* data/language/*/SpecProfileList.tbl
-* data/resident/CharacterSpecList.pkd
-* data/resident/CharacterSpecList.pkd/CharacterConversionList.cdb
+
+Localized names for characters.
+
 * data/resident/CharacterSpecList.pkd/CharacterSpecList.cdb
+
+Primary data about characters. References records in other files by index.
+
 * data/resident/CharacterSpecList.pkd/CharacterGrowthList.cdb
+
+Profiles for how stats increase on each level up.
+
 * data/resident/CharacterSpecList.pkd/SkillAcquisitionPatternList.cdb
+
+Profiles for which skills are gained as a character levels up.
+
 * data/resident/PersonalMachineList.cdb
+
+Which units will turn into a custom unit when piloted by a certain character. 
+
+* data/language/*/SpecProfileList.tbl
+
+Profile text for each unit, including MS and characters.
+
+* data/resident/CharacterSpecList.pkd/CharacterConversionList.cdb
+
+Seems to change characters from one variant to another.  Not sure how/when/why it's
+triggered.
+
 * data/tmap/resident/scoutMessageId.dat
+
+
+
 * data/battle/table/cutin.tbl
 
+Matches characters to cutin files.
 
-### Series
+#### Series
 
-* data/language/*/SeriesProfileList.tbl
+Series IDs are in the format of G####. Every campaign, character, MS, WS, etc
+needs to be associated with a series.
+
 * data/images/series_logo_l/{series}_l.txd
 * data/images/series_logo_s/{series}_s.txd
+
+Banner representing a series in campaign/stage selects.
+ 
 * data/gallery/gallery.txd/{series}_gallery.dds
+
+Banner representing a series in the gallery.
+
 * data/gallery/*/gallery.txd/{series}_gallery.dds
+
+Language specific versions of the normal gallery images.
+
+* data/language/*/SeriesProfileList.tbl
 * data/resident/MiscData.pkd/SeriesList.cdb
 
 
-### Stages
+#### Stages
+
+Stage_id is a 5 digit value. The first three correspond to the campaign.
+The second two correspond to the stage within that campaign. This is typically
+stored as a 32-bit integer.
+
+* data/resident/SpecProfileList.cdb
+* data/resident/StageList.pkd/StageList.cdb
+* data/resident/StageList.pkd/QuestList.cdb
+
+* data/resident/StageList.pkd/GetUnitList.cdb
+
+Score requirements for Get Units.
+
+* data/tmap/stage/StageClearGetList.cdb
+
+Units rewarded for clearing a stage.
+
+* data/language/*/MiscData.tbl
+* data/language/*/StageList.tbl
 
 * data/tmap/bg/map_###.zip
 * data/tmap/bg/map_###.zip/*.dds
 * data/tmap/bg/map_###.zip/map_###.pmdl
 
-* data/language/*/MiscData.tbl
-* data/language/*/StageList.tbl
+Images used for the map. Background images seem to be universally 1024x1024, even if the
+playable/shown area is much less. Other images may be layered above/below the bg and units.
+Ie: asteroids, clouds, etc.
 
 * data/images/stage_img/l/st_###_##_l.txd
 * data/images/stage_img/s/st_###_##_s.txd
 
-* data/stageComment/###_##0/StageCommentVoiceTable.tbl
-* data/stageComment/###_##0/*/StageCommentStringTable.tbl
-* data/stageComment/###_##0/script.luac
-* data/tmap/stage/###_##0/stringTable/*/StringCommentStringTable.tbl
+Stages are broken up into 3 or 4 sections.
+* 0 - VN scenes before the stage.
+* 1 - VN and battle scripting for the story section.
+* 2 - VN and battle scripting for the sortie section.
+* 3 - Post battle VN executed at the end of the campaign.
 
+* data/stageComment/###_##0/*/StageCommentStringTable.tbl
+* data/tmap/stage/###_##0/stringTable/*/StringCommentStringTable.tbl
 * data/tmap/stage/###_##1/stringTable/*/TMapStringTable.tbl
-* data/tmap/stage/###_##1/beforeBattleTalk.luac
-* data/tmap/stage/###_##1/script.luac
+* data/tmap/stage/###_##2/stringTable/*/TMapStringTable2.tbl
+* data/tmap/stage/###_##3/stringTable/*/SeriesEndingStringTable.tbl
+
+String text referenced by index in their respective LUA scripts. 
+
+* data/stageComment/###_##0/StageCommentVoiceTable.tbl
 * data/tmap/stage/###_##1/VoiceTable.tbl
+* data/tmap/stage/###_##2/VoiceTable2.tbl
+* data/tmap/stage/###_##3/SeriesEndingVoiceTable.tbl
+
+String tables of comma separated values. The first value is the name of the
+voice file for a string text in a scene, if any. The rest of the values aren't understood yet.
+Probably audio length and volume?
+
+* data/stageComment/###_##0/script.luac
+* data/tmap/stage/###_##1/script.luac
+* data/tmap/stage/###_##2/script.luac
+* data/tmap/stage/###_##3/script.luac
+
+Only script.luac is actually called by the engine. There are a number of functions that need to
+exist that are called at each various points before, during, and after a battle. I haven't cataloged
+all the required functions for each scene and the utility functions (found in data/tmap/lua) that are
+called.
+
+* data/tmap/stage/###_##1/beforeBattleTalk.luac
+* data/tmap/stage/###_##2/beforeBattleTalk.luac
+
+Every stage has this broken out as a separate file but it's just imported into script.luac.
+
 * data/tmap/stage/###_##1/miniMap.txd
+* data/tmap/stage/###_##1/miniMap.txd/*.dds
+
+Images of thumbnails of the images in data/tmap/bg/map_###.zip.
+
 * data/tmap/stage/###_##1/stage.dat
 * data/tmap/stage/###_##1/stageConditions.dat
 
-* data/tmap/stage/###_##2/beforeBattleTalk.luac
-* data/tmap/stage/###_##2/script.luac
-* data/tmap/stage/###_##2/VoiceTable2.tbl
+Data about what the map tiles are, which background images they use, structure of the map
+and all the units being used in this stage.
+
+
+#### Battle Environments
+
+
+#### Mobile Suits, Warships and other units
+
+
+
+
+#### Group Dispatches
+
+Group dispatches have a straightforward 4 digit id.
+
+* data/images/mission_l/gd####_l.txd/gd####_l.dds
+
+1920 × 784 DDS in a TXD of the background for a dispatch.
+
+* data/images/mission_s/gd####_s.txd/gd####_s.dds
+
+136 × 60 DDS in a TXD that's a thumbnail of the above.
+
+* data/resident/MiscData.pkd/GroupSendingMissionList.cdb
+
+Primary data for group dispatches.
+
+* data/language/*/MiscData.tbl
+
+String values for dispatch missions and their requirements. Shared with
+series names.
+
+
+### Progress
+
+#### Read & Write
+
+* data/\*\*/*.pkd
+
+* data/language/*/MiscData.tbl
+* data/language/*/StageList.tbl
+* data/language/*/CharacterSpecList.tbl
+* data/language/*/SpecProfileList.tbl
+* data/stageComment/###_##0/*/StageCommentStringTable.tbl
+* data/tmap/stage/###_##0/stringTable/*/StringCommentStringTable.tbl
+* data/tmap/stage/###_##1/stringTable/*/TMapStringTable.tbl
 * data/tmap/stage/###_##2/stringTable/*/TMapStringTable2.tbl
-
 * data/tmap/stage/###_##3/stringTable/*/SeriesEndingStringTable.tbl
-* data/tmap/stage/###_##3/SeriesEndingVoiceTable.tbl
-* data/tmap/stage/###_##3/script.luac
 
-* data/resident/SpecProfileList.cdb
-* data/resident/StageList.pkd/StageList.cdb
+* data/resident/PersonalMachineList.cdb
+* data/resident/CharacterSpecList.pkd/CharacterGrowthList.cdb
 * data/resident/StageList.pkd/GetUnitList.cdb
-* data/resident/StageList.pkd/QuestList.cdb
 * data/tmap/stage/StageClearGetList.cdb
+* data/resident/MachineSpecList.pkd/MachineDesignList.cdb
+* data/resident/MachineSpecList.pkd/MachineDevelopmentList.cdb
+* data/resident/MachineSpecList.pkd/MachineConversionList.cdb
 
 
-### Battle Environments
+#### Read & Write but not entirely understood
+* data/stageComment/###_##0/StageCommentVoiceTable.tbl
+* data/tmap/stage/###_##1/VoiceTable.tbl
+* data/tmap/stage/###_##2/VoiceTable2.tbl
+* data/tmap/stage/###_##3/SeriesEndingVoiceTable.tbl
 
+* data/tmap/resident/scoutMessageId.dat
+* data/resident/MachineSpecList.pkd/MachineConversionList.cdb
+* data/resident/CharacterSpecList.pkd/CharacterConversionList.cdb
+* data/resident/MiscData.pkd/SeriesList.cdb
+* data/resident/CellAttributeList.pkd/BattleBgList.cdb
+* data/resident/SeriesProfileList.cdb
 
-### Mobile Suits, Warships and other units
-
-
-### Dispatches
 
