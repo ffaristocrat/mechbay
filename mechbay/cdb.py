@@ -797,9 +797,9 @@ class SeriesList(GundamDataFile):
         string_bytes += record_count.to_bytes(4, byteorder="little")
 
         for record in records:
-            string_bytes += self.write_series_bytes(record["series1"])
-            string_bytes += self.write_series_bytes(record["series2"])
-            string_bytes += self.write_int(record["index"], 2)
+            string_bytes += self.write_series_bytes(record["series_logo_l"])
+            string_bytes += self.write_series_bytes(record["series_logo_s"])
+            string_bytes += self.write_int(record["string_index"], 2)
             string_bytes += self.write_int(record["value"], 1)
             string_bytes += self.write_int(record["flag"], 1)
 
@@ -812,9 +812,9 @@ class SeriesList(GundamDataFile):
         for i in range(record_count):
             record = {
                 "__order": i,
-                "series1": self.read_series_bytes(buffer.read(4)),
-                "series2": self.read_series_bytes(buffer.read(4)),
-                "index": self.read_int(buffer.read(2)),
+                "series_logo_l": self.read_series_bytes(buffer.read(4)),
+                "series_logo_s": self.read_series_bytes(buffer.read(4)),
+                "string_index": self.read_int(buffer.read(2)),
                 # Ranges from 0-4
                 "value": self.read_int(buffer.read(1)),
                 # 0 or 1
@@ -839,7 +839,7 @@ class SeriesProfileList(GundamDataFile):
         for record in records:
             string_bytes += self.write_series_bytes(record["series"])
             string_bytes += self.write_int(record["value"], 2)
-            string_bytes += self.write_int(record["series_string_index"], 2)
+            string_bytes += self.write_int(record["string_index"], 2)
 
         return string_bytes
 
@@ -850,9 +850,9 @@ class SeriesProfileList(GundamDataFile):
         for i in range(record_count):
             record = {
                 "__order": i,
-                "series": self.read_series_bytes(buffer.read(4)),
+                "gallery": self.read_series_bytes(buffer.read(4)),
                 "value": self.read_int(buffer.read(2)),
-                "series_string_index": self.read_int(buffer.read(2)),
+                "string_index": self.read_int(buffer.read(2)),
             }
             records.append(record)
 
