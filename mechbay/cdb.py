@@ -789,8 +789,17 @@ class SeriesList(GundamDataFile):
     default_filename = "SeriesList.cdb"
     header = b"\x4C\x52\x45\x53\x01\x00\x02\x01"
 
+    ERA = {
+        0: None,
+        1: "After Colony",
+        2: "Cosmic Era",
+        3: "Anno Domini",
+        4: "Post Disaster",
+    }
+
     def write(self, records: List[Dict]) -> bytes:
         string_bytes = bytes()
+        reverse_era = {v: k for k, v in self.ERA.items()}
 
         string_bytes += self.header
         record_count = len(records)
@@ -800,7 +809,7 @@ class SeriesList(GundamDataFile):
             string_bytes += self.write_series_bytes(record["series_logo_l"])
             string_bytes += self.write_series_bytes(record["series_logo_s"])
             string_bytes += self.write_int(record["string_index"], 2)
-            string_bytes += self.write_int(record["value"], 1)
+            string_bytes += self.write_int(reverse_era.get(record["era"], 0), 1)
             string_bytes += self.write_int(record["flag"], 1)
 
         return string_bytes
@@ -808,15 +817,14 @@ class SeriesList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
-
+        
         for i in range(record_count):
             record = {
                 "__order": i,
                 "series_logo_l": self.read_series_bytes(buffer.read(4)),
                 "series_logo_s": self.read_series_bytes(buffer.read(4)),
                 "string_index": self.read_int(buffer.read(2)),
-                # Ranges from 0-4
-                "value": self.read_int(buffer.read(1)),
+                "era": self.ERA.get(self.read_int(buffer.read(1))),
                 # 0 or 1
                 "flag": self.read_int(buffer.read(1)),
             }
