@@ -799,9 +799,9 @@ class SeriesList(GundamDataFile):
         for record in records:
             string_bytes += self.write_series_bytes(record["series1"])
             string_bytes += self.write_series_bytes(record["series2"])
-            string_bytes += record["index"].to_bytes(2, byteorder="little")
-            string_bytes += record["value"].to_bytes(1, byteorder="little")
-            string_bytes += record["flag"].to_bytes(1, byteorder="little")
+            string_bytes += self.write_int(record["index"], 2)
+            string_bytes += self.write_int(record["value"], 1)
+            string_bytes += self.write_int(record["flag"], 1)
 
         return string_bytes
 
@@ -838,10 +838,8 @@ class SeriesProfileList(GundamDataFile):
 
         for record in records:
             string_bytes += self.write_series_bytes(record["series"])
-            string_bytes += record["value"].to_bytes(2, byteorder="little")
-            string_bytes += record["series_string_index"].to_bytes(
-                2, byteorder="little"
-            )
+            string_bytes += self.write_int(record["value"], 2)
+            string_bytes += self.write_int(record["series_string_index"], 2)
 
         return string_bytes
 
