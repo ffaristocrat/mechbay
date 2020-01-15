@@ -314,33 +314,50 @@ class CharacterSpecList(GundamDataFile):
                 "__order": i,
                 "unit1": self.read_unit_bytes(buffer.read(8)),
                 "unit2": self.read_unit_bytes(buffer.read(8)),
-                "unit3": self.read_unit_bytes(buffer.read(8)),
-                "unkonwn2": self.read_int(buffer.read(2), signed=True),
-                "unknown": self.read_int(buffer.read(2), signed=True),
+                "chara_org": self.read_unit_bytes(buffer.read(8)),
+                "unknown1": self.read_int(buffer.read(2), signed=True),
+                "dlc_thing": self.read_int(buffer.read(2), signed=True),
                 # in language/*/CharacterSpecList.tbl
                 "name_index": self.read_int(buffer.read(2), signed=True),
-                "unknown3": self.read_int(buffer.read(2), signed=True),
-                "stats": {
-                    s: self.read_int(buffer.read(2), signed=True)
-                    for s in CHARACTER_STATS
-                },
-                "unknown6": self.read_int(buffer.read(2), signed=True),
-                "unknown7": self.read_int(buffer.read(2), signed=True),
+                "unknown3": self.read_int(buffer.read(1)),
+                "unknown4": self.read_int(buffer.read(1)),
+                "command": self.read_int(buffer.read(2)),
+                "ranged": self.read_int(buffer.read(2)),
+                "melee": self.read_int(buffer.read(2)),
+                "defense": self.read_int(buffer.read(2)),
+                "reaction": self.read_int(buffer.read(2)),
+                "awaken": self.read_int(buffer.read(2)),
+                "auxiliary": self.read_int(buffer.read(2)),
+                "communications": self.read_int(buffer.read(2)),
+                "navigation": self.read_int(buffer.read(2)),
+                "maintenance": self.read_int(buffer.read(2)),
+                "charisma": self.read_int(buffer.read(2)),
+                "experience": self.read_int(buffer.read(2), signed=True),
+                "out_value": self.read_int(buffer.read(2)),
                 # in resident/CharacterGrowth.cdb
-                "growth_profile": self.read_int(buffer.read(2), signed=True),
-                "values1": [
-                    self.read_int(buffer.read(2), signed=True) for _ in range(6)
+                "growth_profile": self.read_int(buffer.read(2)),
+                "skills": [
+                    self.read_int(buffer.read(2), signed=True) for _ in range(3)
                 ],
+                "bgm1": self.read_int(buffer.read(2)),
+                "bgm2": self.read_int(buffer.read(2)),
+                "personality": self.read_int(buffer.read(2)),
                 "unit4": self.read_unit_bytes(buffer.read(8)),
-                "unknown4": self.read_int(buffer.read(2), signed=True),
-                "unknown5": self.read_int(buffer.read(2), signed=False),
+                "unique_name_index": self.read_int(buffer.read(2), signed=True),
+                "unknown5a": self.read_int(buffer.read(1), signed=False),
+                "unknown5b": self.read_int(buffer.read(1), signed=False),
                 "values2": [
                     self.read_int(buffer.read(2), signed=True) for _ in range(5)
                 ],
-                "values3": [
-                    self.read_int(buffer.read(2), signed=True) for _ in range(9)
+                "nulls": [
+                    self.read_int(buffer.read(2), signed=True) for _ in range(5)
                 ],
+                "scout_cost": self.read_int(buffer.read(2)),
+                "unknown6": self.read_int(buffer.read(2), signed=True),
+                "recruitable": self.read_int(buffer.read(4)),
             }
+            if record["unique_name_index"] == -1:
+                record["unique_name_index"] = record["name_index"]
             records.append(record)
 
         return records
@@ -649,13 +666,24 @@ class MachineSpecList(GundamDataFile):
                 "unit_id1": self.read_unit_bytes(buffer.read(8)),
                 "unit_id2": self.read_unit_bytes(buffer.read(8)),
                 "unit_id3": self.read_unit_bytes(buffer.read(8)),
-                "cost?": self.read_int(buffer.read(4)),
+                "hp": self.read_int(buffer.read(4)),
                 "index1": self.read_int(buffer.read(2)),
                 "index2": self.read_int(buffer.read(2)),
-                "index3": self.read_int(buffer.read(2)),
-                "values2": [self.read_int(buffer.read(2)) for _ in range(20)],
+                "name_string_index": self.read_int(buffer.read(2)),
+                "values2": [self.read_int(buffer.read(2)) for _ in range(13)],
+
+                "production_cost": self.read_int(buffer.read(2)),
+                "en": self.read_int(buffer.read(2)),
+                "att": self.read_int(buffer.read(2)),
+                "def": self.read_int(buffer.read(2)),
+                "mob": self.read_int(buffer.read(2)),
+                "exp": self.read_int(buffer.read(2)),
+                "unk2": self.read_int(buffer.read(2)),
+    
+                "values2b": [self.read_int(buffer.read(1)) for _ in range(4)],
+                "size": self.read_int(buffer.read(1)),
                 "values1": [
-                    self.read_int(buffer.read(1), signed=True) for _ in range(34)
+                    self.read_int(buffer.read(1), signed=True) for _ in range(29)
                 ],
             }
             records.append(unit)
@@ -1008,11 +1036,28 @@ class SpecProfileList(GundamDataFile):
         pass
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
+        ms_count = self.read_header(buffer)
+        ws_count = self.read_int(buffer.read(4))
+        char_count = self.read_int(buffer.read(4))
+
         records = []
 
-        for i in range(record_count):
-            record = {"__order": i}
+        for i in range(ms_count + ws_count + char_count):
+            record = {
+                "__order": i,
+                "unit_id": self.read_unit_bytes(buffer.read(8)),
+                "unit_id2": self.read_unit_bytes(buffer.read(8)),
+                "series": self.read_series_bytes(buffer.read(4)),
+                "unk1": self.read_int(buffer.read(2)),
+                "unk2": self.read_int(buffer.read(2)),
+                "unk3": self.read_int(buffer.read(2)),
+                "unk4": self.read_int(buffer.read(2)),
+                # .... maybe?
+                "profile_index": self.read_int(buffer.read(2)),
+                "unk6": self.read_int(buffer.read(2)),
+                "unk7": self.read_int(buffer.read(2)),
+                "unk8": self.read_int(buffer.read(2)),
+            }
             records.append(record)
 
         return records
