@@ -173,6 +173,15 @@ Images used for VN scenes. Variants are used for different poses, ids, etc. Refe
 
 Voiced lines used in battle animations.
 
+* data/sound/voice/BTL/idset.tbl
+* data/sound/voice/BTL/voice_table.tbl
+
+Matches character ids to voice data.
+
+* data/sound/voice/BTL/text/*/text.tbl
+
+Localized text for battle lines
+
 * data/sound/voice/EVM/{unitid}/{unitid}_*.hca
 * data/sound/voice/EVT/{unitid}/*.hca
 
