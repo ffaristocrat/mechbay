@@ -80,12 +80,45 @@ are the series ID the character belongs to. The next 5 identify the character in
 and the last character identifies the variant.
 
 Variants are generally used for playable guest units. For example, there are multiple versions of "Heero Yuy"
-that are identical except for their stats & images. Only the first is recruitable. The others are used for
+that are identical except for their stats and/or images. With exceptions, only the first is recruitable. The others are used for
 different versions during a campaign. As such, "Heero Yuy (EW)" is *not* a variant of "Heero Yuy" since it has
 an entirely different unit id. As far as the game is concerned, they have as little in common as Duo and Treize.
 
 Non-playable characters, including pilots without cutins and characters who only speak in cut-scenes,
 have the same format except it's an N instead a C.
+
+##### Data
+
+* data/resident/CharacterSpecList.pkd/CharacterSpecList.cdb
+
+Primary data about characters. References records in other files by index.
+
+* data/resident/CharacterSpecList.pkd/CharacterGrowthList.cdb
+
+Profiles for how stats increase on each level up.
+
+* data/resident/CharacterSpecList.pkd/SkillAcquisitionPatternList.cdb
+
+Profiles for which skills are gained as a character levels up.
+
+* data/resident/PersonalMachineList.cdb
+
+Which units will turn into a custom unit when piloted by a certain character. 
+
+* data/resident/SpecProfileList.cdb
+
+Links units to string text in SpecProfileList.tbl
+
+* data/language/*/SpecProfileList.tbl
+
+Profile text for each unit, including MS and characters.
+
+* data/resident/CharacterSpecList.pkd/CharacterConversionList.cdb
+
+Seems to change characters from one variant to another.  Not sure how/when/why it's
+triggered.
+
+##### Cut-Ins
 
 * data/battle/cutin/general_chara/{unitid}_lip.zip
 * data/battle/cutin/scene_chara/f####{unitid}/f####.zip
@@ -97,7 +130,14 @@ have the same format except it's an N instead a C.
 
 Images and animation data for battle cutins. Only used for characters. Not sure what
 f#### represents. They're generally static images with smaller images of the lips to use for
-speaking animation. The rest is placement, effects, etc.
+speaking animation. The rest is placement, effects, etc. Not all the files
+are present for every character.
+
+* data/battle/table/cutin.tbl
+
+Matches characters to cutin files.
+
+##### Images
 
 * data/images/chara_org/m/{unitid}_m.txd/{unitid}_m.dds
 
@@ -127,6 +167,8 @@ speaking animation. The rest is placement, effects, etc.
 
 Images used for VN scenes. Variants are used for different poses, ids, etc. Referenced by Lua scripts.
 
+##### Audio
+
 * data/sound/voice/BTL/{unitid}/*.hca
 
 Voiced lines used in battle animations.
@@ -136,42 +178,18 @@ Voiced lines used in battle animations.
 
 Voiced lines used for movies and cut-scenes.
 
+##### Localization
+
 * data/language/*/CharacterSpecList.tbl
 
 Localized names for characters.
 
-* data/resident/CharacterSpecList.pkd/CharacterSpecList.cdb
+* data/tmap/stage/scoutMessage/*/ScoutMessageTable.tbl
 
-Primary data about characters. References records in other files by index.
-
-* data/resident/CharacterSpecList.pkd/CharacterGrowthList.cdb
-
-Profiles for how stats increase on each level up.
-
-* data/resident/CharacterSpecList.pkd/SkillAcquisitionPatternList.cdb
-
-Profiles for which skills are gained as a character levels up.
-
-* data/resident/PersonalMachineList.cdb
-
-Which units will turn into a custom unit when piloted by a certain character. 
-
-* data/language/*/SpecProfileList.tbl
-
-Profile text for each unit, including MS and characters.
-
-* data/resident/CharacterSpecList.pkd/CharacterConversionList.cdb
-
-Seems to change characters from one variant to another.  Not sure how/when/why it's
-triggered.
+String text for death messages.
 
 * data/tmap/resident/scoutMessageId.dat
 
-
-
-* data/battle/table/cutin.tbl
-
-Matches characters to cutin files.
 
 #### Series
 
@@ -182,6 +200,11 @@ needs to be associated with a series.
 * data/images/series_logo_s/{series}_s.txd
 
 Banner representing a series in campaign/stage selects.
+
+* data/images/series_logo_l/*/{series}_l.txd
+* data/images/series_logo_s/*/{series}_s.txd
+
+Language specific versions of the series logos.
  
 * data/gallery/gallery.txd/{series}_gallery.dds
 
@@ -192,7 +215,14 @@ Banner representing a series in the gallery.
 Language specific versions of the normal gallery images.
 
 * data/language/*/SeriesProfileList.tbl
+
+Profile text about the series.
+
 * data/resident/MiscData.pkd/SeriesList.cdb
+
+Primary data file about series.
+
+* data/resident/MiscData.pkd/SeriesProfileList.cdb
 
 
 #### Stages
