@@ -294,22 +294,25 @@ class CharacterSpecList(GundamDataFile):
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
+        npcs = []
 
-        unknown1 = self.read_int(buffer.read(4))
-        pointer1 = self.read_int(buffer.read(4))
-        pointer2 = self.read_int(buffer.read(4))
-        unknown2 = self.read_int(buffer.read(4))
+        npc_count = self.read_int(buffer.read(4)) # 224
+        npc_pointer = self.read_int(buffer.read(4)) # 95452
+        pointer2 = self.read_int(buffer.read(4)) # 111580
+        unknown2 = self.read_int(buffer.read(2)) # 832
+        unknown3 = self.read_int(buffer.read(2)) # 20
 
-        print(unknown1, unknown2)
+        print(unknown2, unknown3, pointer2)
 
         # block 1
         # 112 bytes per record
         # block 2
-        # 184 byte per record
+        # 72 bytes per record
         # block 3
         # 1 byte per record?
 
         for i in range(record_count):
+            # 112 bytes per record
             record = {
                 "__order": i,
                 "unit1": self.read_unit_bytes(buffer.read(8)),
@@ -318,21 +321,21 @@ class CharacterSpecList(GundamDataFile):
                 "unknown1": self.read_int(buffer.read(2), signed=True),
                 "dlc_thing": self.read_int(buffer.read(2), signed=True),
                 # in language/*/CharacterSpecList.tbl
-                "name_index": self.read_int(buffer.read(2), signed=True),
+                "name_index": self.read_int(buffer.read(2)),
                 "unknown3": self.read_int(buffer.read(1)),
                 "unknown4": self.read_int(buffer.read(1)),
-                "command": self.read_int(buffer.read(2)),
                 "ranged": self.read_int(buffer.read(2)),
                 "melee": self.read_int(buffer.read(2)),
                 "defense": self.read_int(buffer.read(2)),
                 "reaction": self.read_int(buffer.read(2)),
                 "awaken": self.read_int(buffer.read(2)),
+                "command": self.read_int(buffer.read(2)),
                 "auxiliary": self.read_int(buffer.read(2)),
                 "communications": self.read_int(buffer.read(2)),
                 "navigation": self.read_int(buffer.read(2)),
                 "maintenance": self.read_int(buffer.read(2)),
                 "charisma": self.read_int(buffer.read(2)),
-                "experience": self.read_int(buffer.read(2), signed=True),
+                "experience": self.read_int(buffer.read(2)),
                 "out_value": self.read_int(buffer.read(2)),
                 # in resident/CharacterGrowth.cdb
                 "growth_profile": self.read_int(buffer.read(2)),
@@ -359,6 +362,62 @@ class CharacterSpecList(GundamDataFile):
             if record["unique_name_index"] == -1:
                 record["unique_name_index"] = record["name_index"]
             records.append(record)
+
+        buffer.seek(npc_pointer)
+        
+        for i in range(npc_count):
+            # 72 bytes per record
+            npc = {
+                "__order": i,
+                "unit1": self.read_unit_bytes(buffer.read(8)),
+                "unit2": self.read_unit_bytes(buffer.read(8)),
+                "chara_org": self.read_unit_bytes(buffer.read(8)),
+                "unknown1": self.read_int(buffer.read(2), signed=True),
+                "dlc_thing": self.read_int(buffer.read(2), signed=True),
+                # in language/*/CharacterSpecList.tbl
+                "name_index": self.read_int(buffer.read(2)),
+                "unknown3": self.read_int(buffer.read(1)),
+                "unknown4": self.read_int(buffer.read(1)),
+                "ranged": self.read_int(buffer.read(2)),
+                "melee": self.read_int(buffer.read(2)),
+                "defense": self.read_int(buffer.read(2)),
+                "reaction": self.read_int(buffer.read(2)),
+                "awaken": self.read_int(buffer.read(2)),
+                "command": self.read_int(buffer.read(2)),
+                "auxiliary": self.read_int(buffer.read(2)),
+                "communications": self.read_int(buffer.read(2)),
+                "navigation": self.read_int(buffer.read(2)),
+                "maintenance": self.read_int(buffer.read(2)),
+                "charisma": self.read_int(buffer.read(2)),
+                "experience": self.read_int(buffer.read(2)),
+                "out_value": self.read_int(buffer.read(2)),
+                "growth_profile": self.read_int(buffer.read(2)),
+                "skills": [
+                    self.read_int(buffer.read(2), signed=True) for _ in range(3)
+                ],
+                "bgm1": self.read_int(buffer.read(2)),
+                "bgm2": self.read_int(buffer.read(2)),
+                "personality": self.read_int(buffer.read(2)),
+    
+            }
+            npcs.append(npc)
+
+        print(buffer.tell())
+        buffer.seek(pointer2)
+        pair_count = self.read_int(buffer.read(4))
+        pairs = []
+        for i in range(pair_count):
+            pair = {
+                "__order": i,
+                "pair1": self.read_int(buffer.read(1)),
+                "pair2": self.read_int(buffer.read(1)),
+                "pair3": self.read_int(buffer.read(1)),
+                "pair4": self.read_int(buffer.read(1)),
+            }
+            pairs.append(pair)
+        
+        records.extend(npcs)
+        records.extend(pairs)
 
         return records
 
