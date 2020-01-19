@@ -375,7 +375,7 @@ class CharacterSpecList(GundamDataFile):
                 "unknown1": self.read_int(buffer.read(2), signed=True),
                 "dlc_thing": self.read_int(buffer.read(2), signed=True),
                 # in language/*/CharacterSpecList.tbl
-                "name_index": self.read_int(buffer.read(2)),
+                "unique_name_index": self.read_int(buffer.read(2)),
                 "unknown3": self.read_int(buffer.read(1)),
                 "unknown4": self.read_int(buffer.read(1)),
                 "ranged": self.read_int(buffer.read(2)),
