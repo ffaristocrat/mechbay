@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Dict, ByteString, BinaryIO
+from typing import List, Dict, ByteString, BinaryIO, Union
 
 
 class GundamDataFile:
@@ -44,7 +44,7 @@ class GundamDataFile:
         return string_bytes
 
     @staticmethod
-    def read_guid_bytes(byte_string: bytes) -> str:
+    def read_guid_bytes(byte_string: bytes) -> Union[str, None]:
         if byte_string == b"\x00\x00\x00\x00\x00\x00\x00\x00":
             return None
 
@@ -59,7 +59,7 @@ class GundamDataFile:
         return unit_id
 
     @staticmethod
-    def write_guid_bytes(unit_string: str) -> bytes:
+    def write_guid_bytes(unit_string: Union[str, None]) -> bytes:
         if not unit_string:
             return b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
