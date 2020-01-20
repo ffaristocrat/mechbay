@@ -85,11 +85,22 @@ class GundamDataFile:
 
         return output_string
 
+    def write_string_null_term(self, string: str) -> bytes:
+        byte_string = string.encode("utf-8") + b"\x00"
+        return byte_string
+
     def read_string_length(self, buffer: BinaryIO) -> str:
         length = self.read_int(buffer.read(1))
         output_string = buffer.read(length).decode("utf-8")
 
         return output_string
+
+    def write_string_length(self, string: str) -> bytes:
+        byte_string = bytes()
+        byte_string += self.write_int(len(string), length=1)
+        byte_string += string.encode("utf-8")
+
+        return byte_string
 
     def read_header(self, buffer: BinaryIO) -> int:
         self._start_pos = buffer.tell()
@@ -124,3 +135,53 @@ class GundamDataFile:
 
     def write(self, records: List[Dict]) -> bytes:
         raise NotImplementedError
+
+    def read_record(self, definition: Dict, buffer: BinaryIO) -> Dict:
+        record = {}
+        for field, field_type in definition.items():
+            if field_type.startswith("int"):
+                record[field] = self.read_int(
+                    buffer.read(int(field_type[-1])),
+                    signed=True
+                )
+            elif field_type.startswith("uint"):
+                record[field] = self.read_int(
+                    buffer.read(int(field_type[-1])),
+                    signed=False
+                )
+            elif field_type in ["len_string"]:
+                record[field] = self.read_string_length(buffer)
+            elif field_type in ["null_string"]:
+                record[field] = self.read_string_null_term(buffer, offset=0)
+            elif field_type in ["guid"]:
+                record[field] = self.read_guid_bytes(buffer.read(8))
+            elif field_type in ["series_guid"]:
+                record[field] = self.read_series_bytes(buffer.read(4))
+
+        return record
+
+    def write_record(self, definition: Dict, record: Dict) -> bytes:
+        byte_string = bytes()
+        for field, field_type in definition.items():
+            if field_type.startswith("int"):
+                byte_string += self.write_int(
+                    record[field],
+                    int(field_type[-1]),
+                    signed=True
+                )
+            elif field_type.startswith("uint"):
+                byte_string += self.write_int(
+                    record[field],
+                    int(field_type[-1]),
+                    signed=False
+                )
+            elif field_type in ["len_string"]:
+                byte_string += self.write_string_length(field)
+            elif field_type in ["null_string"]:
+                byte_string += self.write_string_null_term(field)
+            elif field_type in ["guid"]:
+                byte_string += self.write_guid_bytes(field)
+            elif field_type in ["series_guid"]:
+                byte_string += self.write_series_bytes(field)
+
+        return byte_string
