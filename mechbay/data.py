@@ -44,7 +44,7 @@ class GundamDataFile:
         return string_bytes
 
     @staticmethod
-    def read_unit_bytes(byte_string: bytes) -> str:
+    def read_guid_bytes(byte_string: bytes) -> str:
         if byte_string == b"\x00\x00\x00\x00\x00\x00\x00\x00":
             return None
 
@@ -59,7 +59,7 @@ class GundamDataFile:
         return unit_id
 
     @staticmethod
-    def write_unit_bytes(unit_string: str) -> bytes:
+    def write_guid_bytes(unit_string: str) -> bytes:
         if not unit_string:
             return b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
