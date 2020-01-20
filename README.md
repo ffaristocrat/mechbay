@@ -75,14 +75,14 @@ In-progress catalog of the assets and data files edits required to add something
 
 #### Characters & NPCs
 
-Playable characters have an id in the format of G###C#####. The first 4 characters
+Playable characters have a guid in the format of G###C#####. The first 4 characters
 are the series ID the character belongs to. The next 5 identify the character in that series
 and the last character identifies the variant.
 
 Variants are generally used for playable guest units. For example, there are multiple versions of "Heero Yuy"
 that are identical except for their stats and/or images. With exceptions, only the first is recruitable. The others are used for
 different versions during a campaign. As such, "Heero Yuy (EW)" is *not* a variant of "Heero Yuy" since it has
-an entirely different unit id. As far as the game is concerned, they have as little in common as Duo and Treize.
+an entirely different guid. As far as the game is concerned, they have as little in common as Duo and Treize.
 
 Non-playable characters, including pilots without cutins and characters who only speak in cut-scenes,
 have the same format except it's an N instead a C.
@@ -120,13 +120,13 @@ triggered.
 
 ##### Cut-Ins
 
-* data/battle/cutin/general_chara/{unitid}_lip.zip
-* data/battle/cutin/scene_chara/f####{unitid}/f####.zip
-* data/battle/cutin/scene_chara/f####{unitid}/f####{unitid}_lip.zip
-* data/battle/cutin/scene_chara/f####{unitid}/f####{unitid}_wiggler.zip
-* data/battle/cutin/scene_chara/f####{unitid}/f####{unitid}.asp
-* data/battle/cutin/scene_chara/f####{unitid}/mask_f####.zip
-* data/battle/cutin/scene_chara/f####{unitid}/*
+* data/battle/cutin/general_chara/{guid}_lip.zip
+* data/battle/cutin/scene_chara/f####{guid}/f####.zip
+* data/battle/cutin/scene_chara/f####{guid}/f####{guid}_lip.zip
+* data/battle/cutin/scene_chara/f####{guid}/f####{guid}_wiggler.zip
+* data/battle/cutin/scene_chara/f####{guid}/f####{guid}.asp
+* data/battle/cutin/scene_chara/f####{guid}/mask_f####.zip
+* data/battle/cutin/scene_chara/f####{guid}/*
 
 Images and animation data for battle cutins. Only used for characters. Not sure what
 f#### represents. They're generally static images with smaller images of the lips to use for
@@ -139,37 +139,37 @@ Matches characters to cutin files.
 
 ##### Images
 
-* data/images/chara_org/m/{unitid}_m.txd/{unitid}_m.dds
+* data/images/chara_org/m/{guid}_m.txd/{guid}_m.dds
 
 156 x 216 DDS in a TXD
 
-* data/images/chara_org/s/{unitid}_s.txd/{unitid}_s.dds
+* data/images/chara_org/s/{guid}_s.txd/{guid}_s.dds
 
 156 x 88 DDS in a TXD
 
-* data/images/chara_org/st/{unitid}_st.txd
+* data/images/chara_org/st/{guid}_st.txd
 
 768 × 1024 DDS in a TXD of the character standing.
 
-* data/images/chara_pick_up/{unitid}_pu.txd
+* data/images/chara_pick_up/{guid}_pu.txd
 
 256 × 768 DDS in a TXD
 
-* data/images/chara_status/{unitid}_status.txd
+* data/images/chara_status/{guid}_status.txd
 
 1024 × 768 DDS in a TXD
 
-* data/images/schips.txd/{unitid}
+* data/images/schips.txd/{guid}
 
 128 × 64 DDS (extension stripped) in a TXD
 
-* data/tmap/txds/talkChara/{unitid}.txd
+* data/tmap/txds/talkChara/{guid}.txd
 
 Images used for VN scenes. Variants are used for different poses, ids, etc. Referenced by Lua scripts.
 
 ##### Audio
 
-* data/sound/voice/BTL/{unitid}/*.hca
+* data/sound/voice/BTL/{guid}/*.hca
 
 Voiced lines used in battle animations.
 
@@ -182,8 +182,8 @@ Matches character ids to voice data.
 
 Localized text for battle lines
 
-* data/sound/voice/EVM/{unitid}/{unitid}_*.hca
-* data/sound/voice/EVT/{unitid}/*.hca
+* data/sound/voice/EVM/{guid}/{guid}_*.hca
+* data/sound/voice/EVT/{guid}/*.hca
 
 Voiced lines used for movies and cut-scenes.
 
