@@ -302,8 +302,6 @@ class CharacterSpecList(GundamDataFile):
         unknown2 = self.read_int(buffer.read(2)) # 832
         unknown3 = self.read_int(buffer.read(2)) # 20
 
-        print(unknown2, unknown3, pointer2)
-
         # block 1
         # 112 bytes per record
         # block 2
@@ -408,11 +406,12 @@ class CharacterSpecList(GundamDataFile):
         pairs = []
         for i in range(pair_count):
             pair = {
+                # Adds up to 100
                 "__order": i,
-                "pair1": self.read_int(buffer.read(1)),
-                "pair2": self.read_int(buffer.read(1)),
-                "pair3": self.read_int(buffer.read(1)),
-                "pair4": self.read_int(buffer.read(1)),
+                "index": self.read_int(buffer.read(1)),
+                "val1": self.read_int(buffer.read(1)),
+                "val2": self.read_int(buffer.read(1)),
+                "val3": self.read_int(buffer.read(1)),
             }
             pairs.append(pair)
         
