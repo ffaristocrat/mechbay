@@ -1,30 +1,36 @@
 import json
 import os
-from typing import List, Dict, ByteString, BinaryIO, Union
+from typing import List, Dict, ByteString, BinaryIO, Union, Any
 
 
 class GundamDataFile:
     header: ByteString = None
     default_filename: str = None
     record_count_length: int = 4
+    definition: Dict[str, str] = None
 
-    def __init__(self, filename: str = None, header: ByteString = None,
-                 record_count_length: int = None):
+    def __init__(
+        self,
+        filename: str = None,
+        header: ByteString = None,
+        record_count_length: int = None,
+    ):
         self.filename = filename or self.default_filename
-        self._start_pos = 0
         if header:
             self.header = header
         if record_count_length is not None:
             self.record_count_length = record_count_length
 
     @staticmethod
-    def read_int(byte_string: bytes, byteorder: str = "little", signed: bool = False
-                 ) -> int:
+    def read_int(
+        byte_string: bytes, byteorder: str = "little", signed: bool = False
+    ) -> int:
         return int.from_bytes(byte_string, byteorder=byteorder, signed=signed)
 
     @staticmethod
-    def write_int(value: int, length: int, byteorder: str = "little",
-                  signed: bool = False) -> bytes:
+    def write_int(
+        value: int, length: int, byteorder: str = "little", signed: bool = False
+    ) -> bytes:
         return value.to_bytes(length, byteorder=byteorder, signed=signed)
 
     @staticmethod
@@ -61,7 +67,7 @@ class GundamDataFile:
     @staticmethod
     def write_guid_bytes(unit_string: Union[str, None]) -> bytes:
         if not unit_string:
-            return b"\x00\x00\x00\x00\x00\x00\x00\x00"
+            return b"\x00" * 8
 
         unit_bytes = bytes()
         unit_bytes += int(unit_string[1:5]).to_bytes(2, byteorder="little")
@@ -73,9 +79,12 @@ class GundamDataFile:
 
         return unit_bytes
 
-    def read_string_null_term(self, buffer: BinaryIO, offset: int) -> str:
+    @staticmethod
+    def read_string_null_term(buffer: BinaryIO, offset: int = None) -> str:
         all_bytes = bytes()
-        buffer.seek(offset + self._start_pos)
+        if offset is not None:
+            buffer.seek(offset)
+
         while True:
             char = buffer.read(1)
             if char == b"\x00":
@@ -85,46 +94,53 @@ class GundamDataFile:
 
         return output_string
 
-    def write_string_null_term(self, string: str) -> bytes:
+    @staticmethod
+    def write_string_null_term(string: str) -> bytes:
         byte_string = string.encode("utf-8") + b"\x00"
         return byte_string
 
-    def read_string_length(self, buffer: BinaryIO) -> str:
-        length = self.read_int(buffer.read(1))
+    @classmethod
+    def read_string_length(cls, buffer: BinaryIO) -> str:
+        length = cls.read_int(buffer.read(1))
         output_string = buffer.read(length).decode("utf-8")
 
         return output_string
 
-    def write_string_length(self, string: str) -> bytes:
-        byte_string = bytes()
-        byte_string += self.write_int(len(string), length=1)
-        byte_string += string.encode("utf-8")
+    @classmethod
+    def write_string_length(cls, string: str) -> bytes:
+        byte_string = cls.write_int(len(string), length=1) + string.encode("utf-8")
 
         return byte_string
 
-    def read_header(self, buffer: BinaryIO) -> int:
-        self._start_pos = buffer.tell()
-        header = buffer.read(len(self.header))
-        assert header == self.header
-        record_count = self.read_int(buffer.read(self.record_count_length))
+    @classmethod
+    def read_header(cls, buffer: BinaryIO) -> int:
+        header = buffer.read(len(cls.header))
+        assert header == cls.header
+        record_count = cls.read_int(buffer.read(cls.record_count_length))
         return record_count
 
-    def write_header(self, record_count: int) -> bytes:
+    @classmethod
+    def write_header(cls, record_count: int) -> bytes:
         string_bytes = bytes()
-        string_bytes += self.header
-        string_bytes += self.write_int(record_count, 4)
+        string_bytes += cls.header
+        string_bytes += cls.write_int(record_count, 4)
         return string_bytes
 
     def dump(self, data_filename: str = None, json_filename: str = None):
         data_filename = data_filename or self.filename
         json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")
-        data = {self.filename or os.path.split(data_filename)[1]: self.read_file(data_filename)}
+        data = {
+            self.filename
+            or os.path.split(data_filename)[1]: self.read_file(data_filename)
+        }
         json.dump(data, open(json_filename, "wt"), indent=4)
 
     def load(self, json_filename: str = None, data_filename: str = None):
         data_filename = data_filename or self.filename
         json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")
-        records = json.load(open(json_filename, "rt"))[self.filename or os.path.split(data_filename)[1]]
+        records = json.load(open(json_filename, "rt"))[
+            self.filename or os.path.split(data_filename)[1]
+        ]
         self.write_file(records, data_filename)
 
     def read_file(self, filename: str) -> List[Dict]:
@@ -133,61 +149,85 @@ class GundamDataFile:
         return records
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
-        raise NotImplementedError
+        record_count = self.read_header(buffer)
+        records = self.read_records(self.definition, buffer, record_count)
+        return records
 
     def write_file(self, records: List[Dict], filename: str):
         with open(filename, "wb") as buffer:
             buffer.write(self.write(records))
 
     def write(self, records: List[Dict]) -> bytes:
-        raise NotImplementedError
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+        string_bytes += self.write_records(self.definition, records)
 
-    def read_record(self, definition: Dict, buffer: BinaryIO) -> Dict:
+        return string_bytes
+
+    @classmethod
+    def write_records(cls, definition: Dict, records: List[Dict]) -> bytes:
+        byte_string = bytes()
+
+        for record in records:
+            byte_string += cls.write_record(definition, record)
+
+        return byte_string
+
+    @classmethod
+    def read_records(
+        cls, definition: Dict, buffer: BinaryIO, record_count: int
+    ) -> List[Dict]:
+        records = []
+
+        for i in range(record_count):
+            record = cls.read_record(definition, buffer)
+            record["__order"] = i
+            records.append(record)
+
+        return records
+
+    @classmethod
+    def read_record(cls, definition: Dict, buffer: BinaryIO) -> Dict[str, Any]:
         record = {}
         for field, field_type in definition.items():
             if field_type.startswith("int"):
-                record[field] = self.read_int(
-                    buffer.read(int(field_type[-1])),
-                    signed=True
+                record[field] = cls.read_int(
+                    buffer.read(int(field_type[-1])), signed=True
                 )
             elif field_type.startswith("uint"):
-                record[field] = self.read_int(
-                    buffer.read(int(field_type[-1])),
-                    signed=False
+                record[field] = cls.read_int(
+                    buffer.read(int(field_type[-1])), signed=False
                 )
             elif field_type in ["len_string"]:
-                record[field] = self.read_string_length(buffer)
+                record[field] = cls.read_string_length(buffer)
             elif field_type in ["null_string"]:
-                record[field] = self.read_string_null_term(buffer, offset=0)
+                record[field] = cls.read_string_null_term(buffer)
             elif field_type in ["guid"]:
-                record[field] = self.read_guid_bytes(buffer.read(8))
+                record[field] = cls.read_guid_bytes(buffer.read(8))
             elif field_type in ["series_guid"]:
-                record[field] = self.read_series_bytes(buffer.read(4))
+                record[field] = cls.read_series_bytes(buffer.read(4))
 
         return record
 
-    def write_record(self, definition: Dict, record: Dict) -> bytes:
+    @classmethod
+    def write_record(cls, definition: Dict, record: Dict) -> bytes:
         byte_string = bytes()
         for field, field_type in definition.items():
             if field_type.startswith("int"):
-                byte_string += self.write_int(
-                    record[field],
-                    int(field_type[-1]),
-                    signed=True
+                byte_string += cls.write_int(
+                    record[field], int(field_type[-1]), signed=True
                 )
             elif field_type.startswith("uint"):
-                byte_string += self.write_int(
-                    record[field],
-                    int(field_type[-1]),
-                    signed=False
+                byte_string += cls.write_int(
+                    record[field], int(field_type[-1]), signed=False
                 )
             elif field_type in ["len_string"]:
-                byte_string += self.write_string_length(field)
+                byte_string += cls.write_string_length(record[field])
             elif field_type in ["null_string"]:
-                byte_string += self.write_string_null_term(field)
+                byte_string += cls.write_string_null_term(record[field])
             elif field_type in ["guid"]:
-                byte_string += self.write_guid_bytes(field)
+                byte_string += cls.write_guid_bytes(record[field])
             elif field_type in ["series_guid"]:
-                byte_string += self.write_series_bytes(field)
+                byte_string += cls.write_series_bytes(record[field])
 
         return byte_string
