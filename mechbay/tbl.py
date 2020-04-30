@@ -70,7 +70,7 @@ class VoiceTable(StringTBL):
         return records
 
 
-class WeaponTBL(GundamDataFile):
+class Weapon(GundamDataFile):
     header = b"\x54\x4E\x50\x57\x00\x00\x02\x00"
     default_filename = "weapon.tbl"
 
@@ -81,13 +81,10 @@ class WeaponTBL(GundamDataFile):
         return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
-        """
-        Weapons table
-        16 byte header
+        """ I think this might be for display purposes only """
 
-        """
         weapon_count = self.read_header(buffer)
-        record_count = int.from_bytes(buffer.read(4), byteorder="little")
+        record_count = self.read_int(buffer.read(4))
         records = []
 
         for i in range(record_count):
@@ -101,7 +98,7 @@ class WeaponTBL(GundamDataFile):
             records.append(record)
             print(record)
 
-        # Now read_file the weapons
+        # Now read the weapons
         weapons = []
         for i in range(weapon_count):
             # 80
@@ -117,7 +114,7 @@ class WeaponTBL(GundamDataFile):
             weapons.append(weapon)
             print(weapon)
 
-        # Now read_file the lookup table
+        # Now read the lookup table
         lookup = StringTBL().read(buffer)
         for l in lookup:
             print(l)
