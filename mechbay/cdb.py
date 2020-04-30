@@ -16,11 +16,11 @@ CHARACTER_STATS = [
     "chr",
 ]
 
-SPACE = 1
-AIR = 2
-LAND = 4
-SURFACE = 8
-UNDERWATER = 16
+TERRAIN_SPACE = 1
+TERRAIN_AIR = 2
+TERRAIN_LAND = 4
+TERRAIN_SURFACE = 8
+TERRAIN_UNDERWATER = 16
 
 
 class AbilitySpecList(GundamDataFile):
@@ -47,31 +47,11 @@ class AbilitySpecList(GundamDataFile):
 class ActAbilityEffectList(GundamDataFile):
     default_filename = "ActAbilityEffectList.cdb"
     header = b"\x4C\x45\x41\x41\x00\x00\x01\x01"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        for record in records:
-            string_bytes += self.write_guid_bytes(record["guid"])
-            for v in record["values"]:
-                string_bytes += self.write_int(v, 4)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {
-                "__order": i,
-                "guid": self.read_guid_bytes(buffer.read(8)),
-                "values": [self.read_int(buffer.read(4)) for _ in range(2)],
-            }
-            records.append(record)
-
-        return records
+    definition = {
+        "guid": "guid",
+        "unknown1": "uint4",
+        "unknown2": "uint4",
+    }
 
 
 class BattleBgList(GundamDataFile):
@@ -158,12 +138,14 @@ class CellAttributeList(GundamDataFile):
             record = {
                 "__order": i,
                 "__pointer": self.read_int(buffer.read(4)) + location,
-                "values": [self.read_int(buffer.read(1)) for _ in range(20)],
+                "index": self.read_int(buffer.read(2)),
+                "type?": self.read_int(buffer.read(1)),
+                "values": [self.read_int(buffer.read(1), signed=True) for _ in range(17)],
             }
             records.append(record)
 
         for record in records:
-            record["data"] = self.read_string_null_term(buffer, record.pop("__pointer"))
+            record["name"] = self.read_string_null_term(buffer, record.pop("__pointer"))
 
         return records
 
@@ -171,33 +153,11 @@ class CellAttributeList(GundamDataFile):
 class CharacterConversionList(GundamDataFile):
     default_filename = "CharacterConversionList.cdb"
     header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        for record in records:
-            string_bytes += self.write_guid_bytes(record["character_id"])
-            string_bytes += self.write_guid_bytes(record["new_character_id"])
-            string_bytes += self.write_int(record["change_type"], 4)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            records.append(
-                {
-                    "__order": i,
-                    "character_id": self.read_guid_bytes(buffer.read(8)),
-                    "new_character_id": self.read_guid_bytes(buffer.read(8)),
-                    "change_type": self.read_int(buffer.read(4)),
-                }
-            )
-
-        return records
+    definition = {
+        "character_id": "guid",
+        "new_character_id": "guid",
+        "change_type": "uint4",
+    }
 
 
 class CharacterGrowthList(GundamDataFile):
@@ -492,30 +452,10 @@ class GalleryMovieList(GundamDataFile):
 class GetUnitList(GundamDataFile):
     default_filename = "GetUnitList.cdb"
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        for record in records:
-            string_bytes += self.write_guid_bytes(record["guid"])
-            string_bytes += int(record["required_xp"]).to_bytes(4, byteorder="little")
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {
-                "__order": i,
-                "guid": self.read_guid_bytes(buffer.read(8)),
-                "required_xp": self.read_int(buffer.read(4)),
-            }
-            records.append(record)
-
-        return records
+    definition = {
+        "guid": "guid",
+        "required_xp": "uint4",
+    }
 
 
 class GroupSendingMissionList(GundamDataFile):
@@ -547,6 +487,11 @@ class GroupSendingMissionList(GundamDataFile):
 class MachineConversionList(GundamDataFile):
     default_filename = "MachineConversionList.cdb"
     header = b"\x56\x4E\x43\x4D\x00\x00\x02\x01"
+    definition = {
+        "guid": "guid",
+        "transform_guid": "guid",
+        "conversion_type_id": "uint4",
+    }
 
     conversion_types = {
         19: "",
@@ -593,35 +538,12 @@ class MachineConversionList(GundamDataFile):
 class MachineDesignList(GundamDataFile):
     default_filename = "MachineDesignList.cdb"
     header = b"\x49\x53\x44\x4D\x00\x00\x02\x01"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        for record in records:
-            string_bytes += self.write_guid_bytes(record["first_guid"])
-            string_bytes += self.write_guid_bytes(record["second_guid"])
-            string_bytes += self.write_guid_bytes(record["result_guid"])
-            string_bytes += int(record["index"]).to_bytes(4, byteorder="little")
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            records.append(
-                {
-                    "__order": i,
-                    "first_guid": self.read_guid_bytes(buffer.read(8)),
-                    "second_guid": self.read_guid_bytes(buffer.read(8)),
-                    "result_guid": self.read_guid_bytes(buffer.read(8)),
-                    "index": self.read_int(buffer.read(4)),
-                }
-            )
-
-        return records
+    definition = {
+        "first_guid": "guid",
+        "second_guid": "guid",
+        "result_guid": "guid",
+        "index": "uint4",
+    }
 
 
 class MachineDevelopmentList(GundamDataFile):
@@ -671,7 +593,6 @@ class MachineDevelopmentList(GundamDataFile):
             }
             records.append(record)
 
-        # Proceed immediately into reading the next block
         for record in records:
             buffer.seek(record.pop("__pointer"))
             for _ in range(record.pop("__child_count")):
@@ -747,9 +668,9 @@ class MachineSpecList(GundamDataFile):
                 "def": self.read_int(buffer.read(2)),
                 "mob": self.read_int(buffer.read(2)),
                 "exp": self.read_int(buffer.read(2)),
-                "unknown1": self.read_int(buffer.read(2)),
+                # "unknown1": self.read_int(buffer.read(2)),
     
-                "values2": [self.read_int(buffer.read(1)) for _ in range(4)],
+                "values2": [self.read_int(buffer.read(1)) for _ in range(6)],
                 "size": self.read_int(buffer.read(1)),
                 "fixed7": self.read_int(buffer.read(1)),  # always 7
                 "values3": [
@@ -823,32 +744,11 @@ class MyCharacterConfigurations(GundamDataFile):
 class PersonalMachineList(GundamDataFile):
     default_filename = "PersonalMachineList.cdb"
     header = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        for record in records:
-            string_bytes += self.write_guid_bytes(record["guid"])
-            string_bytes += self.write_guid_bytes(record["pilot_guid"])
-            string_bytes += self.write_guid_bytes(record["custom_guid"])
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {
-                "__order": i,
-                "guid": self.read_guid_bytes(buffer.read(8)),
-                "pilot_guid": self.read_guid_bytes(buffer.read(8)),
-                "custom_guid": self.read_guid_bytes(buffer.read(8)),
-            }
-            records.append(record)
-
-        return records
+    definition = {
+        "guid": "guid",
+        "pilot_guid": "guid",
+        "custom_guid": "guid",
+    }
 
 
 class QuestList(GundamDataFile):
@@ -895,13 +795,12 @@ class RangeDataList(GundamDataFile):
                     "__order": i,
                     "length": self.read_int(buffer.read(2)),
                     "mask": self.read_int(buffer.read(2)),
-                    # pointer is probably garbage
                     "__pointer": self.read_int(buffer.read(4)) + location,
                 }
             )
 
         for record in records:
-            buffer.seek(record.pop("pointer"))
+            buffer.seek(record.pop("__pointer"))
             record["values"] = [
                 self.read_int(buffer.read(1)) for _ in range(record["length"])
             ]
@@ -912,78 +811,33 @@ class RangeDataList(GundamDataFile):
 class SeriesList(GundamDataFile):
     default_filename = "SeriesList.cdb"
     header = b"\x4C\x52\x45\x53\x01\x00\x02\x01"
+    definition = {
+        "series_logo_l": "series_guid",
+        "series_logo_s": "series_guid",
+        "string_index": "uint2",
+        "era": "uint1",
+        "flag": "uint1",
+    }
 
+    # Era names are in messagestring.tbl
+    # starting from index = 109112
     ERA = {
         0: None,
         1: "After Colony",
         2: "Cosmic Era",
-        3: "Anno Domini",
+        3: "A.D.",
         4: "Post Disaster",
     }
-
-    def write(self, records: List[Dict]) -> bytes:
-        reverse_era = {v: k for k, v in self.ERA.items()}
-
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        for record in records:
-            string_bytes += self.write_series_bytes(record["series_logo_l"])
-            string_bytes += self.write_series_bytes(record["series_logo_s"])
-            string_bytes += self.write_int(record["string_index"], 2)
-            string_bytes += self.write_int(reverse_era.get(record["era"], 0), 1)
-            string_bytes += self.write_int(record["flag"], 1)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-        
-        for i in range(record_count):
-            record = {
-                "__order": i,
-                "series_logo_l": self.read_series_bytes(buffer.read(4)),
-                "series_logo_s": self.read_series_bytes(buffer.read(4)),
-                "string_index": self.read_int(buffer.read(2)),
-                "era": self.ERA.get(self.read_int(buffer.read(1))),
-                # 0 or 1
-                "flag": self.read_int(buffer.read(1)),
-            }
-            records.append(record)
-
-        return records
 
 
 class SeriesProfileList(GundamDataFile):
     default_filename = "SeriesProfileList.cdb"
     header = b"\x4C\x50\x52\x53\x00\x00\x01\x01"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        for record in records:
-            string_bytes += self.write_series_bytes(record["series"])
-            string_bytes += self.write_int(record["value"], 2)
-            string_bytes += self.write_int(record["string_index"], 2)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {
-                "__order": i,
-                "gallery": self.read_series_bytes(buffer.read(4)),
-                "value": self.read_int(buffer.read(2)),
-                "string_index": self.read_int(buffer.read(2)),
-            }
-            records.append(record)
-
-        return records
+    definition = {
+        "gallery": "series_guid",
+        "value": "uint2",
+        "string_index": "uint2",
+    }
 
 
 class StageClearGetList(GundamDataFile):
@@ -1067,11 +921,11 @@ class StageList(GundamDataFile):
                 "series_end": self.read_int(buffer.read(4)),
                 "units_available": [],
             }
-            record["terrain_space"] = 1 if record["terrain"] & SPACE else 0
-            record["terrain_air"] = 1 if record["terrain"] & AIR else 0
-            record["terrain_land"] = 1 if record["terrain"] & LAND else 0
-            record["terrain_surface"] = 1 if record["terrain"] & SURFACE else 0
-            record["terrain_underwater"] = 1 if record["terrain"] & UNDERWATER else 0
+            record["terrain_space"] = 1 if record["terrain"] & TERRAIN_SPACE else 0
+            record["terrain_air"] = 1 if record["terrain"] & TERRAIN_AIR else 0
+            record["terrain_land"] = 1 if record["terrain"] & TERRAIN_LAND else 0
+            record["terrain_surface"] = 1 if record["terrain"] & TERRAIN_SURFACE else 0
+            record["terrain_underwater"] = 1 if record["terrain"] & TERRAIN_UNDERWATER else 0
 
             del record["terrain"]
             del record["__null"]
@@ -1184,22 +1038,13 @@ class TitleBgmList(GundamDataFile):
 class TutorialList(GundamDataFile):
     default_filename = "TutorialList.cdb"
     header = b"\x4F\x54\x55\x54\x00\x00\x01\x01"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {"__order": i}
-            records.append(record)
-
-        return records
+    definition = {
+        "tutorial_id1": "uint4",
+        "tutorial_id2": "uint4",
+        "tutorial_id3": "uint4",
+        "index": "uint2",
+        "unknown": "uint2",
+    }
 
 
 class WeaponSpecList(GundamDataFile):
