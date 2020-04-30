@@ -109,6 +109,12 @@ class GundamDataFile:
         record_count = self.read_int(buffer.read(self.record_count_length))
         return record_count
 
+    def write_header(self, record_count: int) -> bytes:
+        string_bytes = bytes()
+        string_bytes += self.header
+        string_bytes += self.write_int(record_count, 4)
+        return string_bytes
+
     def dump(self, data_filename: str = None, json_filename: str = None):
         data_filename = data_filename or self.filename
         json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")

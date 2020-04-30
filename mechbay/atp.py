@@ -9,12 +9,13 @@ class CockpitBgTable(GundamDataFile):
     record_count_length = 0
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
         return records
-
-

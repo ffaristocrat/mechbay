@@ -16,13 +16,22 @@ CHARACTER_STATS = [
     "chr",
 ]
 
+SPACE = 1
+AIR = 2
+LAND = 4
+SURFACE = 8
+UNDERWATER = 16
+
 
 class AbilitySpecList(GundamDataFile):
     default_filename = "AbilitySpecList.cdb"
     header = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -40,11 +49,8 @@ class ActAbilityEffectList(GundamDataFile):
     header = b"\x4C\x45\x41\x41\x00\x00\x01\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += self.write_int(record_count, 4)
+        string_bytes = self.write_header(record_count)
 
         for record in records:
             string_bytes += self.write_guid_bytes(record["guid"])
@@ -73,11 +79,8 @@ class BattleBgList(GundamDataFile):
     header = b"\x47\x42\x54\x42\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += self.write_int(record_count, 4)
+        string_bytes = self.write_header(record_count)
 
         # Consolidate all the bgm string ids into a set
         all_music = set()
@@ -141,7 +144,10 @@ class CellAttributeList(GundamDataFile):
     header = b"\x4C\x54\x41\x43\x00\x00\x03\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -167,11 +173,8 @@ class CharacterConversionList(GundamDataFile):
     header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += self.write_int(record_count, 4)
+        string_bytes = self.write_header(record_count)
 
         for record in records:
             string_bytes += self.write_guid_bytes(record["character_id"])
@@ -204,11 +207,8 @@ class CharacterGrowthList(GundamDataFile):
     profile_constant = 332
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += self.write_int(record_count, 4)
+        string_bytes = self.write_header(record_count)
 
         # make a unique list of stat increases
         # replace their entries with the index to those increases
@@ -289,18 +289,21 @@ class CharacterSpecList(GundamDataFile):
     header = b"\x4C\x53\x48\x43\x00\x00\x07\x02"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
         npcs = []
 
-        npc_count = self.read_int(buffer.read(4)) # 224
-        npc_pointer = self.read_int(buffer.read(4)) # 95452
-        pointer2 = self.read_int(buffer.read(4)) # 111580
-        unknown2 = self.read_int(buffer.read(2)) # 832
-        unknown3 = self.read_int(buffer.read(2)) # 20
+        npc_count = self.read_int(buffer.read(4))  # 224
+        npc_pointer = self.read_int(buffer.read(4))  # 95452
+        pointer2 = self.read_int(buffer.read(4))  # 111580
+        unknown2 = self.read_int(buffer.read(2))  # 832
+        unknown3 = self.read_int(buffer.read(2))  # 20
 
         # block 1
         # 112 bytes per record
@@ -317,7 +320,7 @@ class CharacterSpecList(GundamDataFile):
                 "guid2": self.read_guid_bytes(buffer.read(8)),
                 "chara_org": self.read_guid_bytes(buffer.read(8)),
                 "unknown1": self.read_int(buffer.read(2), signed=True),
-                "dlc_thing": self.read_int(buffer.read(2), signed=True),
+                "dlc_set": self.read_int(buffer.read(2)),
                 # in language/*/CharacterSpecList.tbl
                 "name_index": self.read_int(buffer.read(2)),
                 "unknown3": self.read_int(buffer.read(1)),
@@ -350,15 +353,16 @@ class CharacterSpecList(GundamDataFile):
                 "values2": [
                     self.read_int(buffer.read(2), signed=True) for _ in range(5)
                 ],
-                "nulls": [
-                    self.read_int(buffer.read(2), signed=True) for _ in range(5)
-                ],
+                "__null": buffer.read(10),
                 "scout_cost": self.read_int(buffer.read(2)),
-                "unknown6": self.read_int(buffer.read(2), signed=True),
+                "__unknown6": self.read_int(buffer.read(2)),
                 "recruitable": self.read_int(buffer.read(4)),
             }
             if record["unique_name_index"] == -1:
                 record["unique_name_index"] = record["name_index"]
+            for i in range(4):
+                record[f"unknown6_bit{i}"] = 1 if record["__unknown6"] & 2 ** i else 0
+            del record["__null"]
             records.append(record)
 
         buffer.seek(npc_pointer)
@@ -415,8 +419,8 @@ class CharacterSpecList(GundamDataFile):
             }
             pairs.append(pair)
         
-        records.extend(npcs)
-        records.extend(pairs)
+        # records.extend(npcs)
+        # records.extend(pairs)
 
         return records
 
@@ -426,7 +430,10 @@ class CreditBgmList(GundamDataFile):
     header = b""
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -445,7 +452,10 @@ class DatabaseCalculation(GundamDataFile):
     header = b"\x43\x4C\x41\x43\x00\x00\x06\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -463,7 +473,10 @@ class GalleryMovieList(GundamDataFile):
     header = b"\x4C\x56\x4D\x47\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -481,11 +494,8 @@ class GetUnitList(GundamDataFile):
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        string_bytes = self.write_header(record_count)
 
         for record in records:
             string_bytes += self.write_guid_bytes(record["guid"])
@@ -513,7 +523,10 @@ class GroupSendingMissionList(GundamDataFile):
     header = b"\x4C\x53\x50\x47\x00\x00\x07\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -547,11 +560,8 @@ class MachineConversionList(GundamDataFile):
     }
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        string_bytes = self.write_header(record_count)
 
         for record in records:
             string_bytes += self.write_guid_bytes(record["guid"])
@@ -585,11 +595,8 @@ class MachineDesignList(GundamDataFile):
     header = b"\x49\x53\x44\x4D\x00\x00\x02\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        string_bytes = self.write_header(record_count)
 
         for record in records:
             string_bytes += self.write_guid_bytes(record["first_guid"])
@@ -622,11 +629,8 @@ class MachineDevelopmentList(GundamDataFile):
     header = b"\x56\x45\x44\x4D\x00\x00\x02\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        string_bytes = self.write_header(record_count)
 
         child_start = len(string_bytes) + (record_count * 16)
         for record in records:
@@ -685,7 +689,10 @@ class MachineGrowthList(GundamDataFile):
     header = b"\x00\x00\x01\x01\x52\x47\x43\x4D"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -705,45 +712,67 @@ class MachineSpecList(GundamDataFile):
     header = b"\x4C\x53\x43\x4D\x03\x00\x05\x02"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         unit_count = self.read_header(buffer)
         records = []
         units = []
-        value1 = self.read_int(buffer.read(4))
-        value2 = self.read_int(buffer.read(4))
-        value3 = self.read_int(buffer.read(4))
-        value4 = self.read_int(buffer.read(4))
-        value5 = self.read_int(buffer.read(4))
+        header_values = [self.read_int(buffer.read(4)) for _ in range(3)]
+        pointer1 = self.read_int(buffer.read(4))  # to ships
+        pointer2 = self.read_int(buffer.read(4))  # to emplacements
+        print(header_values)
 
         for i in range(unit_count):
             # 108 byte chunk
             unit = {
                 "__order": i,
-                "guid1": self.read_guid_bytes(buffer.read(8)),
-                "guid2": self.read_guid_bytes(buffer.read(8)),
-                "guid3": self.read_guid_bytes(buffer.read(8)),
+                "profile_guid": self.read_guid_bytes(buffer.read(8)),
+                "dev_list_guid": self.read_guid_bytes(buffer.read(8)),
+                "guid": self.read_guid_bytes(buffer.read(8)),
                 "hp": self.read_int(buffer.read(4)),
                 "index1": self.read_int(buffer.read(2)),
-                "index2": self.read_int(buffer.read(2)),
-                "name_string_index": self.read_int(buffer.read(2)),
-                "values2": [self.read_int(buffer.read(2)) for _ in range(13)],
-
+                "dlc_set": self.read_int(buffer.read(2)),
+                "name_index": self.read_int(buffer.read(2)),
+                "values1": [self.read_int(buffer.read(1)) for _ in range(6)],
+                "values1b": [self.read_int(buffer.read(2)) for _ in range(5)],
+                "__null": buffer.read(10),
+    
                 "production_cost": self.read_int(buffer.read(2)),
                 "en": self.read_int(buffer.read(2)),
                 "att": self.read_int(buffer.read(2)),
                 "def": self.read_int(buffer.read(2)),
                 "mob": self.read_int(buffer.read(2)),
                 "exp": self.read_int(buffer.read(2)),
-                "unk2": self.read_int(buffer.read(2)),
+                "unknown1": self.read_int(buffer.read(2)),
     
-                "values2b": [self.read_int(buffer.read(1)) for _ in range(4)],
+                "values2": [self.read_int(buffer.read(1)) for _ in range(4)],
                 "size": self.read_int(buffer.read(1)),
-                "values1": [
-                    self.read_int(buffer.read(1), signed=True) for _ in range(29)
+                "fixed7": self.read_int(buffer.read(1)),  # always 7
+                "values3": [
+                    self.read_int(buffer.read(2), signed=True) for _ in range(5)
                 ],
+                "weapon_index": self.read_int(buffer.read(2), signed=True),
+                "map_weapon_index": self.read_int(buffer.read(2), signed=True),
+                "move": self.read_int(buffer.read(1)),
+                "dimensions": [
+                    self.read_int(buffer.read(1), signed=True) for _ in range(2)
+                ],
+                "weapon_count": self.read_int(buffer.read(1)),
+                "map_weapon_count": self.read_int(buffer.read(1)),
+                "values4": [
+                    self.read_int(buffer.read(1), signed=True) for _ in range(4)
+                ],
+                "values5": [
+                    self.read_int(buffer.read(1), signed=False) for _ in range(4)
+                ],
+                "__null2": self.read_int(buffer.read(1)),
             }
+            del unit["__null"]
+            del unit["__null2"]
             records.append(unit)
 
         return records
@@ -754,7 +783,10 @@ class MapTypes(GundamDataFile):
     header = b"\x02\x00\x05\x01\x50\x59\x54\x4D"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -772,7 +804,10 @@ class MyCharacterConfigurations(GundamDataFile):
     header = b"\x43\x48\x43\x4D\x01\x00\x02\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -790,11 +825,8 @@ class PersonalMachineList(GundamDataFile):
     header = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += self.write_int(record_count, 4)
+        string_bytes = self.write_header(record_count)
 
         for record in records:
             string_bytes += self.write_guid_bytes(record["guid"])
@@ -824,7 +856,10 @@ class QuestList(GundamDataFile):
     header = b"\x4C\x54\x45\x51\x00\x00\x02\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -842,7 +877,10 @@ class RangeDataList(GundamDataFile):
     header = b"\x4C\x47\x4E\x52\x01\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -884,12 +922,10 @@ class SeriesList(GundamDataFile):
     }
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
         reverse_era = {v: k for k, v in self.ERA.items()}
 
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += record_count.to_bytes(4, byteorder="little")
+        string_bytes = self.write_header(record_count)
 
         for record in records:
             string_bytes += self.write_series_bytes(record["series_logo_l"])
@@ -924,11 +960,8 @@ class SeriesProfileList(GundamDataFile):
     header = b"\x4C\x50\x52\x53\x00\x00\x01\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += int(record_count).to_bytes(4, byteorder="little")
+        string_bytes = self.write_header(record_count)
 
         for record in records:
             string_bytes += self.write_series_bytes(record["series"])
@@ -958,11 +991,8 @@ class StageClearGetList(GundamDataFile):
     header = b"\x43\x47\x54\x53\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-    
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += self.write_int(record_count, 4)
+        string_bytes = self.write_header(record_count)
 
         units_start = len(string_bytes) + (record_count * 12)
         for record in records:
@@ -1007,16 +1037,13 @@ class StageList(GundamDataFile):
     header = b"\x4C\x47\x54\x53\x00\x00\x0B\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         difficulties = ["NORMAL", "HARD", "EXTRA", "HELL"]
-        SPACE = 1
-        AIR = 2
-        LAND = 4
-        SURFACE = 8
-        UNDERWATER = 16
-        
         record_count = self.read_header(buffer)
         records = []
 
@@ -1045,7 +1072,9 @@ class StageList(GundamDataFile):
             record["terrain_land"] = 1 if record["terrain"] & LAND else 0
             record["terrain_surface"] = 1 if record["terrain"] & SURFACE else 0
             record["terrain_underwater"] = 1 if record["terrain"] & UNDERWATER else 0
+
             del record["terrain"]
+            del record["__null"]
 
             records.append(record)
 
@@ -1068,7 +1097,14 @@ class SkillAcquisitionPatternList(GundamDataFile):
     header = b"\x4C\x51\x41\x53\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        for record in records:
+            for v in record["values"]:
+                string_bytes += self.write_int(v, 4)
+    
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -1091,7 +1127,10 @@ class SpecProfileList(GundamDataFile):
     header = b"\x4C\x50\x50\x53\x00\x00\x03\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         ms_count = self.read_header(buffer)
@@ -1126,7 +1165,10 @@ class TitleBgmList(GundamDataFile):
     header = b""
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -1144,7 +1186,10 @@ class TutorialList(GundamDataFile):
     header = b"\x4F\x54\x55\x54\x00\x00\x01\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -1162,7 +1207,10 @@ class WeaponSpecList(GundamDataFile):
     header = b"\x4C\x53\x50\x57\x00\x00\x01\x01"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)

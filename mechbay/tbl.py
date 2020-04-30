@@ -11,11 +11,8 @@ class StringTBL(GundamDataFile):
     header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
 
     def write(self, records: List[Dict]) -> bytes:
-        string_bytes = bytes()
-
-        string_bytes += self.header
         record_count = len(records)
-        string_bytes += self.write_int(record_count, 4)
+        string_bytes = self.write_header(record_count)
 
         string_start = len(string_bytes) + (record_count * 8)
 
@@ -78,7 +75,10 @@ class WeaponTBL(GundamDataFile):
     default_filename = "weapon.tbl"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         """

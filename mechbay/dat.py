@@ -8,7 +8,10 @@ class DlcList(GundamDataFile):
     header = b"\x08\x80\x80\x80\x08\x12\x04\x08"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -28,7 +31,10 @@ class EffectList(GundamDataFile):
     header = b"\x4C\x45\x4D\x54"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -49,7 +55,10 @@ class MapWeaponList(GundamDataFile):
     header = b"\x57\x4D\x4D\x54"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -76,7 +85,10 @@ class MovieList(GundamDataFile):
     record_count_length = 2
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -96,7 +108,10 @@ class PowerUpList(GundamDataFile):
     header = b"\x44\x4C\x55\x50"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -117,7 +132,10 @@ class ScoutMessageId(GundamDataFile):
     record_count_length = 2
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -141,7 +159,10 @@ class SteamDlcGroupList(GundamDataFile):
     header = b""
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -161,7 +182,10 @@ class Stage(GundamDataFile):
     header = b"\x49\x53\x4D\x54\x2F\x01\x00\x00"
 
     def write(self, records: List[Dict]) -> bytes:
-        pass
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
