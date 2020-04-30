@@ -33,6 +33,10 @@ class EffectList(GundamDataFile):
     def write(self, records: List[Dict]) -> bytes:
         record_count = len(records)
         string_bytes = self.write_header(record_count)
+        
+        for r in records:
+            string_bytes += self.write_int(r["effect_id"], 4)
+            string_bytes += self.write_string_length(r["effect_name"])
 
         return string_bytes
 
