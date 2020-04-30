@@ -322,7 +322,7 @@ class CharacterSpecList(GundamDataFile):
                 "unknown1": self.read_int(buffer.read(2), signed=True),
                 "dlc_set": self.read_int(buffer.read(2)),
                 # in language/*/CharacterSpecList.tbl
-                "name_index": self.read_int(buffer.read(2)),
+                "display_name_index": self.read_int(buffer.read(2)),
                 "unknown3": self.read_int(buffer.read(1)),
                 "unknown4": self.read_int(buffer.read(1)),
                 "ranged": self.read_int(buffer.read(2)),
@@ -345,7 +345,7 @@ class CharacterSpecList(GundamDataFile):
                 ],
                 "bgm1": self.read_int(buffer.read(2)),
                 "bgm2": self.read_int(buffer.read(2)),
-                "personality": self.read_int(buffer.read(2)),
+                "personality_index": self.read_int(buffer.read(2)),
                 "guid4": self.read_guid_bytes(buffer.read(8)),
                 "unique_name_index": self.read_int(buffer.read(2), signed=True),
                 "unknown5a": self.read_int(buffer.read(1), signed=False),
@@ -359,7 +359,7 @@ class CharacterSpecList(GundamDataFile):
                 "recruitable": self.read_int(buffer.read(4)),
             }
             if record["unique_name_index"] == -1:
-                record["unique_name_index"] = record["name_index"]
+                record["unique_name_index"] = record["display_name_index"]
             for i in range(4):
                 record[f"unknown6_bit{i}"] = 1 if record["__unknown6"] & 2 ** i else 0
             del record["__null"]
@@ -375,7 +375,7 @@ class CharacterSpecList(GundamDataFile):
                 "guid2": self.read_guid_bytes(buffer.read(8)),
                 "chara_org": self.read_guid_bytes(buffer.read(8)),
                 "unknown1": self.read_int(buffer.read(2), signed=True),
-                "dlc_thing": self.read_int(buffer.read(2), signed=True),
+                "dlc_set": self.read_int(buffer.read(2)),
                 # in language/*/CharacterSpecList.tbl
                 "unique_name_index": self.read_int(buffer.read(2)),
                 "unknown3": self.read_int(buffer.read(1)),
@@ -399,28 +399,28 @@ class CharacterSpecList(GundamDataFile):
                 ],
                 "bgm1": self.read_int(buffer.read(2)),
                 "bgm2": self.read_int(buffer.read(2)),
-                "personality": self.read_int(buffer.read(2)),
-    
+                "personality_index": self.read_int(buffer.read(2)),
             }
             npcs.append(npc)
 
         print(buffer.tell())
         buffer.seek(pointer2)
-        pair_count = self.read_int(buffer.read(4))
-        pairs = []
-        for i in range(pair_count):
-            pair = {
+        personality_count = self.read_int(buffer.read(4))
+        personalities = []
+        for i in range(personality_count):
+            personality = {
                 # Adds up to 100
                 "__order": i,
                 "index": self.read_int(buffer.read(1)),
-                "val1": self.read_int(buffer.read(1)),
-                "val2": self.read_int(buffer.read(1)),
-                "val3": self.read_int(buffer.read(1)),
+                "timid": self.read_int(buffer.read(1)),
+                "normal": self.read_int(buffer.read(1)),
+                "high": self.read_int(buffer.read(1)),
             }
-            pairs.append(pair)
-        
-        # records.extend(npcs)
-        # records.extend(pairs)
+            personalities.append(personality)
+            print(personality)
+
+        records.extend(npcs)
+        # records.extend(personalities)
 
         return records
 
