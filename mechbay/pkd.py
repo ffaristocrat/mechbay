@@ -93,8 +93,7 @@ class PKDArchive(GundamDataFile):
                 "__file_pointer": self.read_int(buffer.read(4)),
                 "__file_size": self.read_int(buffer.read(4)),
                 # +20 for header bytes
-                "__name_pointer": self.read_int(buffer.read(4))
-                + 20,
+                "__name_pointer": self.read_int(buffer.read(4)) + 20,
             }
             records.append(record)
 
