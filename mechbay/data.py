@@ -8,6 +8,7 @@ class GundamDataFile:
     default_filename: str = None
     record_count_length: int = 4
     definition: Dict[str, str] = None
+    constants: Dict = None
 
     def __init__(
         self,
@@ -165,8 +166,17 @@ class GundamDataFile:
         return string_bytes
 
     @classmethod
+    def apply_constants(cls, records: List[Dict]) -> None:
+        if not cls.constants:
+            return
+
+        for r in records:
+            r.update(**cls.constants)
+
+    @classmethod
     def write_records(cls, definition: Dict, records: List[Dict]) -> bytes:
         byte_string = bytes()
+        cls.apply_constants(records)
 
         for record in records:
             byte_string += cls.write_record(definition, record)
@@ -188,24 +198,10 @@ class GundamDataFile:
 
     @classmethod
     def read_record(cls, definition: Dict, buffer: BinaryIO) -> Dict[str, Any]:
+        location = buffer.tell()
         record = {}
         for field, field_type in definition.items():
-            if field_type.startswith("int"):
-                record[field] = cls.read_int(
-                    buffer.read(int(field_type[-1])), signed=True
-                )
-            elif field_type.startswith("uint"):
-                record[field] = cls.read_int(
-                    buffer.read(int(field_type[-1])), signed=False
-                )
-            elif field_type in ["len_string"]:
-                record[field] = cls.read_string_length(buffer)
-            elif field_type in ["null_string"]:
-                record[field] = cls.read_string_null_term(buffer)
-            elif field_type in ["guid"]:
-                record[field] = cls.read_guid_bytes(buffer.read(8))
-            elif field_type in ["series_guid"]:
-                record[field] = cls.read_series_bytes(buffer.read(4))
+            record[field] = cls.read_field(field_type, buffer, location)
 
         return record
 
@@ -213,21 +209,58 @@ class GundamDataFile:
     def write_record(cls, definition: Dict, record: Dict) -> bytes:
         byte_string = bytes()
         for field, field_type in definition.items():
-            if field_type.startswith("int"):
-                byte_string += cls.write_int(
-                    record[field], int(field_type[-1]), signed=True
-                )
-            elif field_type.startswith("uint"):
-                byte_string += cls.write_int(
-                    record[field], int(field_type[-1]), signed=False
-                )
-            elif field_type in ["len_string"]:
-                byte_string += cls.write_string_length(record[field])
-            elif field_type in ["null_string"]:
-                byte_string += cls.write_string_null_term(record[field])
-            elif field_type in ["guid"]:
-                byte_string += cls.write_guid_bytes(record[field])
-            elif field_type in ["series_guid"]:
-                byte_string += cls.write_series_bytes(record[field])
+            cls.write_field(field_type, record[field])
+
+        return byte_string
+
+    @classmethod
+    def read_field(
+        cls, field_type: str, buffer: BinaryIO, location: int = None
+    ) -> Union[int, str, bytes]:
+        value = None
+
+        if field_type.startswith("int"):
+            value = cls.read_int(
+                buffer.read(int(field_type.replace("int", ""))), signed=True
+            )
+        elif field_type.startswith("uint"):
+            value = cls.read_int(
+                buffer.read(int(field_type.replace("uint", ""))), signed=False
+            )
+        elif field_type in ["string_len_prefix"]:
+            value = cls.read_string_length(buffer)
+        elif field_type in ["string_null_term"]:
+            value = cls.read_string_null_term(buffer)
+        elif field_type in ["guid"]:
+            value = cls.read_guid_bytes(buffer.read(8))
+        elif field_type in ["series_guid"]:
+            value = cls.read_series_bytes(buffer.read(4))
+        elif field_type.startswith("bytes"):
+            value = buffer.read(int(field_type.replace("bytes", "")))
+        elif field_type in ["pointer"]:
+            value = cls.read_int(buffer.read(4), signed=False) + location
+
+        return value
+
+    @classmethod
+    def write_field(cls, field_type: str, value: Union[int, str, bytes]) -> bytes:
+        byte_string = bytes()
+        if field_type.startswith("int"):
+            byte_string += cls.write_int(value, int(field_type[-1]), signed=True)
+        elif field_type.startswith("uint"):
+            byte_string += cls.write_int(value, int(field_type[-1]), signed=False)
+        elif field_type in ["len_string"]:
+            byte_string += cls.write_string_length(value)
+        elif field_type in ["null_string"]:
+            byte_string += cls.write_string_null_term(value)
+        elif field_type in ["guid"]:
+            byte_string += cls.write_guid_bytes(value)
+        elif field_type in ["series_guid"]:
+            byte_string += cls.write_series_bytes(value)
+        elif field_type.startswith("bytes"):
+            byte_length = int(field_type.replace("bytes", ""))
+            byte_string += (value + ("\x00" * byte_length))[0:byte_length]
+        elif field_type in ["pointer"]:
+            byte_string += cls.write_int(value, 4, signed=False)
 
         return byte_string
