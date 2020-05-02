@@ -174,6 +174,16 @@ class GundamDataFile:
             r.update(**cls.constants)
 
     @classmethod
+    def remove_constants(cls, records: List[Dict]) -> None:
+        if not cls.constants:
+            return
+
+        for r in records:
+            for c in cls.constants:
+                if c in r:
+                    del r[c]
+
+    @classmethod
     def write_records(cls, definition: Dict, records: List[Dict]) -> bytes:
         byte_string = bytes()
         cls.apply_constants(records)
@@ -194,6 +204,8 @@ class GundamDataFile:
             record["__order"] = i
             records.append(record)
 
+        cls.remove_constants(records)
+
         return records
 
     @classmethod
@@ -201,7 +213,10 @@ class GundamDataFile:
         location = buffer.tell()
         record = {}
         for field, field_type in definition.items():
-            record[field] = cls.read_field(field_type, buffer, location)
+            value = cls.read_field(field_type, buffer, location)
+
+            if not field_type.startswith("null"):
+                record[field] = value
 
         return record
 
@@ -239,6 +254,8 @@ class GundamDataFile:
             value = buffer.read(int(field_type.replace("bytes", "")))
         elif field_type in ["pointer"]:
             value = cls.read_int(buffer.read(4), signed=False) + location
+        elif field_type.startswith("null"):
+            value = buffer.read(int(field_type.replace("null", "")))
 
         return value
 
@@ -262,5 +279,8 @@ class GundamDataFile:
             byte_string += (value + ("\x00" * byte_length))[0:byte_length]
         elif field_type in ["pointer"]:
             byte_string += cls.write_int(value, 4, signed=False)
+        elif field_type.startswith("null"):
+            byte_length = int(field_type.replace("null", ""))
+            byte_string += "\x00" * byte_length
 
         return byte_string
