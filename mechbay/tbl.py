@@ -10,6 +10,11 @@ class TBLData(GundamDataFile):
 class StringTBL(GundamDataFile):
     header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
 
+    definition = {
+        "index": "uint:4",
+        "string": "uint:4",
+    }
+
     def write(self, records: List[Dict]) -> bytes:
         record_count = len(records)
         string_bytes = self.write_header(record_count)
@@ -30,26 +35,17 @@ class StringTBL(GundamDataFile):
         string_bytes += b"\x00" * padding
 
         for record in records:
-            string_bytes += record["string"].encode("utf-8") + b"\x00"
+            string_bytes += self.write_string_null_term(record["string"])
 
         return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {
-                "__order": i,
-                "index": self.read_int(buffer.read(4)),
-                "__pointer": self.read_int(buffer.read(4)),
-            }
-            records.append(record)
+        records = self.read_records(self.definition, buffer, record_count)
 
         for record in records:
-            record["string"] = self.read_string_null_term(
-                buffer, record.pop("__pointer")
-            )
+            # Pointers in StringTBLs work slightly differently
+            record["string"] = self.read_string_null_term(buffer, record["string"])
 
         return records
 
@@ -57,11 +53,20 @@ class StringTBL(GundamDataFile):
 class VoiceTable(StringTBL):
     header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
 
+    def write(self, records: List[Dict]) -> bytes:
+        for r in records:
+            r["string"] = ",".join([
+                r["voice_id"], r["val1"], r["val2"], r["val3"]
+            ])
+        byte_string = super().write(records)
+
+        return byte_string
+
     def read(self, buffer: BinaryIO) -> List[Dict]:
         records = super().read(buffer)
 
         for record in records:
-            unpack = record["string"].split(",")
+            unpack = record.pop("string").split(",")
             record["voice_id"] = unpack[0]
             record["val1"] = int(unpack[1])
             record["val2"] = int(unpack[2])
