@@ -238,7 +238,7 @@ Primary data file about series.
 
 Stage_id is a 5 digit value. The first three correspond to the campaign.
 The second two correspond to the stage within that campaign. This is typically
-stored as a 32-bit integer.
+stored as a 4-byte unsigned integer.
 
 * data/resident/SpecProfileList.cdb
 * data/resident/StageList.pkd/StageList.cdb
@@ -261,7 +261,8 @@ Units rewarded for clearing a stage.
 
 Images used for the map. Background images seem to be universally 1024x1024, even if the
 playable/shown area is much less. Other images may be layered above/below the bg and units.
-Ie: asteroids, clouds, etc.
+Ie: asteroids, clouds, etc. The pmdl file appears to control how images
+are layered, animated, etc.
 
 * data/images/stage_img/l/st_###_##_l.txd
 * data/images/stage_img/s/st_###_##_s.txd
