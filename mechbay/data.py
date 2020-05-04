@@ -218,9 +218,7 @@ class GundamDataFile:
                     del r[c]
 
     @classmethod
-    def write_records(
-        cls, definition: Dict, records: List[Dict]
-    ) -> bytes:
+    def write_records(cls, definition: Dict, records: List[Dict]) -> bytes:
         cls.apply_constants(records)
 
         main_block_size = len(records) * cls.definition_size(definition)
@@ -326,7 +324,7 @@ class GundamDataFile:
         if base_type not in ["pointer", "cfpointer"]:
             return base_type, byte_count, is_list, child_type
 
-        if ft[0] == "list":
+        if len(ft) > 1 and ft[0] == "list":
             ft.pop(0)
             is_list = True
             byte_count = 8
@@ -361,7 +359,7 @@ class GundamDataFile:
             buffer.read(byte_count)
         elif base_type in ["pointer", "cfpointer"]:
             pointer = cls.read_int(buffer.read(4)) + location
-            
+
             if not is_list and not child_type:
                 value = pointer
 
