@@ -1,6 +1,7 @@
 import json
 import os
-from typing import List, Dict, ByteString, BinaryIO, Union, Any
+from functools import lru_cache
+from typing import List, Dict, ByteString, BinaryIO, Union, Any, Tuple, Optional
 
 
 class GundamDataFile:
@@ -17,7 +18,7 @@ class GundamDataFile:
         record_count_length: int = None,
     ):
         self.filename = filename or self.default_filename
-        if header:
+        if header is not None:
             self.header = header
         if record_count_length is not None:
             self.record_count_length = record_count_length
@@ -51,22 +52,25 @@ class GundamDataFile:
         return string_bytes
 
     @staticmethod
-    def read_guid_bytes(byte_string: bytes) -> Union[str, None]:
+    def read_guid_bytes(byte_string: bytes) -> Union[str, bytes, None]:
         if byte_string == b"\x00\x00\x00\x00\x00\x00\x00\x00":
             return None
 
-        series = int.from_bytes(byte_string[0:2], byteorder="little")
-        gundam = chr(byte_string[2])
-        unit_type = chr(byte_string[4])
-        spec = byte_string[5]
-        model = int.from_bytes(byte_string[6:8], byteorder="little")
+        try:
+            series = int.from_bytes(byte_string[0:2], byteorder="little")
+            gundam = chr(byte_string[2])
+            unit_type = chr(byte_string[4])
+            spec = byte_string[5]
+            model = int.from_bytes(byte_string[6:8], byteorder="little")
 
-        unit_id = f"{gundam}{series:04}{unit_type}{model:03}{spec:02}"
+            unit_id = f"{gundam}{series:04}{unit_type}{model:03}{spec:02}"
+        except (TypeError, IndexError):
+            return byte_string
 
         return unit_id
 
     @staticmethod
-    def write_guid_bytes(unit_string: Union[str, None]) -> bytes:
+    def write_guid_bytes(unit_string: Optional[str]) -> bytes:
         if not unit_string:
             return b"\x00" * 8
 
@@ -124,7 +128,7 @@ class GundamDataFile:
     def write_header(cls, record_count: int) -> bytes:
         string_bytes = bytes()
         string_bytes += cls.header
-        string_bytes += cls.write_int(record_count, 4)
+        string_bytes += cls.write_int(record_count, cls.record_count_length)
         return string_bytes
 
     def dump(self, data_filename: str = None, json_filename: str = None):
@@ -166,6 +170,36 @@ class GundamDataFile:
         return string_bytes
 
     @classmethod
+    def definition_size(cls, definition: Dict) -> int:
+        size = 0
+        for field_type in definition.values():
+            _, byte_count, _, _ = cls.parse_field_type(field_type)
+            size += byte_count
+        return size
+
+    @staticmethod
+    def bit_smash(field: str, value: int, sub_fields: List[str]) -> Dict[str, int]:
+        smashed = {
+            f"{field}_{sf}": 1 if value and value & (2 ** i) else 0
+            for i, sf in enumerate(sub_fields)
+        }
+        return smashed
+
+    @staticmethod
+    def bit_smush(field: str, smashed: Dict[str, int], sub_fields: List[str]) -> int:
+        value = 0
+
+        for i, sf in enumerate(sub_fields):
+            if smashed[f"{field}_{sf}"] == 1:
+                value += 2 ** i
+
+        return value
+
+    @classmethod
+    def header_length(cls) -> int:
+        return len(cls.header) + cls.record_count_length
+
+    @classmethod
     def apply_constants(cls, records: List[Dict]) -> None:
         if not cls.constants:
             return
@@ -184,12 +218,41 @@ class GundamDataFile:
                     del r[c]
 
     @classmethod
-    def write_records(cls, definition: Dict, records: List[Dict]) -> bytes:
-        byte_string = bytes()
+    def write_records(
+        cls, definition: Dict, records: List[Dict]
+    ) -> bytes:
         cls.apply_constants(records)
 
+        main_block_size = len(records) * cls.definition_size(definition)
+        child_bytes = bytes()
+
+        # Assemble child blocks while filling in pointers
+        for field, field_type in definition.items():
+            base_type, byte_count, is_list, child_type = cls.parse_field_type(
+                field_type
+            )
+            if base_type not in ["pointer", "cfpointer"]:
+                continue
+
+            for i, r in enumerate(records):
+                r[f"{field}_pointer"] = (
+                    main_block_size
+                    - (i * cls.definition_size(definition))
+                    + len(child_bytes)
+                )
+
+                if is_list:
+                    r[f"{field}_count"] = len(r[field])
+                    for c in r[field]:
+                        child_bytes += cls.write_field(child_type, c)
+                else:
+                    child_bytes += cls.write_field(child_type, r[field])
+
+        byte_string = bytes()
         for record in records:
             byte_string += cls.write_record(definition, record)
+
+        byte_string += child_bytes
 
         return byte_string
 
@@ -224,63 +287,133 @@ class GundamDataFile:
     def write_record(cls, definition: Dict, record: Dict) -> bytes:
         byte_string = bytes()
         for field, field_type in definition.items():
-            cls.write_field(field_type, record[field])
+            base_type, byte_count, is_list, _ = cls.parse_field_type(field_type)
+
+            if base_type in ["cfpointer"]:
+                byte_string += cls.write_field("uint:4", record.pop(f"{field}_count"))
+                byte_string += cls.write_field("uint:4", record.pop(f"{field}_pointer"))
+            elif base_type in ["pointer"] and is_list:
+                byte_string += cls.write_field("uint:4", record.pop(f"{field}_pointer"))
+                byte_string += cls.write_field("uint:4", record.pop(f"{field}_count"))
+            elif base_type in ["pointer"] and not is_list:
+                byte_string += cls.write_field("uint:4", record.pop(f"{field}_pointer"))
+            elif base_type in ["null"]:
+                byte_string += b"\x00" * byte_count
+            else:
+                byte_string += cls.write_field(field_type, record[field])
 
         return byte_string
+
+    @staticmethod
+    @lru_cache
+    def parse_field_type(
+        field_type: str
+    ) -> Tuple[str, Optional[int], bool, Optional[str]]:
+        ft = field_type.split(":")
+
+        base_type = ft.pop(0)
+        byte_count = None
+        is_list = False
+        child_type = None
+
+        if base_type in ["uint", "int", "null", "bytes"]:
+            byte_count = int(ft.pop(0))
+        elif base_type in ["guid"]:
+            byte_count = 8
+        elif base_type in ["series"]:
+            byte_count = 4
+
+        if base_type not in ["pointer", "cfpointer"]:
+            return base_type, byte_count, is_list, child_type
+
+        if ft[0] == "list":
+            ft.pop(0)
+            is_list = True
+            byte_count = 8
+        else:
+            byte_count = 4
+        child_type = ":".join(ft)
+
+        return base_type, byte_count, is_list, child_type
 
     @classmethod
     def read_field(
         cls, field_type: str, buffer: BinaryIO, location: int = None
-    ) -> Union[int, str, bytes]:
+    ) -> Union[List, Dict, int, str, bytes]:
         value = None
+        base_type, byte_count, is_list, child_type = cls.parse_field_type(field_type)
 
-        if field_type.startswith("int"):
-            value = cls.read_int(
-                buffer.read(int(field_type.replace("int", ""))), signed=True
-            )
-        elif field_type.startswith("uint"):
-            value = cls.read_int(
-                buffer.read(int(field_type.replace("uint", ""))), signed=False
-            )
-        elif field_type in ["string_len_prefix"]:
+        if base_type in ["uint"]:
+            value = cls.read_int(buffer.read(byte_count))
+        elif base_type in ["int"]:
+            value = cls.read_int(buffer.read(byte_count), signed=True)
+        elif base_type in ["string_len_prefix"]:
             value = cls.read_string_length(buffer)
-        elif field_type in ["string_null_term"]:
+        elif base_type in ["string_null_term"]:
             value = cls.read_string_null_term(buffer)
-        elif field_type in ["guid"]:
+        elif base_type in ["guid"]:
             value = cls.read_guid_bytes(buffer.read(8))
-        elif field_type in ["series_guid"]:
+        elif base_type in ["series"]:
             value = cls.read_series_bytes(buffer.read(4))
-        elif field_type.startswith("bytes"):
-            value = buffer.read(int(field_type.replace("bytes", "")))
-        elif field_type in ["pointer"]:
-            value = cls.read_int(buffer.read(4), signed=False) + location
-        elif field_type.startswith("null"):
-            value = buffer.read(int(field_type.replace("null", "")))
+        elif base_type in ["bytes"]:
+            value = buffer.read(byte_count)
+        elif base_type in ["null"]:
+            buffer.read(byte_count)
+        elif base_type in ["pointer", "cfpointer"]:
+            pointer = cls.read_int(buffer.read(4)) + location
+            
+            if not is_list and not child_type:
+                value = pointer
+
+            elif is_list:
+                list_count = cls.read_int(buffer.read(4))
+
+                # list count is first in the pair
+                if base_type == "cfpointer":
+                    list_count, pointer = pointer, list_count
+                    list_count -= location
+                    pointer += location
+
+                value = []
+                save_location = buffer.tell()
+                buffer.seek(pointer)
+                for _ in range(list_count):
+                    v = cls.read_field(child_type, buffer)
+                    value.append(v)
+                buffer.seek(save_location)
+
+            else:
+                save_location = buffer.tell()
+                buffer.seek(pointer)
+                value = cls.read_field(child_type, buffer)
+                buffer.seek(save_location)
 
         return value
 
     @classmethod
     def write_field(cls, field_type: str, value: Union[int, str, bytes]) -> bytes:
         byte_string = bytes()
-        if field_type.startswith("int"):
-            byte_string += cls.write_int(value, int(field_type[-1]), signed=True)
-        elif field_type.startswith("uint"):
-            byte_string += cls.write_int(value, int(field_type[-1]), signed=False)
-        elif field_type in ["len_string"]:
+        base_type, byte_count, is_list, child_type = cls.parse_field_type(field_type)
+
+        if isinstance(value, bytes):
+            return value
+        elif base_type in ["int"]:
+            byte_string += cls.write_int(value, byte_count, signed=True)
+        elif base_type in ["uint"]:
+            byte_string += cls.write_int(value, byte_count)
+        elif base_type in ["string_len_prefix"]:
             byte_string += cls.write_string_length(value)
-        elif field_type in ["null_string"]:
+        elif base_type in ["string_null_term"]:
             byte_string += cls.write_string_null_term(value)
-        elif field_type in ["guid"]:
+        elif base_type in ["guid"]:
             byte_string += cls.write_guid_bytes(value)
-        elif field_type in ["series_guid"]:
+        elif base_type in ["series"]:
             byte_string += cls.write_series_bytes(value)
-        elif field_type.startswith("bytes"):
-            byte_length = int(field_type.replace("bytes", ""))
-            byte_string += (value + ("\x00" * byte_length))[0:byte_length]
-        elif field_type in ["pointer"]:
-            byte_string += cls.write_int(value, 4, signed=False)
-        elif field_type.startswith("null"):
-            byte_length = int(field_type.replace("null", ""))
-            byte_string += "\x00" * byte_length
+        elif base_type in ["bytes"]:
+            byte_string += (value + ("\x00" * byte_count))[0:byte_count]
+        elif base_type in ["null"]:
+            byte_string += b"\x00" * byte_count
+        elif base_type in ["pointer", "cfpointer"]:
+            byte_string += cls.write_int(value, 4)
 
         return byte_string
