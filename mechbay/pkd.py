@@ -84,9 +84,9 @@ class PKDArchive(GundamDataFile):
         records = []
 
         # Maybe number of bits for long? Always seems to 0x40000000
-        long_size = self.read_int(buffer.read(4))
+        self.read_int(buffer.read(4))
         # Size of the index block which we don't care about tbh
-        index_size = self.read_int(buffer.read(4))
+        self.read_int(buffer.read(4))
 
         for _ in range(record_count):
             record = {
