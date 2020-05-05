@@ -241,7 +241,11 @@ The second two correspond to the stage within that campaign. This is typically
 stored as a 4-byte unsigned integer.
 
 * data/resident/SpecProfileList.cdb
+
 * data/resident/StageList.pkd/StageList.cdb
+
+List of stages with rewards
+
 * data/resident/StageList.pkd/QuestList.cdb
 
 * data/resident/StageList.pkd/GetUnitList.cdb
@@ -339,7 +343,7 @@ Group dispatches have a straightforward 4 digit id.
 
 * data/resident/MiscData.pkd/GroupSendingMissionList.cdb
 
-Primary data for group dispatches.
+Primary data for group dispatches including rewards.
 
 * data/language/*/MiscData.tbl
 
@@ -349,40 +353,89 @@ series names.
 
 ### Progress
 
-#### Read & Write
+#### Read & Write - All Fields understood
 
-* data/\*\*/*.pkd
+* All PKD archives
+** data/\*\*/\*.pkd
 
-* data/language/*/MiscData.tbl
-* data/language/*/StageList.tbl
-* data/language/*/CharacterSpecList.tbl
-* data/language/*/SpecProfileList.tbl
-* data/stageComment/###_##0/*/StageCommentStringTable.tbl
-* data/tmap/stage/###_##0/stringTable/*/StringCommentStringTable.tbl
-* data/tmap/stage/###_##1/stringTable/*/TMapStringTable.tbl
-* data/tmap/stage/###_##2/stringTable/*/TMapStringTable2.tbl
-* data/tmap/stage/###_##3/stringTable/*/SeriesEndingStringTable.tbl
+* All String TBL files
+** data/language/\*/MiscData.tbl
+** data/language/\*/StageList.tbl
+** data/language/\*/CharacterSpecList.tbl
+** data/language/\*/SpecProfileList.tbl
+** data/stageComment/???_??0/\*/StageCommentStringTable.tbl
+** data/tmap/stage/???_??0/stringTable/\*/StringCommentStringTable.tbl
+** data/tmap/stage/???_??1/stringTable/\*/TMapStringTable.tbl
+** data/tmap/stage/???_??2/stringTable/\*/TMapStringTable2.tbl
+** data/tmap/stage/???_??3/stringTable/\*/SeriesEndingStringTable.tbl
 
-* data/resident/PersonalMachineList.cdb
+* data/resident/CharacterConversionList.cdb
 * data/resident/CharacterSpecList.pkd/CharacterGrowthList.cdb
-* data/resident/StageList.pkd/GetUnitList.cdb
-* data/tmap/stage/StageClearGetList.cdb
+* data/resident/MachineSpecList.pkd/MachineConversionList.cdb
 * data/resident/MachineSpecList.pkd/MachineDesignList.cdb
 * data/resident/MachineSpecList.pkd/MachineDevelopmentList.cdb
-* data/resident/MachineSpecList.pkd/MachineConversionList.cdb
+* data/resident/MachineSpecList.pkd/PersonalMachineList.cdb
+* data/resident/StageList.pkd/GetUnitList.cdb
+* data/tmap/stage/StageClearGetList.cdb
 
 
-#### Read & Write but not entirely understood
-* data/stageComment/###_##0/StageCommentVoiceTable.tbl
-* data/tmap/stage/###_##1/VoiceTable.tbl
-* data/tmap/stage/###_##2/VoiceTable2.tbl
-* data/tmap/stage/###_##3/SeriesEndingVoiceTable.tbl
+#### Read & Write but some fields not understood
+* All Voice String TBL files
+** data/stageComment/???_??0/StageCommentVoiceTable.tbl
+** data/tmap/stage/???_??1/VoiceTable.tbl
+** data/tmap/stage/???_??2/VoiceTable2.tbl
+** data/tmap/stage/???_??3/SeriesEndingVoiceTable.tbl
 
-* data/tmap/resident/scoutMessageId.dat
-* data/resident/MachineSpecList.pkd/MachineConversionList.cdb
-* data/resident/CharacterSpecList.pkd/CharacterConversionList.cdb
-* data/resident/MiscData.pkd/SeriesList.cdb
 * data/resident/CellAttributeList.pkd/BattleBgList.cdb
 * data/resident/SeriesProfileList.cdb
+* data/resident/MiscData.pkd/SeriesList.cdb
+* data/resident/StageList.pkd/QuestList.cdb
+* data/resident/SpecProfileList.cdb
+
+* data/tmap/resident/scoutMessageId.dat
+* data/tmap/resident/ActAbilityEffectList.cdb
 
 
+#### In Progress
+* data/tmap/resident/MapTypes.cdb
+* data/tmap/resident/editBgmScoutId.dat
+* data/tmap/resident/effectList.dat
+* data/tmap/resident/MapWeaponList.dat
+* data/tmap/resident/movieList.dat
+* data/tmap/resident/powerUpList.dat
+
+* data/resident/AbilitySpecList.cdb
+* data/resident/CellAttributeList.pkd/CellAttributeList.cdb
+* data/resident/CharacterSpecList.pkd/CharacterSpecList.cdb
+* data/resident/CharacterSpecList.pkd/MyCharacterConfiguration.cdb
+* data/resident/CharacterSpecList.pkd/SkillAcquisitionPatternList.cdb
+* data/resident/MachineSpecList.pkd/MachineGrowthList.cdb
+* data/resident/MachineSpecList.pkd/MachineSpecList.cdb
+* data/resident/MiscData.pkd/GroupSendingMissionList.cdb
+* data/resident/MiscData.pkd/TutorialList.cdb
+* data/resident/WeaponSpecList.cdb
+
+
+#### Not/Barely Started
+
+* data/tmap/stage/???_??1/stage.dat
+* data/tmap/stage/???_??1/stageConditions.dat
+
+* data/resident/CreditBgmList.cdb
+* data/resident/CreditList.cdb
+* data/resident/DlcList.dat
+* data/resident/GalleryMovieList.cdb
+* data/resident/MiscData.pkd/DatabaseCaluclation.cdb
+* data/resident/RangeDataList.cdb
+* data/resident/SteamDlcGroupList.dat
+* data/resident/TitleBgmList.cdb
+
+* data/battle/table/animation.tbl
+* data/battle/table/bomb_table.atp
+* data/battle/table/cockpit_bg_table.atp
+* data/battle/table/cutin_same.tbl
+* data/battle/table/cutin.tbl
+* data/battle/table/filter_table.atp
+* data/battle/table/idset.tbl
+* data/battle/table/information.tbl
+* data/battle/table/weapon.tbl
