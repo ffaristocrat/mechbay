@@ -29,29 +29,10 @@ class DlcList(GundamDataFile):
 class EffectList(GundamDataFile):
     default_filename = "effectList.dat"
     header = b"\x4C\x45\x4D\x54"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        
-        for r in records:
-            string_bytes += self.write_int(r["effect_id"], 4)
-            string_bytes += self.write_string_length(r["effect_name"])
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for _ in range(record_count):
-            record = {
-                "effect_id": self.read_int(buffer.read(4)),
-                "effect_name": self.read_string_length(buffer),
-            }
-            records.append(record)
-
-        return records
+    definition = {
+        "effect_id": "uint:4",
+        "effect_name": "string_len_prefix",
+    }
 
 
 class MapWeaponList(GundamDataFile):
@@ -134,28 +115,12 @@ class ScoutMessageId(GundamDataFile):
     default_filename = "scoutMessageid.dat"
     header = b"\x4D\x53\x4D\x54"
     record_count_length = 2
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {
-                "__order": i,
-                "string": self.read_string_length(buffer),
-                "value1": self.read_int(buffer.read(1)),
-                "value2": self.read_int(buffer.read(1)),
-                "value3": self.read_int(buffer.read(1)),
-            }
-            records.append(record)
-
-        return records
+    definition = {
+        "string": "string_len_prefix",
+        "value1": "uint:1",
+        "value2": "uint:1",
+        "value3": "uint:1",
+    }
 
 
 class SteamDlcGroupList(GundamDataFile):
@@ -225,7 +190,6 @@ class Stage(GundamDataFile):
                 "null3": buffer.read(1),
                 "values4": [self.read_int(buffer.read(1)) for _ in range(4)],
                 "bytething4": buffer.read(self.read_int(buffer.read(1))),
-                
                 "valuesz": [self.read_int(buffer.read(1)) for _ in
                     range(8)],
     
