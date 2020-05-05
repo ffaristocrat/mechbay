@@ -260,7 +260,7 @@ class CharacterSpecList(GundamDataFile):
         "unknown8": "int:2",
         "unknown9": "int:2",
         "unknown10": "int:2",
-        "__null": "null:10",
+        "null": "null:10",
         "scout_cost": "uint:2",
         "unknown11": "uint:2",
         "recruitable": "uint:4",
@@ -904,11 +904,7 @@ class StageList(GundamDataFile):
         "series_end": "uint:4",
     }
 
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
+    available_unit_definition = {"guid": "guid", "available_type": "uint:4"}
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         difficulties = ["NORMAL", "HARD", "EXTRA", "HELL"]
@@ -924,10 +920,9 @@ class StageList(GundamDataFile):
             record["units_available"] = []
             buffer.seek(record.pop("units_available_pointer"))
             for _ in range(record.pop("units_available_count")):
-                unit_available = {
-                    "guid": self.read_guid_bytes(buffer.read(8)),
-                    "available_type": self.read_int(buffer.read(4)),
-                }
+                unit_available = self.read_record(
+                    self.available_unit_definition, buffer
+                )
                 record["units_available"].append(unit_available)
 
         return records
@@ -963,26 +958,31 @@ class SpecProfileList(GundamDataFile):
     default_filename = "SpecProfileList.cdb"
     header = b"\x4C\x50\x50\x53\x00\x00\x03\x01"
 
-    # TODO: identify unknowns
     definition = {
         "guid": "guid",
-        "guid2": "guid",
+        "display_guid": "guid",
         "series": "series",
-        "unknown1": "uint:2",
-        "unknown2": "uint:2",
-        "unknown3": "uint:2",
-        "unknown4": "uint:2",
-        "profile_index": "uint:2",
-        "unknown5": "uint:2",
-        "unknown6": "uint:2",
-        "unknown7": "uint:2",
+        "stage_id_unlock": "uint:4",  # only for warships?
+        "dlc_set": "uint:2",
+        "profile_id": "uint:2",
+        "string_index": "uint:2",
+        "quest_id": "uint:2",
+        "group_dispatch": "uint:2",
+        "scoutable": "uint:2",  # always 1 for W and U
     }
 
     def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
+        ms_records = [r for r in records if r["guid"][5] == "U"]
+        ws_records = [r for r in records if r["guid"][5] == "W"]
+        char_records = [r for r in records if r["guid"][5] == "C"]
+        ms_count = len(ms_records)
+        string_bytes = self.write_header(ms_count)
+        string_bytes += self.write_int(len(ws_records), 4)
+        string_bytes += self.write_int(len(char_records), 4)
 
-        # TODO: parse out
+        string_bytes += self.write_records(self.definition, ms_records)
+        string_bytes += self.write_records(self.definition, ws_records)
+        string_bytes += self.write_records(self.definition, char_records)
 
         return string_bytes
 
