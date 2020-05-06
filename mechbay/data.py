@@ -314,7 +314,7 @@ class GundamDataFile:
         is_list = False
         child_type = None
 
-        if base_type in ["uint", "int", "null", "bytes"]:
+        if base_type in ["uint", "int", "null", "bytes", "binary"]:
             byte_count = int(ft.pop(0))
         elif base_type in ["guid"]:
             byte_count = 8
@@ -345,6 +345,10 @@ class GundamDataFile:
             value = cls.read_int(buffer.read(byte_count))
         elif base_type in ["int"]:
             value = cls.read_int(buffer.read(byte_count), signed=True)
+        elif base_type in ["binary"]:
+            value = bin(
+                cls.read_int(buffer.read(byte_count))
+            )[2:].zfill(byte_count * 8)
         elif base_type in ["string_len_prefix"]:
             value = cls.read_string_length(buffer)
         elif base_type in ["string_null_term"]:
@@ -399,6 +403,11 @@ class GundamDataFile:
             byte_string += cls.write_int(value, byte_count, signed=True)
         elif base_type in ["uint"]:
             byte_string += cls.write_int(value, byte_count)
+        elif base_type in ["binary"]:
+            byte_string += cls.write_int(
+                int(f"0b" + str(value).zfill(byte_count * 8), 2),
+                byte_count
+            )
         elif base_type in ["string_len_prefix"]:
             byte_string += cls.write_string_length(value)
         elif base_type in ["string_null_term"]:
