@@ -350,18 +350,21 @@ class CharacterSpecList(GundamDataFile):
 
         for i in range(ms_count):
             char = self.read_record(self.character_definition, buffer)
+            char["__order"] = i
             chars.append(char)
 
         buffer.seek(npc_pointer)
 
         for i in range(npc_count):
             npc = self.read_record(self.npc_definition, buffer)
+            npc["__order"] = i
             npcs.append(npc)
 
         buffer.seek(personality_pointer)
         personality_count = self.read_int(buffer.read(4))
         for i in range(personality_count):
             personality = self.read_record(self.personality_definition, buffer)
+            personality["__order"] = i
             personalities.append(personality)
 
         records = chars + npcs
