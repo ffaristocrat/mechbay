@@ -179,10 +179,9 @@ class CharacterGrowthList(GundamDataFile):
         level_up_bytes = self.write_records(
             self.level_up_definition,
             [
-                {
-                    k: i for k, i in zip(self.level_up_definition.keys(), s)
-                } for s in level_up_stats
-            ]
+                {k: i for k, i in zip(self.level_up_definition.keys(), s)}
+                for s in level_up_stats
+            ],
         )
 
         string_bytes = self.write_header(len(records))
@@ -313,7 +312,7 @@ class CharacterSpecList(GundamDataFile):
 
         chars = [r for r in records if r["guid"] == "C"]
         npcs = [r for r in records if r["guid"] == "N"]
-        
+
         char_bytes = self.write_records(self.definition, chars)
         npc_bytes = self.write_records(self.npc_definition, npcs)
         personality_bytes = self.write_records(
@@ -321,7 +320,7 @@ class CharacterSpecList(GundamDataFile):
             [
                 {"index": i + 1, "timid": p[0], "normal": p[1], "high": p[2]}
                 for i, p in enumerate(personalities)
-            ]
+            ],
         )
 
         string_bytes = self.write_header(len(chars))
