@@ -138,83 +138,79 @@ class CharacterConversionList(GundamDataFile):
 class CharacterGrowthList(GundamDataFile):
     default_filename = "CharacterGrowthList.cdb"
     header = b"\x52\x47\x48\x43\x00\x00\x00\x01"
-    constants = {"level_ups": 90, "profile_constant": 332}
+    level_ups = 98
+    constants = {"profile_constant": 332}
+    definition = {"profile_constant": "uint:2"}
+    level_up_definition = {
+        "cmd": "uint:2",
+        "rng": "uint:2",
+        "mel": "uint:2",
+        "def": "uint:2",
+        "rct": "uint:2",
+        "awk": "uint:2",
+        "aux": "uint:2",
+        "com": "uint:2",
+        "nav": "uint:2",
+        "mnt": "uint:2",
+        "chr": "uint:2",
+    }
+
+    def __new__(cls, *args, **kwargs):
+        super().__new__(*args, **kwargs)
+        for i in range(cls.level_ups):
+            cls.definition[f"level_{i + 2}_index"] = "uint:2"
 
     def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
         # make a unique list of stat increases
         # replace their entries with the index to those increases
         # then write both blocks
 
         level_up_stats = []
         for record in records:
-            assert len(record["level_up_stats"]) == self.constants["level_ups"]
-            record["stats"] = []
+            for i in range(self.level_ups):
+                assert len(record[f"level_{i + 2}"]) == self.level_ups
+                level_ups = tuple(record[f"level_{i + 2}"])
+                if level_ups not in level_up_stats:
+                    level_up_stats.append(level_ups)
+                record[f"level_{i + 2}_index"] = level_up_stats.index(level_ups)
 
-            for level in record["level_up_stats"]:
-                stats = (int(level[s]) for s in CHARACTER_STATS)
-                if stats not in level_up_stats:
-                    level_up_stats.append(stats)
-                record["stats"].append(stats)
+        self.apply_constants(records)
+        profile_bytes = self.write_records(self.definition, records)
+        level_up_bytes = self.write_records(
+            self.level_up_definition,
+            [
+                {
+                    k: i for k, i in zip(self.level_up_definition.keys(), s)
+                } for s in level_up_stats
+            ]
+        )
 
-        level_up_stats = list(level_up_stats)
-        stat_count = len(level_up_stats)
-        string_bytes += self.write_int(stat_count, 4)
-
-        pointer = (record_count * 2 * (self.constants["level_ups"] + 1)) + 20
-        string_bytes += self.write_int(pointer, 4)
-
-        index_lookup = {s: i for i, s in enumerate(level_up_stats)}
-        for record in records:
-            string_bytes += self.write_int(self.constants["profile_constant"], 2)
-            for s in record.pop("stats"):
-                string_bytes += self.write_int(index_lookup[s], 2)
-
-        for stats in level_up_stats:
-            string_bytes += b"".join([self.write_int(int(s), 1) for s in stats])
+        string_bytes = self.write_header(len(records))
+        string_bytes += self.write_int(len(level_up_stats), 4)
+        level_up_pointer = len(string_bytes) + len(profile_bytes) + 4
+        string_bytes += self.write_int(level_up_pointer, 4)
+        string_bytes += profile_bytes + level_up_bytes
 
         return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        stat_count = self.read_int(buffer.read(4))
-        pointer = self.read_int(buffer.read(4))
-
-        records = []
-        level_up_stats = []
+        profile_count = self.read_header(buffer)
+        level_up_count = self.read_int(buffer.read(4))
+        level_up_pointer = self.read_int(buffer.read(4))
 
         # characters have an index to one of these profiles
         # each profile has 98 indexes to a list of stats
         # the stats list states the increase of each stat
 
-        for i in range(record_count):
-            # first value is always 332
-            assert self.read_int(buffer.read(2)) == self.constants["profile_constant"]
-            record = {
-                "__order": i,
-                "__stats_index": [
-                    self.read_int(buffer.read(2))
-                    for _ in range(self.constants["level_ups"])
-                ],
-            }
-            records.append(record)
+        profiles = self.read_records(self.definition, buffer, profile_count)
+        buffer.seek(level_up_pointer)
+        level_ups = self.read_records(self.level_up_definition, buffer, level_up_count)
 
-        buffer.seek(pointer)
-        for i in range(stat_count):
-            # 11 byte blocks
-            level_up_stat = {
-                stat: self.read_int(buffer.read(1)) for stat in CHARACTER_STATS
-            }
-            level_up_stats.append(level_up_stat)
+        for profile in profiles:
+            for i in range(self.level_ups):
+                profile[f"level_{i + 2}"] = level_ups[profile[f"level_{i + 2}_index"]]
 
-        for record in records:
-            record["level_up_stats"] = [
-                level_up_stats[stat_index] for stat_index in record.pop("__stats_index")
-            ]
-
-        return records
+        return profiles
 
 
 class CharacterSpecList(GundamDataFile):
@@ -317,9 +313,26 @@ class CharacterSpecList(GundamDataFile):
 
         chars = [r for r in records if r["guid"] == "C"]
         npcs = [r for r in records if r["guid"] == "N"]
+        
+        char_bytes = self.write_records(self.definition, chars)
+        npc_bytes = self.write_records(self.npc_definition, npcs)
+        personality_bytes = self.write_records(
+            self.personality_definition,
+            [
+                {"index": i + 1, "timid": p[0], "normal": p[1], "high": p[2]}
+                for i, p in enumerate(personalities)
+            ]
+        )
 
         string_bytes = self.write_header(len(chars))
         string_bytes += self.write_int(len(npcs), 4)
+        npc_pointer = len(string_bytes) + len(char_bytes) + 12
+        string_bytes += self.write_int(npc_pointer, 4)
+        personality_pointer = npc_pointer + len(npc_bytes)
+        string_bytes += self.write_int(personality_pointer, 4)
+        string_bytes += self.write_int(832, 4)
+        string_bytes += self.write_int(20, 4)
+        string_bytes += char_bytes + npc_bytes + personality_bytes
 
         return string_bytes
 
@@ -328,8 +341,8 @@ class CharacterSpecList(GundamDataFile):
         npc_count = self.read_int(buffer.read(4))
         npc_pointer = self.read_int(buffer.read(4))
         personality_pointer = self.read_int(buffer.read(4))
-        unknown2 = self.read_int(buffer.read(2))  # 832
-        unknown3 = self.read_int(buffer.read(2))  # 20
+        self.read_int(buffer.read(2))  # unknown = 832
+        self.read_int(buffer.read(2))  # unknown = 20
 
         chars = []
         npcs = []
