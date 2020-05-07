@@ -51,14 +51,11 @@ class StringTBL(GundamDataFile):
 
 
 class Localisation:
-    def __init__(self, data_path: str, filename: str):
-        self.data_path = data_path
-        self.filename = filename
-
-    def read_files(self, input_data_path: str = None) -> List[Dict]:
+    @classmethod
+    def read_files(cls, input_data_path: str, filename: str) -> List[Dict]:
         records = None
         for language in LANGUAGES:
-            localisation = self.read_localization(language, input_data_path)
+            localisation = cls.read_localization(language, input_data_path, filename)
             if not records:
                 records = localisation[:]
 
@@ -75,7 +72,8 @@ class Localisation:
 
         return records
 
-    def write_files(self, records: List[Dict], output_data_path: str = None):
+    @classmethod
+    def write_files(cls, records: List[Dict], output_data_path: str, filename: str):
         for l in LANGUAGES:
             # try to read language
             # fall back to english then japanese
@@ -89,25 +87,27 @@ class Localisation:
                 }
                 for r in records
             ]
-            self.write_localization(localisation, l, output_data_path)
+            cls.write_localization(localisation, l, output_data_path, filename)
 
+    @staticmethod
     def write_localization(
-        self, records: List[Dict], language: str, output_data_path: str = None
+        records: List[Dict], language: str, output_data_path: str, filename: str
     ):
         full_path = os.path.join(
-            output_data_path or self.data_path,
+            output_data_path,
             language,
-            self.filename,
+            filename,
         )
         StringTBL().write_file(records, full_path)
 
+    @staticmethod
     def read_localization(
-        self, language: str, input_data_path: str = None
+        language: str, input_data_path: str, filename: str
     ) -> List[Dict]:
         full_path = os.path.join(
-            input_data_path or self.data_path,
+            input_data_path,
             language,
-            self.filename,
+            filename,
         )
         records = StringTBL().read_file(full_path)
         return records
