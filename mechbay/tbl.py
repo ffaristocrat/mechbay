@@ -80,7 +80,7 @@ class Localisation:
             # try to read language
             # fall back to english then japanese
             # then put in an error
-            localized = [
+            localisation = [
                 {
                     "string": r.get(
                         l, r.get("english", r.get("japanese", "missing string"))
@@ -89,7 +89,7 @@ class Localisation:
                 }
                 for r in records
             ]
-            self.write_localization(localized, l, output_data_path)
+            self.write_localization(localisation, l, output_data_path)
 
     def write_localization(
         self, records: List[Dict], language: str, output_data_path: str = None
