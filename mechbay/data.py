@@ -15,15 +15,14 @@ class GundamDataFile:
 
     def __init__(
         self,
-        filename: str = None,
-        header: ByteString = None,
-        record_count_length: int = None,
+        base_path: str = "."
     ):
-        self.filename = filename or self.default_filename
-        if header is not None:
-            self.header = header
-        if record_count_length is not None:
-            self.record_count_length = record_count_length
+        self.base_path = base_path
+
+    def default_file_path(self) -> str:
+        return os.path.join(
+            self.base_path, self.data_path, self.default_filename
+        )
 
     @staticmethod
     def read_int(
@@ -134,23 +133,24 @@ class GundamDataFile:
         return string_bytes
 
     def dump(self, data_filename: str = None, json_filename: str = None):
-        data_filename = data_filename or self.filename
+        data_filename = data_filename or self.default_file_path()
         json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")
         data = {
-            self.filename
+            self.default_filename
             or os.path.split(data_filename)[1]: self.read_file(data_filename)
         }
         json.dump(data, open(json_filename, "wt"), indent=4)
 
     def load(self, json_filename: str = None, data_filename: str = None):
-        data_filename = data_filename or self.filename
+        data_filename = data_filename or self.default_file_path()
         json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")
         records = json.load(open(json_filename, "rt"))[
-            self.filename or os.path.split(data_filename)[1]
+            self.default_filename or os.path.split(data_filename)[1]
         ]
         self.write_file(records, data_filename)
 
-    def read_file(self, filename: str) -> List[Dict]:
+    def read_file(self, filename: str = None) -> List[Dict]:
+        filename = filename or self.default_file_path()
         with open(filename, "rb") as buffer:
             records = self.read(buffer)
         return records
@@ -161,6 +161,7 @@ class GundamDataFile:
         return records
 
     def write_file(self, records: List[Dict], filename: str):
+        filename = filename or self.default_file_path()
         with open(filename, "wb") as buffer:
             buffer.write(self.write(records))
 
