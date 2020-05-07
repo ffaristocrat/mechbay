@@ -24,6 +24,7 @@ TERRAIN_UNDERWATER = 16
 
 
 class AbilitySpecList(GundamDataFile):
+    data_path = "data/resident"
     default_filename = "AbilitySpecList.cdb"
     header = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
 
@@ -45,12 +46,15 @@ class AbilitySpecList(GundamDataFile):
 
 
 class ActAbilityEffectList(GundamDataFile):
+    data_path = "data/tmap/resident"
     default_filename = "ActAbilityEffectList.cdb"
     header = b"\x4C\x45\x41\x41\x00\x00\x01\x01"
     definition = {"guid": "guid", "unknown1": "uint:4", "unknown2": "uint:4"}
 
 
 class BattleBgList(GundamDataFile):
+    data_path = "data/resident"
+    package = "CellAttributeList.pkd"
     default_filename = "BattleBgList.cdb"
     header = b"\x47\x42\x54\x42\x00\x00\x00\x01"
     definition = {
@@ -100,6 +104,8 @@ class BattleBgList(GundamDataFile):
 
 class CellAttributeList(GundamDataFile):
     default_filename = "CellAttributeList.cdb"
+    data_path = "data/resident"
+    package = "CellAttributeList.pkd"
     header = b"\x4C\x54\x41\x43\x00\x00\x03\x01"
     definition = {
         "name": "pointer:string_null_term",
@@ -127,6 +133,7 @@ class CellAttributeList(GundamDataFile):
 
 class CharacterConversionList(GundamDataFile):
     default_filename = "CharacterConversionList.cdb"
+    data_path = "data/resident"
     header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
     definition = {
         "character_id": "guid",
@@ -137,6 +144,8 @@ class CharacterConversionList(GundamDataFile):
 
 class CharacterGrowthList(GundamDataFile):
     default_filename = "CharacterGrowthList.cdb"
+    data_path = "data/resident"
+    package = "CharacterSpecList.pkd"
     header = b"\x52\x47\x48\x43\x00\x00\x00\x01"
     level_ups = 98
     constants = {"profile_constant": 332}
@@ -214,6 +223,8 @@ class CharacterGrowthList(GundamDataFile):
 
 class CharacterSpecList(GundamDataFile):
     default_filename = "CharacterSpecList.cdb"
+    data_path = "data/resident"
+    package = "CharacterSpecList.pkd"
     header = b"\x4C\x53\x48\x43\x00\x00\x07\x02"
     character_definition = {
         "guid": "guid",
@@ -376,6 +387,7 @@ class CharacterSpecList(GundamDataFile):
 
 class CreditBgmList(GundamDataFile):
     default_filename = "CreditBgmList.cdb"
+    data_path = "data/resident"
     header = b""
 
     def write(self, records: List[Dict]) -> bytes:
@@ -398,6 +410,8 @@ class CreditBgmList(GundamDataFile):
 class DatabaseCalculation(GundamDataFile):
     # The source file is misspelled
     default_filename = "DatabaseCalcuclation.cdb"
+    data_path = "data/resident"
+    package = "MiscData.pkd"
     header = b"\x43\x4C\x41\x43\x00\x00\x06\x01"
 
     def write(self, records: List[Dict]) -> bytes:
@@ -419,6 +433,7 @@ class DatabaseCalculation(GundamDataFile):
 
 class GalleryMovieList(GundamDataFile):
     default_filename = "GalleryMovieList.cdb"
+    data_path = "data/resident"
     header = b"\x4C\x56\x4D\x47\x00\x00\x00\x01"
 
     def write(self, records: List[Dict]) -> bytes:
@@ -440,12 +455,15 @@ class GalleryMovieList(GundamDataFile):
 
 class GetUnitList(GundamDataFile):
     default_filename = "GetUnitList.cdb"
+    data_path = "data/tmap/stage"
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
     definition = {"guid": "guid", "required_xp": "uint:4"}
 
 
 class GroupSendingMissionList(GundamDataFile):
     default_filename = "GroupSendingMissionList.cdb"
+    data_path = "data/resident"
+    package = "MiscData.pkd"
     header = b"\x4C\x53\x50\x47\x00\x00\x07\x01"
 
     definition = {
@@ -483,6 +501,8 @@ class GroupSendingMissionList(GundamDataFile):
 
 class MachineConversionList(GundamDataFile):
     default_filename = "MachineConversionList.cdb"
+    data_path = "data/resident"
+    package = "MachineSpecList.pkd"
     header = b"\x56\x4E\x43\x4D\x00\x00\x02\x01"
     definition = {
         "guid": "guid",
@@ -504,6 +524,8 @@ class MachineConversionList(GundamDataFile):
 
 class MachineDesignList(GundamDataFile):
     default_filename = "MachineDesignList.cdb"
+    data_path = "data/resident"
+    package = "MachineSpecList.pkd"
     header = b"\x49\x53\x44\x4D\x00\x00\x02\x01"
     definition = {
         "first_guid": "guid",
@@ -515,6 +537,8 @@ class MachineDesignList(GundamDataFile):
 
 class MachineDevelopmentList(GundamDataFile):
     default_filename = "MachineDevelopmentList.cdb"
+    data_path = "data/resident"
+    package = "MachineSpecList.pkd"
     header = b"\x56\x45\x44\x4D\x00\x00\x02\x01"
     definition = {
         "guid": "guid",
@@ -559,6 +583,8 @@ class MachineDevelopmentList(GundamDataFile):
 
 class MachineGrowthList(GundamDataFile):
     default_filename = "MachineGrowthList.cdb"
+    data_path = "data/resident"
+    package = "MachineSpecList.pkd"
     header = b"\x00\x00\x01\x01\x52\x47\x43\x4D"
     definition = {}
 
@@ -581,6 +607,8 @@ class MachineGrowthList(GundamDataFile):
 
 class MachineSpecList(GundamDataFile):
     default_filename = "MachineSpecList.cdb"
+    data_path = "data/resident"
+    package = "MachineSpecList.pkd"
     header = b"\x4C\x53\x43\x4D\x03\x00\x05\x02"
     constants = {"fixed7": 7}
 
@@ -748,6 +776,7 @@ class MachineSpecList(GundamDataFile):
 
 class MapTypes(GundamDataFile):
     default_filename = "MapTypes.cdb"
+    data_path = "data/tmap/resident"
     header = b"\x02\x00\x05\x01\x50\x59\x54\x4D"
     definition = {
         "unknown1": "uint:2",
@@ -778,6 +807,8 @@ class MapTypes(GundamDataFile):
 
 class MyCharacterConfigurations(GundamDataFile):
     default_filename = "MyCharacterConfigurations.cdb"
+    data_path = "data/resident"
+    package = "CharacterSpecList.pkd"
     header = b"\x43\x48\x43\x4D\x01\x00\x02\x01"
 
     definition = {
@@ -820,12 +851,16 @@ class MyCharacterConfigurations(GundamDataFile):
 
 class PersonalMachineList(GundamDataFile):
     default_filename = "PersonalMachineList.cdb"
+    data_path = "data/resident"
+    package = "MachineSpecList.pkd"
     header = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
     definition = {"guid": "guid", "pilot_guid": "guid", "custom_guid": "guid"}
 
 
 class QuestList(GundamDataFile):
     default_filename = "QuestList.cdb"
+    data_path = "data/resident"
+    package = "StageList.pkd"
     header = b"\x4C\x54\x45\x51\x00\x00\x02\x01"
     definition = {
         "guid1": "pointer:list:guid",
@@ -926,21 +961,25 @@ class QuestList(GundamDataFile):
 
 class RangeDataList(GundamDataFile):
     default_filename = "RangeDataList.cdb"
+    data_path = "data/resident"
     header = b"\x4C\x47\x4E\x52\x01\x00\x00\x01"
 
     # TODO: identify mask
-    definition = {"value_count": "uint:2", "mask": "uint:2", "value_pointer": "pointer"}
+    definition = {
+        "value_pointer": "pointer:list:uint:2",
+        "value_count": "uint:2",
+        "mask": "uint:2",
+    }
 
     def write(self, records: List[Dict]) -> bytes:
         record_count = len(records)
         string_bytes = self.write_header(record_count)
-
-        # TODO: Finish writing
-
         return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
+        other_count = self.read_int(buffer.read(4))
+
         records = self.read_records(self.definition, buffer, record_count)
 
         for record in records:
@@ -956,6 +995,8 @@ class RangeDataList(GundamDataFile):
 
 class SeriesList(GundamDataFile):
     default_filename = "SeriesList.cdb"
+    data_path = "data/resident"
+    package = "MiscData.pkd"
     header = b"\x4C\x52\x45\x53\x01\x00\x02\x01"
     # TODO: identify unknowns
     definition = {
@@ -973,6 +1014,7 @@ class SeriesList(GundamDataFile):
 
 class SeriesProfileList(GundamDataFile):
     default_filename = "SeriesProfileList.cdb"
+    data_path = "data/resident"
     header = b"\x4C\x50\x52\x53\x00\x00\x01\x01"
     definition = {
         "gallery": "series",
@@ -984,12 +1026,15 @@ class SeriesProfileList(GundamDataFile):
 
 class StageClearGetList(GundamDataFile):
     default_filename = "StageClearGetList.cdb"
+    data_path = "data/tmap/stage"
     header = b"\x43\x47\x54\x53\x00\x00\x00\x01"
     definition = {"stage_id": "uint:4", "get_units": "cfpointer:list:guid"}
 
 
 class StageList(GundamDataFile):
     default_filename = "StageList.cdb"
+    data_path = "data/resident"
+    package = "StageList.pkd"
     header = b"\x4C\x47\x54\x53\x00\x00\x0B\x01"
 
     definition = {
@@ -1090,6 +1135,7 @@ class SkillAcquisitionPatternList(GundamDataFile):
 
 class SpecProfileList(GundamDataFile):
     default_filename = "SpecProfileList.cdb"
+    data_path = "data/resident"
     header = b"\x4C\x50\x50\x53\x00\x00\x03\x01"
 
     # These are only informational for the profile pages
@@ -1135,6 +1181,7 @@ class SpecProfileList(GundamDataFile):
 
 class TitleBgmList(GundamDataFile):
     default_filename = "TitleBgmList.cdb"
+    data_path = "data/resident"
     header = b""
 
     def write(self, records: List[Dict]) -> bytes:
@@ -1156,6 +1203,8 @@ class TitleBgmList(GundamDataFile):
 
 class TutorialList(GundamDataFile):
     default_filename = "TutorialList.cdb"
+    data_path = "data/resident"
+    package = "MiscData.pkd"
     header = b"\x4F\x54\x55\x54\x00\x00\x01\x01"
     definition = {
         "tutorial_id1": "uint:4",
@@ -1168,7 +1217,78 @@ class TutorialList(GundamDataFile):
 
 class WeaponSpecList(GundamDataFile):
     default_filename = "WeaponSpecList.cdb"
-    header = b"\x4C\x53\x50\x57\x00\x00\x01\x01"
+    data_path = "data/resident"
+    package = "MachineSpecList.pkd"
+    header = b"\x4C\x53\x50\x57\x00\x00\x00\x01"
+    
+    """
+        name
+        range (grid)
+        power
+        en
+        mp
+        icon
+        type 1 - beam/physical/special
+        type 2 - melee/ranged
+        map
+        tension
+        accuracy
+        weapon effect
+        terrain capability
+        terrain effect
+    """
+    
+    definition = {
+        "guid": "guid",
+        "name_index": "uint:2",  # MachineSpecList.tbl
+        "unk1": "uint:2",
+        "power": "uint:2",
+        "en": "uint:2",
+        "mp": "uint:2",
+        "unk6a": "uint:1",  # [0, 136, 168, 170]
+        "unk6b": "uint:1",  # [0, 1, 2]
+        "index2": "uint:2",  # [1793, 1794, 1795, 1796, 1797, 1798, 1799, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1811, 1817, 1819]
+        "type_index": "uint:1",
+        "effect_index": "uint:1",
+        "unk9": "uint:2",  # [0, 4, 5]
+        "unk10": "uint:2",  # [15, 16, 26, 30, 31]
+        "unk11": "int:1",  # [1, 2, 3, 4]
+        "unk12": "int:1",  # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]
+        "unk13": "uint:2",  # [65, 70, 75, 80, 85, 90, 1355, 1360, 1365, 1370, 2630, 2635, 2640, 2645, 2650, 3925]
+        "icon?": "uint:2",  # [1, 2, 3, 4, 5, 6, 7, 8]
+        "null": "null:2",
+    }
+
+    map_weapon_definition = {
+        "guid": "guid",
+        "name_index": "uint:2",
+        "unk1": "uint:2",
+        "power": "uint:2",
+        "en": "uint:2",
+        "mp": "uint:2",
+        "unk6a": "uint:1",  # [128, 170]
+        "unk6b": "uint:1",  # [0, 2]
+        "index2": "uint:2",  # [1793, 1794, 1795, 1796, 1797, 1798, 1799, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1811, 1817, 1819]
+        "type_index": "uint:1",  # [7]
+        "effect_index": "uint:1",
+        "unk9": "uint:2",  # [0, 4]
+        "unk10": "uint:2",  # [15, 24, 31]
+        "unk11": "int:2",  # [-1, 1812, 1815, 1831]
+        "unk12": "int:2",  # [0, 1, 256, 512]
+        "unk13": "int:2",  # [3, 4, 258, 769, 1281, 1537]
+        "null": "null:2",
+    }
+
+    type_definition = {
+        "name_index": "uint:2",
+        "index": "uint:2",
+    }
+
+    effect_definition = {
+        "name_index": "uint:2",
+        "desc_index": "uint:2",
+        "index": "uint:2",
+    }
 
     def write(self, records: List[Dict]) -> bytes:
         record_count = len(records)
@@ -1177,16 +1297,35 @@ class WeaponSpecList(GundamDataFile):
         return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
+        weapon_count = self.read_header(buffer)
+        map_weapon_count = self.read_int(buffer.read(4))
+        map_weapon_pointer = self.read_int(buffer.read(4))
+        type_pointer = self.read_int(buffer.read(4))
+        effect_pointer = self.read_int(buffer.read(4))
 
-        # series of data
-        # followed by two small blocks
-        # 8 * (value, index)
-        # 31 * (value, value, index)
+        weapons = self.read_records(self.definition, buffer, weapon_count)
 
-        for i in range(record_count):
-            record = {"__order": i}
-            records.append(record)
+        buffer.seek(map_weapon_pointer)
+        map_weapons = self.read_records(
+            self.map_weapon_definition, buffer, map_weapon_count
+        )
 
+        print("weapons")
+        for k in weapons[0].keys():
+            print(k, sorted({w[k] for w in weapons}))
+
+        print("map_weapons")
+        for k in map_weapons[0].keys():
+            print(k, sorted({w[k] for w in map_weapons}))
+
+        buffer.seek(type_pointer)
+        type_count = self.read_int(buffer.read(4))
+        types = self.read_records(self.type_definition, buffer, type_count)
+
+        buffer.seek(effect_pointer)
+        effect_count = self.read_int(buffer.read(4))
+        effects = self.read_records(self.effect_definition, buffer, effect_count)
+
+        records = weapons + map_weapons + types + effects
+        
         return records
