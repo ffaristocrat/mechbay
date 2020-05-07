@@ -3,14 +3,7 @@ from typing import List, Dict, BinaryIO
 
 from .data import GundamDataFile
 
-LANGUAGES = [
-    "english",
-    "japanese",
-    "korean",
-    "schinese",
-    "tchinese/hk",
-    "tchinese/tw",
-]
+LANGUAGES = ["english", "japanese", "korean", "schinese", "tchinese/hk", "tchinese/tw"]
 
 
 class TBLData(GundamDataFile):
@@ -20,10 +13,7 @@ class TBLData(GundamDataFile):
 class StringTBL(GundamDataFile):
     header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
 
-    definition = {
-        "index": "uint:4",
-        "string": "uint:4",
-    }
+    definition = {"index": "uint:4", "string": "uint:4"}
 
     def write(self, records: List[Dict]) -> bytes:
         record_count = len(records)
@@ -60,26 +50,31 @@ class StringTBL(GundamDataFile):
         return records
 
 
-class Localization:
+class Localisation:
     def __init__(self, data_path: str, filename: str):
         self.data_path = data_path
         self.filename = filename
 
     def read_file(self) -> List[Dict]:
         records = None
-        for l in LANGUAGES:
-            localized = self.read_localization(l)
+        for language in LANGUAGES:
+            localisation = self.read_localization(language)
             if not records:
-                records = localized[:]
+                records = localisation[:]
 
-            for r, loc in zip(records, localized):
-                r[l] = loc["string"]
-        
+            if len(records) != len(localisation):
+                raise ValueError(f"Length of {language} string table does not match")
+
+            for r, l in zip(records, localisation):
+                if r["index"] != l["index"]:
+                    raise ValueError(f"Index field in {language} does not match")
+                r[language] = l["string"]
+
         for r in records:
             del r["string"]
-            
+
         return records
-    
+
     def write_file(self, records: List[Dict], output_data_path: str = None):
         for l in LANGUAGES:
             # try to read language
@@ -87,25 +82,32 @@ class Localization:
             # then put in an error
             localized = [
                 {
-                    "string": r.get(l, r.get("english", r.get("japanese", "missing string"))),
-                    "index": r["index"]
-                } for r in records
+                    "string": r.get(
+                        l, r.get("english", r.get("japanese", "missing string"))
+                    ),
+                    "index": r["index"],
+                }
+                for r in records
             ]
             self.write_localization(localized, l, output_data_path)
 
-    def write_localization(self, records: List[Dict], language: str, output_data_path: str = None):
+    def write_localization(
+        self, records: List[Dict], language: str, output_data_path: str = None
+    ):
         full_path = os.path.join(
             output_data_path or self.data_path,
             "" if language == "japanese" else language,
-            self.filename
+            self.filename,
         )
         StringTBL().write_file(records, full_path)
-    
-    def read_localization(self, language: str, input_data_path: str = None) -> List[Dict]:
+
+    def read_localization(
+        self, language: str, input_data_path: str = None
+    ) -> List[Dict]:
         full_path = os.path.join(
             input_data_path or self.data_path,
             "" if language == "japanese" else language,
-            self.filename
+            self.filename,
         )
         records = StringTBL().read_file(full_path)
         return records
@@ -116,9 +118,7 @@ class VoiceTable(StringTBL):
 
     def write(self, records: List[Dict]) -> bytes:
         for r in records:
-            r["string"] = ",".join([
-                r["voice_id"], r["val1"], r["val2"], r["val3"]
-            ])
+            r["string"] = ",".join([r["voice_id"], r["val1"], r["val2"], r["val3"]])
         byte_string = super().write(records)
 
         return byte_string
