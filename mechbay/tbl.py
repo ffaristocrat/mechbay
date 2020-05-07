@@ -55,10 +55,10 @@ class Localisation:
         self.data_path = data_path
         self.filename = filename
 
-    def read_files(self) -> List[Dict]:
+    def read_files(self, input_data_path: str = None) -> List[Dict]:
         records = None
         for language in LANGUAGES:
-            localisation = self.read_localization(language)
+            localisation = self.read_localization(language, input_data_path)
             if not records:
                 records = localisation[:]
 
