@@ -96,7 +96,7 @@ class Localisation:
     ):
         full_path = os.path.join(
             output_data_path or self.data_path,
-            "" if language == "japanese" else language,
+            language,
             self.filename,
         )
         StringTBL().write_file(records, full_path)
@@ -106,7 +106,7 @@ class Localisation:
     ) -> List[Dict]:
         full_path = os.path.join(
             input_data_path or self.data_path,
-            "" if language == "japanese" else language,
+            language,
             self.filename,
         )
         records = StringTBL().read_file(full_path)
