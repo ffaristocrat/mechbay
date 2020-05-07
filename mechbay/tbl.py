@@ -1,6 +1,16 @@
+import os
 from typing import List, Dict, BinaryIO
 
 from .data import GundamDataFile
+
+LANGUAGES = [
+    "english",
+    "japanese",
+    "korean",
+    "schinese",
+    "tchinese/hk",
+    "tchinese/tw",
+]
 
 
 class TBLData(GundamDataFile):
@@ -27,7 +37,7 @@ class StringTBL(GundamDataFile):
         string_start += padding
 
         for record in records:
-            string_bytes += self.write_int(record["index"], 4)
+            string_bytes += self.write_int(record.get("index", 0), 4)
             string_bytes += self.write_int(string_start, 4)
 
             string_start += len(record["string"].encode("utf-8")) + 1
@@ -47,6 +57,57 @@ class StringTBL(GundamDataFile):
             # Pointers in StringTBLs work slightly differently
             record["string"] = self.read_string_null_term(buffer, record["string"])
 
+        return records
+
+
+class Localization:
+    def __init__(self, data_path: str, filename: str):
+        self.data_path = data_path
+        self.filename = filename
+
+    def read_file(self) -> List[Dict]:
+        records = None
+        for l in LANGUAGES:
+            localized = self.read_localization(l)
+            if not records:
+                records = localized[:]
+
+            for r, loc in zip(records, localized):
+                r[l] = loc["string"]
+        
+        for r in records:
+            del r["string"]
+            
+        return records
+    
+    def write_file(self, records: List[Dict], output_data_path: str = None):
+        for l in LANGUAGES:
+            # try to read language
+            # fall back to english then japanese
+            # then put in an error
+            localized = [
+                {
+                    "string": r.get(l, r.get("english", r.get("japanese", "missing string"))),
+                    "index": r["index"]
+                } for r in records
+            ]
+            self.write_localization(localized, l, output_data_path)
+
+    def write_localization(self, records: List[Dict], language: str, output_data_path: str = None):
+        full_path = os.path.join(
+            output_data_path or self.data_path,
+            "" if language == "japanese" else language,
+            self.filename
+        )
+        StringTBL().write_file(records, full_path)
+    
+    def read_localization(self, language: str, input_data_path: str = None) -> List[Dict]:
+        full_path = os.path.join(
+            input_data_path or self.data_path,
+            "" if language == "japanese" else language,
+            self.filename
+        )
+        records = StringTBL().read_file(full_path)
         return records
 
 
