@@ -6,6 +6,8 @@ from typing import List, Dict, ByteString, BinaryIO, Union, Any, Tuple, Optional
 
 class GundamDataFile:
     header: ByteString = None
+    data_path: str = None
+    package: str = None
     default_filename: str = None
     record_count_length: int = 4
     definition: Dict[str, str] = None
