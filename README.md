@@ -363,11 +363,11 @@ series names.
 ** data/language/\*/StageList.tbl
 ** data/language/\*/CharacterSpecList.tbl
 ** data/language/\*/SpecProfileList.tbl
-** data/stageComment/???_??0/\*/StageCommentStringTable.tbl
-** data/tmap/stage/???_??0/stringTable/\*/StringCommentStringTable.tbl
-** data/tmap/stage/???_??1/stringTable/\*/TMapStringTable.tbl
-** data/tmap/stage/???_??2/stringTable/\*/TMapStringTable2.tbl
-** data/tmap/stage/???_??3/stringTable/\*/SeriesEndingStringTable.tbl
+** data/stageComment/???\_??0/\*/StageCommentStringTable.tbl
+** data/tmap/stage/???\_??0/stringTable/\*/StringCommentStringTable.tbl
+** data/tmap/stage/???\_??1/stringTable/\*/TMapStringTable.tbl
+** data/tmap/stage/???\_??2/stringTable/\*/TMapStringTable2.tbl
+** data/tmap/stage/???\_??3/stringTable/\*/SeriesEndingStringTable.tbl
 
 * data/resident/CharacterConversionList.cdb
 * data/resident/CharacterSpecList.pkd/CharacterGrowthList.cdb
@@ -376,20 +376,22 @@ series names.
 * data/resident/MachineSpecList.pkd/MachineDevelopmentList.cdb
 * data/resident/MachineSpecList.pkd/PersonalMachineList.cdb
 * data/resident/StageList.pkd/GetUnitList.cdb
+
 * data/tmap/stage/StageClearGetList.cdb
 
 
 #### Read & Write but some fields not understood
 * All Voice String TBL files
-** data/stageComment/???_??0/StageCommentVoiceTable.tbl
-** data/tmap/stage/???_??1/VoiceTable.tbl
-** data/tmap/stage/???_??2/VoiceTable2.tbl
-** data/tmap/stage/???_??3/SeriesEndingVoiceTable.tbl
+** data/stageComment/???\_??0/StageCommentVoiceTable.tbl
+** data/tmap/stage/???\_??1/VoiceTable.tbl
+** data/tmap/stage/???\_??2/VoiceTable2.tbl
+** data/tmap/stage/???\_??3/SeriesEndingVoiceTable.tbl
 
 * data/resident/CellAttributeList.pkd/BattleBgList.cdb
 * data/resident/SeriesProfileList.cdb
 * data/resident/MiscData.pkd/SeriesList.cdb
 * data/resident/StageList.pkd/QuestList.cdb
+* data/resident/StageList.pkd/StageList.cdb
 * data/resident/SpecProfileList.cdb
 
 * data/tmap/resident/scoutMessageId.dat
@@ -411,9 +413,9 @@ series names.
 * data/resident/CharacterSpecList.pkd/SkillAcquisitionPatternList.cdb
 * data/resident/MachineSpecList.pkd/MachineGrowthList.cdb
 * data/resident/MachineSpecList.pkd/MachineSpecList.cdb
+* data/resident/MachineSpecList.pkd/WeaponSpecList.cdb
 * data/resident/MiscData.pkd/GroupSendingMissionList.cdb
 * data/resident/MiscData.pkd/TutorialList.cdb
-* data/resident/WeaponSpecList.cdb
 
 
 #### Not/Barely Started
