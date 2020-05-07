@@ -55,7 +55,7 @@ class Localisation:
         self.data_path = data_path
         self.filename = filename
 
-    def read_file(self) -> List[Dict]:
+    def read_files(self) -> List[Dict]:
         records = None
         for language in LANGUAGES:
             localisation = self.read_localization(language)
@@ -75,7 +75,7 @@ class Localisation:
 
         return records
 
-    def write_file(self, records: List[Dict], output_data_path: str = None):
+    def write_files(self, records: List[Dict], output_data_path: str = None):
         for l in LANGUAGES:
             # try to read language
             # fall back to english then japanese
