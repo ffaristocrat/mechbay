@@ -377,6 +377,7 @@ series names.
 * data/resident/MachineSpecList.pkd/PersonalMachineList.cdb
 * data/resident/StageList.pkd/GetUnitList.cdb
 
+* data/tmap/resident/effectList.dat
 * data/tmap/stage/StageClearGetList.cdb
 
 
@@ -401,7 +402,6 @@ series names.
 #### In Progress
 * data/tmap/resident/MapTypes.cdb
 * data/tmap/resident/editBgmScoutId.dat
-* data/tmap/resident/effectList.dat
 * data/tmap/resident/MapWeaponList.dat
 * data/tmap/resident/movieList.dat
 * data/tmap/resident/powerUpList.dat
