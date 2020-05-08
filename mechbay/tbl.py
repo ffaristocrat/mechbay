@@ -93,24 +93,143 @@ class Localisation:
     def write_localization(
         records: List[Dict], language: str, output_data_path: str, filename: str
     ):
-        full_path = os.path.join(
-            output_data_path,
-            language,
-            filename,
-        )
+        full_path = os.path.join(output_data_path, language, filename)
         StringTBL().write_file(records, full_path)
 
     @staticmethod
     def read_localization(
         language: str, input_data_path: str, filename: str
     ) -> List[Dict]:
-        full_path = os.path.join(
-            input_data_path,
-            language,
-            filename,
-        )
+        full_path = os.path.join(input_data_path, language, filename)
         records = StringTBL().read_file(full_path)
         return records
+
+
+class LocalisationIndexed(Localisation):
+    """ The stage versions have meaningful indexes
+        And not all localisations have the strings present
+    """
+
+    @classmethod
+    def read_files(cls, input_data_path: str, filename: str) -> Dict[int, Dict]:
+        records = {}
+        for language in LANGUAGES:
+            try:
+                localisation = cls.read_localization(
+                    language, input_data_path, filename
+                )
+            except FileNotFoundError:
+                continue
+
+            for line in localisation:
+                index = int(line["index"])
+                if index not in records:
+                    records[index] = {}
+                records[index][language] = line["string"]
+
+        return records
+
+    @classmethod
+    def write_files(
+        cls, records: Dict[int, Dict], output_data_path: str, filename: str
+    ):
+        for l in LANGUAGES:
+            # No fallback here
+            localisation = [
+                {"string": r[l], "index": index}
+                for index, r in records.items()
+                if r.get(l) is not None
+            ]
+            cls.write_localization(localisation, l, output_data_path, filename)
+
+
+class StageLocalisation:
+    stage_tables = {
+        0: {
+            "dir": "data/stageComment",
+            "voice": "StageCommentVoiceTable.tbl",
+            "string": "StageCommentStringTable.tbl",
+        },
+        1: {
+            "dir": "data/tmap/stage",
+            "voice": "VoiceTable.tbl",
+            "string": "TMapStringTable.tbl",
+        },
+        2: {
+            "dir": "data/tmap/stage",
+            "voice": "VoiceTable2.tbl",
+            "string": "TMapStringTable2.tbl",
+        },
+        3: {
+            "dir": "data/stageComment",
+            "voice": "SeriesEndingVoiceTable.tbl",
+            "string": "SeriesEndingStringTable.tbl",
+        },
+    }
+    voice_fields = ["voice_id", "val1", "val2", "val3"]
+
+    @classmethod
+    def read_files(cls, input_data_path: str, stage_id: int) -> Dict[int, Dict]:
+        parts = {}
+        campaign = str(stage_id).zfill(5)[0:3]
+        stage = str(stage_id).zfill(5)[3:5]
+
+        for part, tables in cls.stage_tables.items():
+            stage_path = os.path.join(
+                input_data_path,
+                tables["dir"],
+                f"{campaign}_{stage}{part}",
+                "StringTable",
+            )
+            parts[part] = LocalisationIndexed.read_files(stage_path, tables["string"])
+            voice_path = os.path.join(
+                input_data_path,
+                tables["dir"],
+                f"{campaign}_{stage}{part}",
+                tables["voice"],
+            )
+            try:
+                voice = VoiceTable().read_file(voice_path)
+            except FileNotFoundError:
+                voice = []
+
+            for v in voice:
+                index = int(v["index"])
+                for vf in cls.voice_fields:
+                    parts[part][index][vf] = v[vf]
+
+        return parts
+
+    @classmethod
+    def write_files(
+        cls, records: Dict[int, Dict], output_data_path: str, stage_id: int
+    ):
+        campaign = str(stage_id).zfill(5)[0:3]
+        stage = str(stage_id).zfill(5)[3:5]
+
+        for part, tables in cls.stage_tables.items():
+            stage_path = os.path.join(
+                output_data_path,
+                tables["dir"],
+                f"{campaign}_{stage}{part}",
+                "StringTable",
+            )
+            LocalisationIndexed.write_files(records[part], output_data_path, stage_path)
+            voice_path = os.path.join(
+                output_data_path,
+                tables["dir"],
+                f"{campaign}_{stage}{part}",
+                tables["voice"],
+            )
+
+            voices = []
+            for index, v in records[part].items():
+                voice = {"index": index}
+                for vf in cls.voice_fields:
+                    voice[vf] = records[part][index][vf]
+                voices.append(voice)
+
+            VoiceTable().write_file(voices, voice_path)
 
 
 class VoiceTable(StringTBL):
