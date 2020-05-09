@@ -541,6 +541,7 @@ class BTLIdSet(GundamDataFile):
 
         return records
 
+
 class BTLVoiceTable(GundamDataFile):
     default_filename = "voice_table.tbl"
     data_path = "data/sound/voice/BTL"
@@ -558,6 +559,7 @@ class BTLVoiceTable(GundamDataFile):
         records = self.read_records(self.definition, buffer, record_count)
 
         return records
+
 
 class MachineConversionList(GundamDataFile):
     default_filename = "MachineConversionList.cdb"
