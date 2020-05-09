@@ -13,16 +13,11 @@ class GundamDataFile:
     definition: Dict[str, str] = None
     constants: Dict = None
 
-    def __init__(
-        self,
-        base_path: str = "."
-    ):
+    def __init__(self, base_path: str = "."):
         self.base_path = base_path
 
     def default_file_path(self) -> str:
-        return os.path.join(
-            self.base_path, self.data_path, self.default_filename
-        )
+        return os.path.join(self.base_path, self.data_path, self.default_filename)
 
     @staticmethod
     def read_int(
@@ -349,9 +344,7 @@ class GundamDataFile:
         elif base_type in ["int"]:
             value = cls.read_int(buffer.read(byte_count), signed=True)
         elif base_type in ["binary"]:
-            value = bin(
-                cls.read_int(buffer.read(byte_count))
-            )[2:].zfill(byte_count * 8)
+            value = bin(cls.read_int(buffer.read(byte_count)))[2:].zfill(byte_count * 8)
         elif base_type in ["string_len_prefix"]:
             value = cls.read_string_length(buffer)
         elif base_type in ["string_null_term"]:
@@ -408,8 +401,7 @@ class GundamDataFile:
             byte_string += cls.write_int(value, byte_count)
         elif base_type in ["binary"]:
             byte_string += cls.write_int(
-                int(f"0b" + str(value).zfill(byte_count * 8), 2),
-                byte_count
+                int(f"0b" + str(value).zfill(byte_count * 8), 2), byte_count
             )
         elif base_type in ["string_len_prefix"]:
             byte_string += cls.write_string_length(value)

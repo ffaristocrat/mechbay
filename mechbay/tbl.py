@@ -188,7 +188,9 @@ class LocalisationIndexed(Localisation):
         return data
 
     @classmethod
-    def write_files(cls, records: Dict[int, Dict], output_data_path: str, filename: str):
+    def write_files(
+        cls, records: Dict[int, Dict], output_data_path: str, filename: str
+    ):
         data = cls.write_bytes(records)
 
         for language, byte_string in data.items():

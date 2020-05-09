@@ -1220,7 +1220,7 @@ class WeaponSpecList(GundamDataFile):
     data_path = "data/resident"
     package = "MachineSpecList.pkd"
     header = b"\x4C\x53\x50\x57\x00\x00\x00\x01"
-    
+
     """
         name
         range (grid)
@@ -1237,7 +1237,7 @@ class WeaponSpecList(GundamDataFile):
         terrain capability
         terrain effect
     """
-    
+
     definition = {
         "guid": "guid",
         "name_index": "uint:2",  # MachineSpecList.tbl
@@ -1279,10 +1279,7 @@ class WeaponSpecList(GundamDataFile):
         "null": "null:2",
     }
 
-    type_definition = {
-        "name_index": "uint:2",
-        "index": "uint:2",
-    }
+    type_definition = {"name_index": "uint:2", "index": "uint:2"}
 
     effect_definition = {
         "name_index": "uint:2",
@@ -1327,5 +1324,5 @@ class WeaponSpecList(GundamDataFile):
         effects = self.read_records(self.effect_definition, buffer, effect_count)
 
         records = weapons + map_weapons + types + effects
-        
+
         return records
