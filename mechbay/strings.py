@@ -251,7 +251,8 @@ class StageLocalisation:
 
             for v in voice:
                 index = int(v["index"])
-                for vf in cls.voice_fields:
+                parts[part][index]["voice_id"] = v["voice_id"]
+                for vf in VoiceTable.fields:
                     parts[part][index][vf] = v[vf]
 
         return parts
@@ -280,8 +281,8 @@ class StageLocalisation:
 
             voices = []
             for index, v in records[part].items():
-                voice = {"index": index}
-                for vf in cls.voice_fields:
+                voice = {"index": index, "voice_id": records[part][index]["voice_id"]}
+                for vf in VoiceTable.fields:
                     voice[vf] = records[part][index][vf]
                 voices.append(voice)
 
@@ -290,10 +291,12 @@ class StageLocalisation:
 
 class VoiceTable(StringTBL):
     header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
+    # TODO: What do these values mean?
+    fields = ["val1", "val2", "val3"]
 
     def write(self, records: List[Dict]) -> bytes:
         for r in records:
-            r["string"] = ",".join([r["voice_id"], r["val1"], r["val2"], r["val3"]])
+            r["string"] = ",".join([r["voice_id"]] + [r[f] for f in self.fields])
         byte_string = super().write(records)
 
         return byte_string
@@ -303,10 +306,8 @@ class VoiceTable(StringTBL):
 
         for record in records:
             unpack = record.pop("string").split(",")
-            # TODO: What do these values mean?
             record["voice_id"] = unpack[0]
-            record["val1"] = int(unpack[1])
-            record["val2"] = int(unpack[2])
-            record["val3"] = int(unpack[3])
+            for i, f in enumerate(self.fields):
+                record[f] = int(unpack[i + 1])
 
         return records
