@@ -1,4 +1,6 @@
 import os
+from io import BytesIO
+from pathlib import Path
 from typing import List, Dict, BinaryIO
 
 from .data import GundamDataFile
@@ -6,8 +8,25 @@ from .data import GundamDataFile
 LANGUAGES = ["english", "japanese", "korean", "schinese", "tchinese/hk", "tchinese/tw"]
 
 
-class TBLData(GundamDataFile):
-    pass
+def write_byte_dict(data: Dict[str, bytes], base_path: str):
+    for file_path, byte_string in data.items():
+        full_path = Path(os.path.join(base_path, file_path))
+        full_path.mkdir(parents=True, exist_ok=True)
+        with full_path.open("wb") as f:
+            f.write(byte_string)
+
+
+def read_byte_dict(file_list: List[str], base_path: str) -> Dict[str, bytes]:
+    data = {}
+    for file_path in file_list:
+        full_path = Path(os.path.join(base_path, file_path))
+        try:
+            with full_path.open("rb") as f:
+                data[file_path] = f.read()
+        except FileNotFoundError:
+            data[file_path] = {}
+
+    return data
 
 
 class StringTBL(GundamDataFile):
@@ -52,10 +71,29 @@ class StringTBL(GundamDataFile):
 
 class Localisation:
     @classmethod
-    def read_files(cls, input_data_path: str, filename: str) -> List[Dict]:
-        records = None
+    def read_files(cls, input_data_path: str, filename: str):
+        data = {}
         for language in LANGUAGES:
-            localisation = cls.read_localization(language, input_data_path, filename)
+            full_path = os.path.join(input_data_path, language, filename)
+            try:
+                with open(full_path, "rb") as f:
+                    data[language] = f.read()
+            except FileNotFoundError:
+                data[language] = None
+
+        records = cls.read_bytes(data)
+
+        return records
+
+    @classmethod
+    def read_bytes(cls, data: Dict[str, bytes]) -> List[Dict]:
+        records = []
+        for language, byte_string in data.items():
+            if not byte_string:
+                continue
+
+            localisation = StringTBL().read(BytesIO(byte_string))
+
             if not records:
                 records = localisation[:]
 
@@ -63,8 +101,6 @@ class Localisation:
                 raise ValueError(f"Length of {language} string table does not match")
 
             for r, l in zip(records, localisation):
-                if r["index"] != l["index"]:
-                    raise ValueError(f"Index field in {language} does not match")
                 r[language] = l["string"]
 
         for r in records:
@@ -74,35 +110,32 @@ class Localisation:
 
     @classmethod
     def write_files(cls, records: List[Dict], output_data_path: str, filename: str):
-        for l in LANGUAGES:
+        data = cls.write_bytes(records)
+
+        for language, byte_string in data.items():
+            full_path = os.path.join(output_data_path, language, filename)
+            with open(full_path, "wb") as f:
+                f.write(byte_string)
+
+    @classmethod
+    def write_bytes(cls, records: List[Dict]) -> Dict[str, bytes]:
+        data = {}
+        for language in LANGUAGES:
             # try to read language
             # fall back to english then japanese
             # then put in an error
             localisation = [
                 {
                     "string": r.get(
-                        l, r.get("english", r.get("japanese", "missing string"))
+                        language, r.get("english", r.get("japanese", "missing string"))
                     ),
                     "index": r["index"],
                 }
                 for r in records
             ]
-            cls.write_localization(localisation, l, output_data_path, filename)
+            data[language] = StringTBL().write(localisation)
 
-    @staticmethod
-    def write_localization(
-        records: List[Dict], language: str, output_data_path: str, filename: str
-    ):
-        full_path = os.path.join(output_data_path, language, filename)
-        StringTBL().write_file(records, full_path)
-
-    @staticmethod
-    def read_localization(
-        language: str, input_data_path: str, filename: str
-    ) -> List[Dict]:
-        full_path = os.path.join(input_data_path, language, filename)
-        records = StringTBL().read_file(full_path)
-        return records
+        return data
 
 
 class LocalisationIndexed(Localisation):
@@ -111,16 +144,12 @@ class LocalisationIndexed(Localisation):
     """
 
     @classmethod
-    def read_files(cls, input_data_path: str, filename: str) -> Dict[int, Dict]:
+    def read_bytes(cls, data: Dict[str, bytes]) -> Dict[int, Dict]:
         records = {}
-        for language in LANGUAGES:
-            try:
-                localisation = cls.read_localization(
-                    language, input_data_path, filename
-                )
-            except FileNotFoundError:
+        for language, byte_string in data.items():
+            if not byte_string:
                 continue
-
+            localisation = StringTBL().read(BytesIO(byte_string))
             for line in localisation:
                 index = int(line["index"])
                 if index not in records:
@@ -130,17 +159,42 @@ class LocalisationIndexed(Localisation):
         return records
 
     @classmethod
-    def write_files(
-        cls, records: Dict[int, Dict], output_data_path: str, filename: str
-    ):
-        for l in LANGUAGES:
+    def read_files(cls, input_data_path: str, filename: str) -> Dict[int, Dict]:
+        data = {}
+        for language in LANGUAGES:
+            full_path = os.path.join(input_data_path, language, filename)
+            try:
+                with open(full_path, "rb") as f:
+                    data[language] = f.read()
+            except FileNotFoundError:
+                data[language] = None
+
+        records = cls.read_bytes(data)
+
+        return records
+
+    @classmethod
+    def write_bytes(cls, records: Dict[int, Dict]) -> Dict[str, bytes]:
+        data = {}
+        for language in LANGUAGES:
             # No fallback here
             localisation = [
-                {"string": r[l], "index": index}
+                {"string": r[language], "index": index}
                 for index, r in records.items()
-                if r.get(l) is not None
+                if r.get(language) is not None
             ]
-            cls.write_localization(localisation, l, output_data_path, filename)
+            data[language] = StringTBL().write(localisation)
+
+        return data
+
+    @classmethod
+    def write_files(cls, records: Dict[int, Dict], output_data_path: str, filename: str):
+        data = cls.write_bytes(records)
+
+        for language, byte_string in data.items():
+            full_path = os.path.join(output_data_path, language, filename)
+            with open(full_path, "wb") as f:
+                f.write(byte_string)
 
 
 class StageLocalisation:
@@ -251,57 +305,5 @@ class VoiceTable(StringTBL):
             record["val1"] = int(unpack[1])
             record["val2"] = int(unpack[2])
             record["val3"] = int(unpack[3])
-
-        return records
-
-
-class Weapon(GundamDataFile):
-    header = b"\x54\x4E\x50\x57\x00\x00\x02\x00"
-    default_filename = "weapon.tbl"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        """ I think this might be for display purposes only """
-
-        weapon_count = self.read_header(buffer)
-        record_count = self.read_int(buffer.read(4))
-        records = []
-
-        for i in range(record_count):
-            record = {
-                "__order": i,
-                "unit_id": self.read_int(buffer.read(4)),
-                "weapons_count": self.read_int(buffer.read(4)),
-                "__weapons_offset": self.read_int(buffer.read(4)),
-                "weapons": [],
-            }
-            records.append(record)
-            print(record)
-
-        # Now read the weapons
-        weapons = []
-        for i in range(weapon_count):
-            # 80
-            weapon = {
-                "values": [self.read_int(buffer.read(1)) for _ in range(6)],
-                "values2": [self.read_int(buffer.read(1)) for _ in range(1)],
-                "values3": [self.read_int(buffer.read(1)) for _ in range(12)],
-                "unit_id": self.read_int(buffer.read(4)),
-                "values5": [self.read_int(buffer.read(1)) for _ in range(20)],
-                "values6": [self.read_int(buffer.read(1)) for _ in range(2)],
-                "values7": [self.read_int(buffer.read(1)) for _ in range(28)],
-            }
-            weapons.append(weapon)
-            print(weapon)
-
-        # Now read the lookup table
-        lookup = StringTBL().read(buffer)
-        for l in lookup:
-            print(l)
 
         return records
