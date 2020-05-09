@@ -303,6 +303,7 @@ class VoiceTable(StringTBL):
 
         for record in records:
             unpack = record.pop("string").split(",")
+            # TODO: What do these values mean?
             record["voice_id"] = unpack[0]
             record["val1"] = int(unpack[1])
             record["val2"] = int(unpack[2])

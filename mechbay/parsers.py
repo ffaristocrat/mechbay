@@ -147,7 +147,7 @@ class CharacterGrowthList(GundamDataFile):
     data_path = "data/resident"
     package = "CharacterSpecList.pkd"
     header = b"\x52\x47\x48\x43\x00\x00\x00\x01"
-    level_ups = 98
+    level_ups = 98  # This is blowing up to 998 for the expansion
     constants = {"profile_constant": 332}
     definition = {"profile_constant": "uint:2"}
     level_up_definition = {
@@ -230,9 +230,9 @@ class CharacterSpecList(GundamDataFile):
         "guid": "guid",
         "cutin_guid": "guid",
         "image_guid": "guid",
-        "index": "int:2",  # index maybe?
-        "dlc_set": "uint:2",
-        "display_character_spec_index": "uint:2",  # in language/*/CharacterSpecList.tbl
+        "index": "int:2",
+        "dlc": "uint:2",
+        "character_spec_list": "uint:2",
         "unknown2": "uint:1",
         "unknown3": "uint:1",
         "ranged": "uint:2",
@@ -248,15 +248,15 @@ class CharacterSpecList(GundamDataFile):
         "charisma": "uint:2",
         "experience": "uint:2",
         "out_value": "uint:2",
-        "character_growth_index": "uint:2",  # in resident/CharacterGrowth.cdb
-        "skill1_index": "int:2",
-        "skill2_index": "int:2",
-        "skill3_index": "int:2",
+        "character_growth": "uint:2",
+        "skill1": "int:2",
+        "skill2": "int:2",
+        "skill3": "int:2",
         "bgm1": "uint:2",
         "bgm2": "uint:2",
-        "personality_index": "uint:2",
+        "personality": "uint:2",
         "profile_guid": "guid",
-        "unique_character_spec_index": "int:2",
+        "unique_character_spec_list": "int:2",
         "unknown4": "uint:1",
         "unknown5": "uint:1",
         "unknown6": "int:2",
@@ -267,7 +267,7 @@ class CharacterSpecList(GundamDataFile):
         "null": "null:10",
         "scout_cost": "uint:2",
         "skill_acquisition_pattern": "uint:2",
-        "recruitable": "uint:4",
+        "scoutable": "uint:4",
     }
 
     npc_definition = {
@@ -275,8 +275,8 @@ class CharacterSpecList(GundamDataFile):
         "cutin_guid": "guid",
         "image_guid": "guid",
         "index": "int:2",
-        "dlc_set": "uint:2",
-        "display_character_spec_index": "uint:2",  # in language/*/CharacterSpecList.tbl
+        "dlc": "uint:2",
+        "character_spec_list": "uint:2",
         "unknown2": "uint:1",
         "unknown3": "uint:1",
         "ranged": "uint:2",
@@ -292,13 +292,13 @@ class CharacterSpecList(GundamDataFile):
         "charisma": "uint:2",
         "experience": "uint:2",
         "out_value": "uint:2",
-        "character_growth_index": "int:2",  # in resident/CharacterGrowth.cdb
+        "character_growth": "int:2",
         "skill1": "int:2",
         "skill2": "int:2",
         "skill3": "int:2",
         "bgm1": "uint:2",
         "bgm2": "uint:2",
-        "personality_index": "uint:2",
+        "personality": "uint:2",
     }
 
     personality_definition = {
@@ -313,13 +313,13 @@ class CharacterSpecList(GundamDataFile):
 
         for r in records:
             personality = (
-                r["personality"]["timid"],
-                r["personality"]["normal"],
-                r["personality"]["high"],
+                r["personality_timid"],
+                r["personality_normal"],
+                r["personality_high"],
             )
             if personality not in personality:
                 personalities.append(personality)
-            r["personality_index"] = personalities.index(personality)
+            r["personality"] = personalities.index(personality)
 
         chars = [r for r in records if r["guid"] == "C"]
         npcs = [r for r in records if r["guid"] == "N"]
@@ -340,8 +340,10 @@ class CharacterSpecList(GundamDataFile):
         string_bytes += self.write_int(npc_pointer, 4)
         personality_pointer = npc_pointer + len(npc_bytes)
         string_bytes += self.write_int(personality_pointer, 4)
+
         string_bytes += self.write_int(832, 4)
         string_bytes += self.write_int(20, 4)
+
         string_bytes += char_bytes + npc_bytes + personality_bytes
 
         return string_bytes
@@ -380,7 +382,29 @@ class CharacterSpecList(GundamDataFile):
         records = chars + npcs
 
         for r in records:
-            r["personality"] = personalities[r["personality_index"]]
+            p = personalities[r["personality"]]
+            r["personality_timid"] = p["timid"]
+            r["personality_normal"] = p["normal"]
+            r["personality_high"] = p["high"]
+
+        return records
+
+
+class CockpitBgTable(GundamDataFile):
+    default_filename = "cockpit_bg_table.atp"
+    data_path = "data/battle/table"
+    header = b"\xC2\x3E\x10\x0A"
+    record_count_length = 0
+
+    def write(self, records: List[Dict]) -> bytes:
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        records = []
 
         return records
 
@@ -408,7 +432,7 @@ class CreditBgmList(GundamDataFile):
 
 
 class DatabaseCalculation(GundamDataFile):
-    # The source file is misspelled
+    # Yes, the source file is misspelled
     default_filename = "DatabaseCalcuclation.cdb"
     data_path = "data/resident"
     package = "MiscData.pkd"
