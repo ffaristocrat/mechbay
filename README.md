@@ -22,7 +22,7 @@ Most audio is HCA. Use [VGMStream](https://github.com/losnoco/vgmstream) to proc
 Images are primarily DDS (DirectDraw Surface) format. They're often stored in TXD
 (Texture Dictionaries) which are just easily unpacked archives of DDS images.
 [GIMP](https://www.gimp.org/) with the [DDS Plug-in](https://code.google.com/archive/p/gimp-dds/downloads)
-should be helpful here.
+should be helpful here. Most of the TXDs used here are actually just ZIP format.
 
 Video files are USM format. This includes cut scenes, menu backgrounds, and crucially,
 battle animations for units are actually pre-rendered video, overlaid on top of 3d
@@ -141,11 +141,11 @@ Matches characters to cutin files.
 
 * data/images/chara_org/m/{guid}_m.txd/{guid}_m.dds
 
-156 x 216 DDS in a TXD
+156 x 216 DDS in a TXD. Thumbnail used for organization screens
 
 * data/images/chara_org/s/{guid}_s.txd/{guid}_s.dds
 
-156 x 88 DDS in a TXD
+156 x 88 DDS in a TXD. Thumbnail used for organization screens
 
 * data/images/chara_org/st/{guid}_st.txd
 
@@ -157,7 +157,7 @@ Matches characters to cutin files.
 
 * data/images/chara_status/{guid}_status.txd
 
-1024 × 768 DDS in a TXD
+1024 × 768 DDS in a TXD. Used on the status page
 
 * data/images/schips.txd/{guid}
 
