@@ -20,7 +20,7 @@ def mod_merge(game_path: str, mod_path: str):
     make_links(game_path, mod_path, mod_files)
 
     # launch ggcr
-    command = os.path.join(game_path, "ggcr.exe")
+    command = os.path.join(game_path, "togg.exe")
     subprocess.run(command)
 
     clean_up(game_path, mod_files)
