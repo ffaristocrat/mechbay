@@ -319,15 +319,15 @@ class GundamDataFile:
         elif base_type in ["series"]:
             byte_count = 4
 
-        if base_type not in ["pointer", "cfpointer"]:
+        if "pointer" not in base_type:
             return base_type, byte_count, is_list, child_type
+
+        byte_count = 2 if base_type in ["shpointer"] else 4
 
         if len(ft) > 1 and ft[0] == "list":
             ft.pop(0)
             is_list = True
-            byte_count = 8
-        else:
-            byte_count = 4
+            byte_count += 4
         child_type = ":".join(ft)
 
         return base_type, byte_count, is_list, child_type
@@ -357,8 +357,8 @@ class GundamDataFile:
             value = buffer.read(byte_count)
         elif base_type in ["null"]:
             buffer.read(byte_count)
-        elif base_type in ["pointer", "cfpointer"]:
-            pointer = cls.read_int(buffer.read(4)) + location
+        elif "pointer" in base_type:
+            pointer = cls.read_int(buffer.read(byte_count)) + location
 
             if not is_list and not child_type:
                 value = pointer
@@ -369,6 +369,7 @@ class GundamDataFile:
                 # list count is first in the pair
                 if base_type == "cfpointer":
                     list_count, pointer = pointer, list_count
+                    # fix location
                     list_count -= location
                     pointer += location
 
@@ -415,7 +416,7 @@ class GundamDataFile:
             byte_string += (value + ("\x00" * byte_count))[0:byte_count]
         elif base_type in ["null"]:
             byte_string += b"\x00" * byte_count
-        elif base_type in ["pointer", "cfpointer"]:
-            byte_string += cls.write_int(value, 4)
+        elif "pointer" in base_type:
+            byte_string += cls.write_int(value,  byte_count)
 
         return byte_string
