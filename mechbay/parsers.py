@@ -68,36 +68,30 @@ class BattleBgList(GundamDataFile):
         record_count = len(records)
         string_bytes = self.write_header(record_count)
         record_size = self.definition_size(self.definition)
+        fields = ["bgm1", "bgm2", "bgm3"]
 
-        # Consolidate all the bgm string ids into a set
-        all_music = []
+        # Consolidate all the string into a set
+        all_strings = []
         for r in records:
-            for f in ["bgm1", "bgm2", "bgm3"]:
-                if r[f] not in all_music:
-                    all_music.append(r[f])
+            for f in fields:
+                if r[f] not in all_strings:
+                    all_strings.append(r[f])
 
         pointer = 0
         locations = {}
-        for bgm in all_music:
-            locations[bgm] = pointer
-            pointer += len(bgm.encode("utf-8")) + 1
-
         index_end = (record_count * record_size) + len(string_bytes)
+        for t in all_strings:
+            locations[t] = pointer + index_end
+            pointer += len(t.encode("utf-8")) + 1
 
         # and then assign them to the records
         for r in records:
-            r["pointers"] = [locations[b] + index_end for b in r["bg_name"]]
-
-        for record in records:
             location = len(string_bytes)
-            for pointer in record.pop("pointers"):
-                # pointers are relative to the start of the record
-                string_bytes += self.write_int(pointer - location, 4)
+            for f in fields:
+                r[f] = locations[f] - location
 
-            string_bytes += self.write_int(record["value"], 4)
-            location += record_size
-
-        string_bytes += b"\x00".join([b.encode("utf-8") for b in all_music]) + b"\x00"
+        string_bytes += self.write_records(self.definition, records)
+        string_bytes += b"\x00".join([b.encode("utf-8") for b in all_strings]) + b"\x00"
 
         return string_bytes
 
@@ -841,30 +835,46 @@ class MapTypes(GundamDataFile):
     data_path = "data/tmap/resident"
     header = b"\x02\x00\x05\x01\x50\x59\x54\x4D"
     definition = {
-        "unknown1": "uint:2",
-        "unknown2": "uint:2",
-        "unknown3": "uint:2",
-        "unknown4": "uint:2",
-        "unknown5": "uint:2",
-        "unknown6": "uint:2",
+        "unk1": "uint:1",
+        "unk2": "uint:1",
+        "type1": "shpointer:string_null_term",
+        "type2": "shpointer:string_null_term",
+        "type3": "shpointer:string_null_term",
+        "unk3": "uint:1",
+        "unk4": "uint:1",
+        "index": "uint:2",
     }
-    definition2 = {"unknown1": "null_term_string"}
 
     def write(self, records: List[Dict]) -> bytes:
         record_count = len(records)
         string_bytes = self.write_header(record_count)
+        record_size = self.definition_size(self.definition)
+        fields = ["type1", "type2", "type3"]
+
+        # Consolidate all the string into a set
+        all_strings = []
+        for r in records:
+            for f in fields:
+                if r[f] not in all_strings:
+                    all_strings.append(r[f])
+
+        pointer = 0
+        locations = {}
+        index_end = (record_count * record_size) + len(string_bytes)
+        for t in all_strings:
+            locations[t] = pointer + index_end
+            pointer += len(t.encode("utf-8")) + 1
+
+        # and then assign them to the records
+        for r in records:
+            location = len(string_bytes)
+            for f in fields:
+                r[f] = locations[f] - location
+
+        string_bytes += self.write_records(self.definition, records)
+        string_bytes += b"\x00".join([b.encode("utf-8") for b in all_strings]) + b"\x00"
 
         return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {"__order": i}
-            records.append(record)
-
-        return records
 
 
 class MyCharacterConfigurations(GundamDataFile):
