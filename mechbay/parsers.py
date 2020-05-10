@@ -1480,36 +1480,31 @@ class MovieList(GundamDataFile):
 
 class PowerUpList(GundamDataFile):
     default_filename = "powerUpList.dat"
+    data_path = "data/tmap/resident"
     header = b"\x44\x4C\x55\x50"
     
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        
-        return string_bytes
-    
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-        
-        for i in range(record_count):
-            record = {
-                "__order": i,
-            }
-            records.append(record)
-        
-        return records
+    definition = {
+        "stage_id": "uint:4",
+        "part": "uint:1",
+        "guid": "string_len_prefix",
+        "null1": "null:4",
+        "effect_name": "string_len_prefix",
+        "null2": "null:25",
+        "unk1": "uint:2",
+        "unk2": "uint:2",
+    }
 
 
 class ScoutMessageId(GundamDataFile):
     default_filename = "scoutMessageid.dat"
+    data_path = "data/tmap/resident"
     header = b"\x4D\x53\x4D\x54"
     record_count_length = 2
     definition = {
         "string": "string_len_prefix",
-        "value1": "uint:1",
-        "value2": "uint:1",
-        "value3": "uint:1",
+        "unk1": "uint:1",
+        "unk2": "uint:1",
+        "unk3": "uint:1",
     }
 
 
