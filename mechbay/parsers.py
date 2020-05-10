@@ -952,9 +952,50 @@ class MyCharacterConfigurations(GundamDataFile):
         "unk4": "uint:1",
     }
 
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
+    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+        outfit_count = len(records["outfits"])
+        string_bytes = self.write_header(outfit_count)
+        
+        voice_count = len(records["voices"])
+        random_name_count = len(records["names"])
+        bgm_count = len(records["bgm"])
+        outfit_bytes = self.write_records(self.definition, records["outfits"])
+        voice_bytes = self.write_records(self.voice_definition, records["voices"])
+        name_bytes = self.write_records(self.random_name_definition, records["names"])
+        
+        string_bytes += self.write_int(voice_count, 4)
+        string_bytes += self.write_int(random_name_count, 4)
+        string_bytes += self.write_int(bgm_count, 4)
+        
+        # pointers
+        string_bytes += self.write_int(0, 4)
+        string_bytes += self.write_int(40 + len(outfit_bytes), 4)
+        string_bytes += self.write_int(
+            40 + len(outfit_bytes) + len(voice_bytes), 4)
+        string_bytes += self.write_int(
+            40 + len(outfit_bytes) + len(voice_bytes) + len(name_bytes), 4
+        )
+        
+        string_bytes += outfit_bytes + voice_bytes + name_bytes
+
+        all_values = []
+        unk_len = self.definition_size(self.unknown_definition)
+        bgm_bytes = bytes()
+        bgm_bytes_size = self.definition_size(self.bgm_definition) * bgm_count
+        unk_start = bgm_bytes_size + len(string_bytes)
+        for r in records["bgm"]:
+            vals = tuple(r["unk1"].values())
+            if vals not in all_values:
+                all_values.append(vals)
+            r["unknown_pointer"] = unk_start + (unk_len * all_values.index(vals))
+            bgm_bytes += self.write_record(self.bgm_definition, r)
+
+        unk_bytes = bytes()
+        for vals in all_values:
+            for v in vals:
+                unk_bytes += self.write_int(v, 2)
+                
+        string_bytes += bgm_bytes + unk_bytes
 
         return string_bytes
 
