@@ -193,10 +193,11 @@ class CharacterGrowthList(GundamDataFile):
         "chr": "uint:2",
     }
 
-    def __new__(cls, *args, **kwargs):
-        super().__new__(*args, **kwargs)
-        for i in range(cls.level_ups):
-            cls.definition[f"level_{i + 2}_index"] = "uint:2"
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for i in range(self.level_ups):
+            self.definition[f"level_{i + 2}_index"] = "uint:2"
 
     def write(self, records: List[Dict]) -> bytes:
         # make a unique list of stat increases
