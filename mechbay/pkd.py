@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict, BinaryIO
+from typing import List, Dict, BinaryIO, NamedTuple
 
 from .data import GundamDataFile
 
@@ -32,10 +32,69 @@ RESIDENT = {
 }
 
 
+class PkdInfo(NamedTuple):
+    name: str
+    size: int
+
+
+class PkdFile:
+    __header = b"\x20\x44\x4B\x50\x00\x01\x03\x00"
+
+    def __init__(self, file, mode: str = "x"):
+        self._file = file
+        self._mode = mode
+
+        self._handle = None
+
+    def close(self):
+        pass
+    
+    def getinfo(self, name: str):
+        pass
+    
+    def infolist(self) -> List:
+        pass
+
+    def namelist(self) -> List[str]:
+        pass
+    
+    def open(self, name: str, mode="r"):
+        pass
+    
+    def extract(self, member, path=None):
+        pass
+    
+    def extractall(self, path=None, members=None):
+        pass
+    
+    def printdir(self):
+        pass
+    
+    def read(self):
+        pass
+    
+    def testpkd(self):
+        pass
+    
+    def write(self, filename, arcname=None):
+        pass
+    
+    def writestr(self, zinfo_or_arcname, data):
+        pass
+    
+    @property
+    def filename(self):
+        return
+
+    @property
+    def mode(self):
+        return self._mode
+
+
 class PKDArchive(GundamDataFile):
     header = b"\x20\x44\x4B\x50\x00\x01\x03\x00"
 
-    def write(self, records: List[Dict]) -> bytes:
+    def write(self, records: Dict[str, bytes]) -> bytes:
         padding = 64
         string_bytes = bytes()
 
@@ -47,7 +106,7 @@ class PKDArchive(GundamDataFile):
 
         # index size
         index_size = (record_count * 12) + sum(
-            [len(r["filename"].encode("utf-8")) + 1 for r in records]
+            [len(filename.encode("utf-8")) + 1 for filename in records.keys()]
         )
         string_bytes += self.write_int(index_size, 4)
 
@@ -55,31 +114,31 @@ class PKDArchive(GundamDataFile):
         name_start = record_count * 12
         file_start = index_size + 20
         file_start += padding - (file_start % padding)
-        for record in records:
+        for filename, data in records.items():
             # File pointer
             string_bytes += self.write_int(file_start, 4)
 
             # File size
-            string_bytes += self.write_int(len(record["bytes"]), 4)
-            file_start += len(record["bytes"])
+            string_bytes += self.write_int(len(data), 4)
+            file_start += len(data)
             # Pad to 64 byte increments
             file_start += padding - (file_start % padding)
 
             # name pointer
             string_bytes += self.write_int(name_start, 4)
-            name_start += len(record["filename"].encode("utf-8")) + 1
+            name_start += len(filename.encode("utf-8")) + 1
 
-        for record in records:
-            string_bytes += record["filename"].encode("utf-8") + b"\x00"
+        for filename in records.keys():
+            string_bytes += filename.encode("utf-8") + b"\x00"
         string_bytes += (padding - (len(string_bytes) % padding)) * b"\x00"
 
-        for record in records:
-            string_bytes += record["bytes"]
+        for filename, data in records.items():
+            string_bytes += data
             string_bytes += (padding - (len(string_bytes) % padding)) * b"\x00"
 
         return string_bytes
 
-    def read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> Dict[str, bytes]:
         record_count = self.read_header(buffer)
         records = []
 
@@ -102,17 +161,23 @@ class PKDArchive(GundamDataFile):
                 buffer, record["__name_pointer"]
             )
 
+        archive = {}
         for record in records:
             buffer.seek(record["__file_pointer"])
-            record["bytes"] = buffer.read(record["__file_size"])
+            archive[record["filename"]] = buffer.read(record["__file_size"])
 
-        return records
+        return archive
 
-    def pack_files(self, filenames) -> bytes:
-        records = []
+    def pack_files(self, filenames: List[str]) -> bytes:
+        records = {}
         for filename in filenames:
             with open(filename, "rb") as file:
-                record = {"filename": os.path.split(filename)[1], "bytes": file.read()}
-                records.append(record)
+                records[os.path.split(filename)[1]] = file.read()
 
         return self.write(records)
+
+    def read_file(self, filename: str = None) -> Dict[str, bytes]:
+        with open(filename, "rb") as buffer:
+            archive = self.read(buffer)
+
+        return archive
