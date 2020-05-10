@@ -27,6 +27,29 @@ class AbilitySpecList(GundamDataFile):
     data_path = "data/resident"
     default_filename = "AbilitySpecList.cdb"
     header = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
+    definition = {
+        "unk1": "uint:2",
+        "index": "uint:2",
+        "name_index": "uint:4",
+    }
+    modifications_definition = {
+        "unk1": "uint:2",
+        "index": "int:2",
+        "unk2": "uint:2",
+        "unk3": "uint:2",
+        "unk4": "uint:2",
+        "unk5": "uint:2",
+        "unk6": "uint:2",
+        "unk7": "uint:2",
+        "unk8": "uint:2",
+        "unk9": "uint:2",
+        "unk10": "uint:2",
+        "unk11": "uint:2",
+        "null1": "null:10",
+        "unk17": "uint:2",
+        "unk18": "uint:2",
+        "null2": "null:2",
+    }
 
     def write(self, records: List[Dict]) -> bytes:
         record_count = len(records)
@@ -35,14 +58,26 @@ class AbilitySpecList(GundamDataFile):
         return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
+        unit_ability_count = self.read_header(buffer)
 
-        for i in range(record_count):
-            record = {"__order": i}
-            records.append(record)
+        modifications_count = self.read_int(buffer.read(4))
+        character_ability_count = self.read_int(buffer.read(4))
+        character_skill_count = self.read_int(buffer.read(4))
+        pointer = self.read_int(buffer.read(4))
+        pointer2 = self.read_int(buffer.read(4))
+        modifications_pointer = self.read_int(buffer.read(4))
+        character_ability_pointer = self.read_int(buffer.read(4))
+        pointer5 = self.read_int(buffer.read(4))
+        pointer6 = self.read_int(buffer.read(4))
+        print(pointer, pointer2, pointer5, pointer6)
+        print(buffer.tell())
 
-        return records
+        unit_abilities = self.read_records(self.definition, buffer, unit_ability_count)
+        buffer.seek(modifications_pointer)
+        modifications = self.read_records(self.modifications_definition, buffer, modifications_count)
+        buffer.seek(character_ability_pointer)
+
+        return unit_abilities + modifications
 
 
 class ActAbilityEffectList(GundamDataFile):
@@ -884,11 +919,37 @@ class MyCharacterConfigurations(GundamDataFile):
     header = b"\x43\x48\x43\x4D\x01\x00\x02\x01"
 
     definition = {
-        "guid": "guid",
+        "image_guid": "guid",
         "index": "uint:2",
-        "string_name_index": "uint:2",
-        "male": "uint:2",
-        "null": "null:2",
+        "outfit_name_index": "uint:2",
+        "is_male": "uint:4",
+    }
+    voice_definition = {
+        "voice_guid": "guid",
+        "index": "uint:2",
+        "cv_name_index": "uint:2",
+        "is_male": "uint:4",
+    }
+    random_name_definition = {
+        "index": "uint:2",
+        "random_name_index": "uint:2",
+        "is_male": "uint:2",
+    }
+    bgm_definition = {
+        "unknown_pointer": "pointer",
+        "series": "uint:2",
+        "fixed71": "uint:2",
+        "null": "null:4",
+        "index": "uint:2",
+        "dlc_set": "uint:2",
+        "bgm_name_index": "uint:2",
+        "unk10": "uint:2",
+    }
+    unknown_definition = {
+        "unk1": "uint:1",
+        "unk2": "uint:1",
+        "unk3": "uint:1",
+        "unk4": "uint:1",
     }
 
     def write(self, records: List[Dict]) -> bytes:
@@ -898,25 +959,32 @@ class MyCharacterConfigurations(GundamDataFile):
         return string_bytes
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
-        custom_count = self.read_header(buffer)
-        npc_count = self.read_int(buffer.read(4))
-        record_count3 = self.read_int(buffer.read(4))
-        record_count4 = self.read_int(buffer.read(4))
-        pointer1 = self.read_int(buffer.read(4)) + 40
-        pointer2 = self.read_int(buffer.read(4))
-        pointer3 = self.read_int(buffer.read(4))
-        pointer4 = self.read_int(buffer.read(4))
+        outfit_count = self.read_header(buffer)
+        voice_count = self.read_int(buffer.read(4))
+        random_name_count = self.read_int(buffer.read(4))
+        bgm_count = self.read_int(buffer.read(4))
+        outfit_pointer = self.read_int(buffer.read(4)) + 40
+        voice_pointer = self.read_int(buffer.read(4))
+        random_pointer = self.read_int(buffer.read(4))
+        bgm_pointer = self.read_int(buffer.read(4))
 
-        print(custom_count, npc_count, record_count3, record_count4)
+        buffer.seek(outfit_pointer)
+        outfits = self.read_records(self.definition, buffer, outfit_count)
+        buffer.seek(voice_pointer)
+        voices = self.read_records(self.voice_definition, buffer, voice_count)
+        buffer.seek(random_pointer)
+        random_names = self.read_records(
+            self.random_name_definition, buffer, random_name_count
+        )
+        buffer.seek(bgm_pointer)
+        bgm = self.read_records(
+            self.bgm_definition, buffer, bgm_count
+        )
+        for r in bgm:
+            buffer.seek(r.pop("unknown_pointer"))
+            r["unk1"] = self.read_record(self.unknown_definition, buffer)
 
-        buffer.seek(pointer1)
-        customs = self.read_records(self.definition, buffer, custom_count)
-        buffer.seek(pointer2)
-        npcs = self.read_records(self.definition, buffer, npc_count)
-        # buffer.seek(pointer3)
-        # records3 = self.read_records(self.definition, buffer, record_count3)
-
-        records = customs + npcs
+        records = outfits + voices + random_names + bgm
 
         return records
 
