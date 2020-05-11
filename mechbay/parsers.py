@@ -24,7 +24,7 @@ TERRAIN_UNDERWATER = 16
 
 
 class AbilitySpecList(GundamDataFile):
-    data_path = "data/resident"
+    data_path = "resident"
     default_filename = "AbilitySpecList.cdb"
     header = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
     definition = {
@@ -81,14 +81,14 @@ class AbilitySpecList(GundamDataFile):
 
 
 class ActAbilityEffectList(GundamDataFile):
-    data_path = "data/tmap/resident"
+    data_path = "tmap/resident"
     default_filename = "ActAbilityEffectList.cdb"
     header = b"\x4C\x45\x41\x41\x00\x00\x01\x01"
     definition = {"guid": "guid", "unknown1": "uint:4", "unknown2": "uint:4"}
 
 
 class BattleBgList(GundamDataFile):
-    data_path = "data/resident"
+    data_path = "resident"
     package = "CellAttributeList.pkd"
     default_filename = "BattleBgList.cdb"
     header = b"\x47\x42\x54\x42\x00\x00\x00\x01"
@@ -133,7 +133,7 @@ class BattleBgList(GundamDataFile):
 
 class CellAttributeList(GundamDataFile):
     default_filename = "CellAttributeList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "CellAttributeList.pkd"
     header = b"\x4C\x54\x41\x43\x00\x00\x03\x01"
     definition = {
@@ -162,7 +162,7 @@ class CellAttributeList(GundamDataFile):
 
 class CharacterConversionList(GundamDataFile):
     default_filename = "CharacterConversionList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     header = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
     definition = {
         "character_id": "guid",
@@ -173,55 +173,47 @@ class CharacterConversionList(GundamDataFile):
 
 class CharacterGrowthList(GundamDataFile):
     default_filename = "CharacterGrowthList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "CharacterSpecList.pkd"
     header = b"\x52\x47\x48\x43\x00\x00\x00\x01"
     level_ups = 98  # This is blowing up to 998 for the expansion
     constants = {"profile_constant": 332}
     definition = {"profile_constant": "uint:2"}
     level_up_definition = {
-        "cmd": "uint:2",
-        "rng": "uint:2",
-        "mel": "uint:2",
-        "def": "uint:2",
-        "rct": "uint:2",
-        "awk": "uint:2",
-        "aux": "uint:2",
-        "com": "uint:2",
-        "nav": "uint:2",
-        "mnt": "uint:2",
-        "chr": "uint:2",
+        "cmd": "uint:1",
+        "rng": "uint:1",
+        "mel": "uint:1",
+        "def": "uint:1",
+        "rct": "uint:1",
+        "awk": "uint:1",
+        "aux": "uint:1",
+        "com": "uint:1",
+        "nav": "uint:1",
+        "mnt": "uint:1",
+        "chr": "uint:1",
     }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for i in range(self.level_ups):
-            self.definition[f"level_{i + 2}_index"] = "uint:2"
 
     def write(self, records: List[Dict]) -> bytes:
         # make a unique list of stat increases
         # replace their entries with the index to those increases
         # then write both blocks
 
+        self.apply_constants(records)
+
+        profile_bytes = bytes()
         level_up_stats = []
         for record in records:
-            for i in range(self.level_ups):
-                assert len(record[f"level_{i + 2}"]) == self.level_ups
-                level_ups = tuple(record[f"level_{i + 2}"])
+            profile_bytes += self.write_int(record["profile_constant"], 2)
+            for l in record["level_ups"]:
+                level_ups = tuple([l.get(k, 0) for k in CHARACTER_STATS])
                 if level_ups not in level_up_stats:
                     level_up_stats.append(level_ups)
-                record[f"level_{i + 2}_index"] = level_up_stats.index(level_ups)
+                profile_bytes += self.write_int(level_up_stats.index(level_ups), 2)
 
-        self.apply_constants(records)
-        profile_bytes = self.write_records(self.definition, records)
-        level_up_bytes = self.write_records(
-            self.level_up_definition,
-            [
-                {k: i for k, i in zip(self.level_up_definition.keys(), s)}
-                for s in level_up_stats
-            ],
-        )
+        level_up_bytes = bytes()
+        for lus in level_up_stats:
+            for lup_tup in lus:
+                level_up_bytes += self.write_int(lup_tup, 1)
 
         string_bytes = self.write_header(len(records))
         string_bytes += self.write_int(len(level_up_stats), 4)
@@ -240,20 +232,30 @@ class CharacterGrowthList(GundamDataFile):
         # each profile has 98 indexes to a list of stats
         # the stats list states the increase of each stat
 
-        profiles = self.read_records(self.definition, buffer, profile_count)
+        records = [
+            {
+                "profile_constant": self.read_int(buffer.read(2)),
+                "level_ups": [self.read_int(buffer.read(2)) for _ in range(self.level_ups)]
+            }
+            for __ in range(profile_count)
+        ]
         buffer.seek(level_up_pointer)
         level_ups = self.read_records(self.level_up_definition, buffer, level_up_count)
 
-        for profile in profiles:
-            for i in range(self.level_ups):
-                profile[f"level_{i + 2}"] = level_ups[profile[f"level_{i + 2}_index"]]
+        for r in records:
+            increases = []
+            for l in r["level_ups"]:
+                increases.append(level_ups[l])
+            r["level_ups"] = increases
 
-        return profiles
+        self.remove_constants(records)
+
+        return records
 
 
 class CharacterSpecList(GundamDataFile):
     default_filename = "CharacterSpecList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "CharacterSpecList.pkd"
     header = b"\x4C\x53\x48\x43\x00\x00\x07\x02"
     character_definition = {
@@ -262,7 +264,7 @@ class CharacterSpecList(GundamDataFile):
         "image_guid": "guid",
         "index": "int:2",
         "dlc": "uint:2",
-        "character_spec_list": "uint:2",
+        "name": "uint:2",
         "unknown2": "uint:1",
         "unknown3": "uint:1",
         "ranged": "uint:2",
@@ -286,7 +288,7 @@ class CharacterSpecList(GundamDataFile):
         "bgm2": "uint:2",
         "personality": "uint:2",
         "profile_guid": "guid",
-        "unique_character_spec_list": "int:2",
+        "unique_name": "int:2",
         "unknown4": "uint:1",
         "unknown5": "uint:1",
         "unknown6": "int:2",
@@ -306,7 +308,7 @@ class CharacterSpecList(GundamDataFile):
         "image_guid": "guid",
         "index": "int:2",
         "dlc": "uint:2",
-        "character_spec_list": "uint:2",
+        "name": "uint:2",
         "unknown2": "uint:1",
         "unknown3": "uint:1",
         "ranged": "uint:2",
@@ -347,16 +349,18 @@ class CharacterSpecList(GundamDataFile):
                 r["personality_normal"],
                 r["personality_high"],
             )
-            if personality not in personality:
+            if personality not in personalities:
                 personalities.append(personality)
             r["personality"] = personalities.index(personality)
 
-        chars = [r for r in records if r["guid"] == "C"]
-        npcs = [r for r in records if r["guid"] == "N"]
+        chars = [r for r in records if r["guid"][5] == "C"]
+        npcs = [r for r in records if r["guid"][5] == "N"]
 
-        char_bytes = self.write_records(self.definition, chars)
+        char_bytes = self.write_records(self.character_definition, chars)
         npc_bytes = self.write_records(self.npc_definition, npcs)
-        personality_bytes = self.write_records(
+
+        personality_bytes = self.write_int(len(personalities), 4)
+        personality_bytes += self.write_records(
             self.personality_definition,
             [
                 {"index": i + 1, "timid": p[0], "normal": p[1], "high": p[2]}
@@ -367,12 +371,13 @@ class CharacterSpecList(GundamDataFile):
         string_bytes = self.write_header(len(chars))
         string_bytes += self.write_int(len(npcs), 4)
         npc_pointer = len(string_bytes) + len(char_bytes) + 12
+
         string_bytes += self.write_int(npc_pointer, 4)
         personality_pointer = npc_pointer + len(npc_bytes)
         string_bytes += self.write_int(personality_pointer, 4)
 
-        string_bytes += self.write_int(832, 4)
-        string_bytes += self.write_int(20, 4)
+        string_bytes += self.write_int(832, 2)
+        string_bytes += self.write_int(20, 2)
 
         string_bytes += char_bytes + npc_bytes + personality_bytes
 
@@ -385,30 +390,13 @@ class CharacterSpecList(GundamDataFile):
         personality_pointer = self.read_int(buffer.read(4))
         self.read_int(buffer.read(2))  # unknown = 832
         self.read_int(buffer.read(2))  # unknown = 20
-
-        chars = []
-        npcs = []
-        personalities = []
-
-        for i in range(ms_count):
-            char = self.read_record(self.character_definition, buffer)
-            char["__order"] = i
-            chars.append(char)
-
+        
+        chars = self.read_records(self.character_definition, buffer, ms_count)
         buffer.seek(npc_pointer)
-
-        for i in range(npc_count):
-            npc = self.read_record(self.npc_definition, buffer)
-            npc["__order"] = i
-            npcs.append(npc)
-
+        npcs = self.read_records(self.npc_definition, buffer, npc_count)
         buffer.seek(personality_pointer)
         personality_count = self.read_int(buffer.read(4))
-        for i in range(personality_count):
-            personality = self.read_record(self.personality_definition, buffer)
-            personality["__order"] = i
-            personalities.append(personality)
-
+        personalities = self.read_records(self.personality_definition, buffer, personality_count)
         records = chars + npcs
 
         for r in records:
@@ -422,7 +410,7 @@ class CharacterSpecList(GundamDataFile):
 
 class CockpitBgTable(GundamDataFile):
     default_filename = "cockpit_bg_table.atp"
-    data_path = "data/battle/table"
+    data_path = "battle/table"
     header = b"\xC2\x3E\x10\x0A"
     record_count_length = 0
 
@@ -441,82 +429,34 @@ class CockpitBgTable(GundamDataFile):
 
 class CreditBgmList(GundamDataFile):
     default_filename = "CreditBgmList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     header = b""
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {"__order": i}
-            records.append(record)
-
-        return records
 
 
 class DatabaseCalculation(GundamDataFile):
     # Yes, the source file is misspelled
     default_filename = "DatabaseCalcuclation.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MiscData.pkd"
     header = b"\x43\x4C\x41\x43\x00\x00\x06\x01"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {"__order": i}
-            records.append(record)
-
-        return records
 
 
 class GalleryMovieList(GundamDataFile):
     default_filename = "GalleryMovieList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     header = b"\x4C\x56\x4D\x47\x00\x00\x00\x01"
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {"__order": i}
-            records.append(record)
-
-        return records
 
 
 class GetUnitList(GundamDataFile):
     default_filename = "GetUnitList.cdb"
-    data_path = "data/tmap/stage"
+    data_path = "tmap/stage"
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
     definition = {"guid": "guid", "required_xp": "uint:4"}
 
 
 class GroupSendingMissionList(GundamDataFile):
     default_filename = "GroupSendingMissionList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MiscData.pkd"
     header = b"\x4C\x53\x50\x47\x00\x00\x07\x01"
 
@@ -555,7 +495,7 @@ class GroupSendingMissionList(GundamDataFile):
 
 class BTLIdSet(GundamDataFile):
     default_filename = "idset.tbl"
-    data_path = "data/sound/voice/BTL"
+    data_path = "sound/voice/BTL"
     header = b"\x54\x53\x44\x49\x00\x01\x02\x00"
 
     definition = {
@@ -574,7 +514,7 @@ class BTLIdSet(GundamDataFile):
 
 class BTLVoiceTable(GundamDataFile):
     default_filename = "voice_table.tbl"
-    data_path = "data/sound/voice/BTL"
+    data_path = "sound/voice/BTL"
     header = b"\x54\x4F\x56\x42\x00\x04\x02\x00"
 
     definition = {
@@ -593,7 +533,7 @@ class BTLVoiceTable(GundamDataFile):
 
 class MachineConversionList(GundamDataFile):
     default_filename = "MachineConversionList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MachineSpecList.pkd"
     header = b"\x56\x4E\x43\x4D\x00\x00\x02\x01"
     definition = {
@@ -616,7 +556,7 @@ class MachineConversionList(GundamDataFile):
 
 class MachineDesignList(GundamDataFile):
     default_filename = "MachineDesignList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MachineSpecList.pkd"
     header = b"\x49\x53\x44\x4D\x00\x00\x02\x01"
     definition = {
@@ -629,7 +569,7 @@ class MachineDesignList(GundamDataFile):
 
 class MachineDevelopmentList(GundamDataFile):
     default_filename = "MachineDevelopmentList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MachineSpecList.pkd"
     header = b"\x56\x45\x44\x4D\x00\x00\x02\x01"
     definition = {
@@ -675,31 +615,15 @@ class MachineDevelopmentList(GundamDataFile):
 
 class MachineGrowthList(GundamDataFile):
     default_filename = "MachineGrowthList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MachineSpecList.pkd"
     header = b"\x00\x00\x01\x01\x52\x47\x43\x4D"
     definition = {}
 
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {"__order": i}
-            records.append(record)
-
-        return records
-
 
 class MachineSpecList(GundamDataFile):
     default_filename = "MachineSpecList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MachineSpecList.pkd"
     header = b"\x4C\x53\x43\x4D\x03\x00\x05\x02"
     constants = {"fixed7": 7}
@@ -843,22 +767,12 @@ class MachineSpecList(GundamDataFile):
         unknown1 = self.read_int(buffer.read(4))
         unknown2 = self.read_int(buffer.read(4))
         ws_pointer = self.read_int(buffer.read(4))  # to ships
-        self.read_int(buffer.read(4))  # file length
+        self.read_int(buffer.read(4))  # file length?
         print(unknown1, unknown2)
 
-        ms_records = []
-        ws_records = []
-
-        for i in range(ms_count):
-            ms = self.read_record(self.definition, buffer)
-            ms["__order"] = i
-            ms_records.append(ms)
-
+        ms_records = self.read_records(self.definition, buffer, ms_count)
         buffer.seek(ws_pointer)
-        for i in range(ws_count):
-            ws = self.read_record(self.definition, buffer)
-            ws["__order"] = i
-            ws_records.append(ws)
+        ws_records = self.read_records(self.definition, buffer, ws_count)
 
         records = ms_records + ws_records
         self.remove_constants(records)
@@ -868,7 +782,7 @@ class MachineSpecList(GundamDataFile):
 
 class MapTypes(GundamDataFile):
     default_filename = "MapTypes.cdb"
-    data_path = "data/tmap/resident"
+    data_path = "tmap/resident"
     header = b"\x02\x00\x05\x01\x50\x59\x54\x4D"
     definition = {
         "unk1": "uint:1",
@@ -915,35 +829,35 @@ class MapTypes(GundamDataFile):
 
 class MyCharacterConfigurations(GundamDataFile):
     default_filename = "MyCharacterConfigurations.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "CharacterSpecList.pkd"
     header = b"\x43\x48\x43\x4D\x01\x00\x02\x01"
 
     definition = {
         "image_guid": "guid",
         "index": "uint:2",
-        "outfit_name_index": "uint:2",
+        "name": "uint:2",
         "is_male": "uint:4",
     }
     voice_definition = {
         "voice_guid": "guid",
         "index": "uint:2",
-        "cv_name_index": "uint:2",
+        "voice_actor": "uint:2",
         "is_male": "uint:4",
     }
     random_name_definition = {
         "index": "uint:2",
-        "random_name_index": "uint:2",
+        "name": "uint:2",
         "is_male": "uint:2",
     }
     bgm_definition = {
-        "unknown_pointer": "pointer",
+        "unknown": "pointer",
         "series": "uint:2",
         "fixed71": "uint:2",
         "null": "null:4",
         "index": "uint:2",
         "dlc_set": "uint:2",
-        "bgm_name_index": "uint:2",
+        "song_name": "uint:2",
         "unk10": "uint:2",
     }
     unknown_definition = {
@@ -983,24 +897,28 @@ class MyCharacterConfigurations(GundamDataFile):
         unk_len = self.definition_size(self.unknown_definition)
         bgm_bytes = bytes()
         bgm_bytes_size = self.definition_size(self.bgm_definition) * bgm_count
-        unk_start = bgm_bytes_size + len(string_bytes)
         for r in records["bgm"]:
-            vals = tuple(r["unk1"].values())
+            vals = tuple(r["unknown"].values())
             if vals not in all_values:
                 all_values.append(vals)
-            r["unknown_pointer"] = unk_start + (unk_len * all_values.index(vals))
+            r["unknown_pointer"] = (
+                    bgm_bytes_size - len(bgm_bytes) +
+                    (unk_len * all_values.index(vals))
+            )
             bgm_bytes += self.write_record(self.bgm_definition, r)
 
         unk_bytes = bytes()
         for vals in all_values:
-            for v in vals:
-                unk_bytes += self.write_int(v, 2)
-                
+            unk_bytes += self.write_record(
+                self.unknown_definition,
+                {k: v for k, v in zip(self.unknown_definition.keys(), vals)}
+            )
+
         string_bytes += bgm_bytes + unk_bytes
 
         return string_bytes
 
-    def read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
         outfit_count = self.read_header(buffer)
         voice_count = self.read_int(buffer.read(4))
         random_name_count = self.read_int(buffer.read(4))
@@ -1022,18 +940,24 @@ class MyCharacterConfigurations(GundamDataFile):
         bgm = self.read_records(
             self.bgm_definition, buffer, bgm_count
         )
-        for r in bgm:
-            buffer.seek(r.pop("unknown_pointer"))
-            r["unk1"] = self.read_record(self.unknown_definition, buffer)
 
-        records = outfits + voices + random_names + bgm
+        for r in bgm:
+            buffer.seek(r.pop("unknown"))
+            r["unknown"] = self.read_record(self.unknown_definition, buffer)
+
+        records = {
+            "outfits": outfits,
+            "voices": voices,
+            "names": random_names,
+            "bgm": bgm
+        }
 
         return records
 
 
 class PersonalMachineList(GundamDataFile):
     default_filename = "PersonalMachineList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MachineSpecList.pkd"
     header = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
     definition = {"guid": "guid", "pilot_guid": "guid", "custom_guid": "guid"}
@@ -1041,7 +965,7 @@ class PersonalMachineList(GundamDataFile):
 
 class QuestList(GundamDataFile):
     default_filename = "QuestList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "StageList.pkd"
     header = b"\x4C\x54\x45\x51\x00\x00\x02\x01"
     definition = {
@@ -1143,7 +1067,7 @@ class QuestList(GundamDataFile):
 
 class RangeDataList(GundamDataFile):
     default_filename = "RangeDataList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     header = b"\x4C\x47\x4E\x52\x01\x00\x00\x01"
 
     # TODO: identify mask
@@ -1177,7 +1101,7 @@ class RangeDataList(GundamDataFile):
 
 class SeriesList(GundamDataFile):
     default_filename = "SeriesList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MiscData.pkd"
     header = b"\x4C\x52\x45\x53\x01\x00\x02\x01"
     # TODO: identify unknowns
@@ -1196,7 +1120,7 @@ class SeriesList(GundamDataFile):
 
 class SeriesProfileList(GundamDataFile):
     default_filename = "SeriesProfileList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     header = b"\x4C\x50\x52\x53\x00\x00\x01\x01"
     definition = {
         "gallery": "series",
@@ -1208,14 +1132,14 @@ class SeriesProfileList(GundamDataFile):
 
 class StageClearGetList(GundamDataFile):
     default_filename = "StageClearGetList.cdb"
-    data_path = "data/tmap/stage"
+    data_path = "tmap/stage"
     header = b"\x43\x47\x54\x53\x00\x00\x00\x01"
     definition = {"stage_id": "uint:4", "get_units": "cfpointer:list:guid"}
 
 
 class StageList(GundamDataFile):
     default_filename = "StageList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "StageList.pkd"
     header = b"\x4C\x47\x54\x53\x00\x00\x0B\x01"
 
@@ -1317,7 +1241,7 @@ class SkillAcquisitionPatternList(GundamDataFile):
 
 class SpecProfileList(GundamDataFile):
     default_filename = "SpecProfileList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     header = b"\x4C\x50\x50\x53\x00\x00\x03\x01"
 
     # These are only informational for the profile pages
@@ -1363,29 +1287,13 @@ class SpecProfileList(GundamDataFile):
 
 class TitleBgmList(GundamDataFile):
     default_filename = "TitleBgmList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     header = b""
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for i in range(record_count):
-            record = {"__order": i}
-            records.append(record)
-
-        return records
 
 
 class TutorialList(GundamDataFile):
     default_filename = "TutorialList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MiscData.pkd"
     header = b"\x4F\x54\x55\x54\x00\x00\x01\x01"
     definition = {
@@ -1399,7 +1307,7 @@ class TutorialList(GundamDataFile):
 
 class WeaponSpecList(GundamDataFile):
     default_filename = "WeaponSpecList.cdb"
-    data_path = "data/resident"
+    data_path = "resident"
     package = "MachineSpecList.pkd"
     header = b"\x4C\x53\x50\x57\x00\x00\x00\x01"
 
@@ -1516,24 +1424,6 @@ class WeaponSpecList(GundamDataFile):
 class DlcList(GundamDataFile):
     default_filename = "DlcList.dat"
     header = b"\x08\x80\x80\x80\x08\x12\x04\x08"
-    
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        
-        return string_bytes
-    
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-        
-        for i in range(record_count):
-            record = {
-                "__order": i,
-            }
-            records.append(record)
-        
-        return records
 
 
 class EffectList(GundamDataFile):
@@ -1578,29 +1468,11 @@ class MovieList(GundamDataFile):
     default_filename = "movieList.dat"
     header = b"\x4C\x4D\x4D\x54"
     record_count_length = 2
-    
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        
-        return string_bytes
-    
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-        
-        for i in range(record_count):
-            record = {
-                "__order": i,
-            }
-            records.append(record)
-        
-        return records
 
 
 class PowerUpList(GundamDataFile):
     default_filename = "powerUpList.dat"
-    data_path = "data/tmap/resident"
+    data_path = "tmap/resident"
     header = b"\x44\x4C\x55\x50"
     
     definition = {
@@ -1617,7 +1489,7 @@ class PowerUpList(GundamDataFile):
 
 class ScoutMessageId(GundamDataFile):
     default_filename = "scoutMessageid.dat"
-    data_path = "data/tmap/resident"
+    data_path = "tmap/resident"
     header = b"\x4D\x53\x4D\x54"
     record_count_length = 2
     definition = {
@@ -1631,24 +1503,6 @@ class ScoutMessageId(GundamDataFile):
 class SteamDlcGroupList(GundamDataFile):
     default_filename = "SteamDlcGroupList.dat"
     header = b""
-    
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        
-        return string_bytes
-    
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-        
-        for i in range(record_count):
-            record = {
-                "__order": i,
-            }
-            records.append(record)
-        
-        return records
 
 
 class Stage(GundamDataFile):
@@ -1673,7 +1527,7 @@ class Stage(GundamDataFile):
             size_y = self.read_int(buffer.read(1))
             print(size_x, size_y)
             record = {
-                "__order": i,
+                # "__order": i,
                 "values": values,
                 "size_x": size_x,
                 "size_y": size_y,
