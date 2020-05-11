@@ -105,6 +105,7 @@ class Localisation:
 
         for r in records:
             del r["string"]
+            del r["index"]
 
         return records
 
@@ -114,6 +115,7 @@ class Localisation:
 
         for language, byte_string in data.items():
             full_path = os.path.join(output_data_path, language, filename)
+            os.makedirs(os.path.split(full_path)[0], exist_ok=True)
             with open(full_path, "wb") as f:
                 f.write(byte_string)
 
@@ -121,16 +123,8 @@ class Localisation:
     def write_bytes(cls, records: List[Dict]) -> Dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
-            # try to read language
-            # fall back to english then japanese
-            # then put in an error
             localisation = [
-                {
-                    "string": r.get(
-                        language, r.get("english", r.get("japanese", "missing string"))
-                    ),
-                    "index": r["index"],
-                }
+                {"string": r.get(language, ""), "index": 0}
                 for r in records
             ]
             data[language] = StringTBL().write(localisation)
@@ -177,7 +171,6 @@ class LocalisationIndexed(Localisation):
     def write_bytes(cls, records: Dict[int, Dict]) -> Dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
-            # No fallback here
             localisation = [
                 {"string": r[language], "index": index}
                 for index, r in records.items()
@@ -195,6 +188,7 @@ class LocalisationIndexed(Localisation):
 
         for language, byte_string in data.items():
             full_path = os.path.join(output_data_path, language, filename)
+            os.makedirs(os.path.split(full_path)[0], exist_ok=True)
             with open(full_path, "wb") as f:
                 f.write(byte_string)
 
