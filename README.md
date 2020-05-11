@@ -12,12 +12,13 @@ in the executable.
 
 The LUAC Scripts are compiled Lua v5.2, 32-bit. [Unluac](https://sourceforge.net/projects/unluac/)
 isn't perfect but will decompile the code well enough to understand what's going on
-and clean it up. Only the simplest scripts can be recompiled without edits.
+and clean it up. Only the simplest scripts can be recompiled.
 (There's also [Luadec](https://github.com/viruscamp/luadec) but I haven't had any luck
 compiling it to handle this specific version of Lua.) Lua scripts are used for scripting
 stages, general battle/UI behavior and to establish game constants.
 
-Most audio is HCA. Use [VGMStream](https://github.com/losnoco/vgmstream) to process.
+Most audio is HCA. Use [VGMStream](https://github.com/losnoco/vgmstream) to process. Finding the
+encryption key will likely be necessary to add new voice lines.
 
 Images are primarily DDS (DirectDraw Surface) format. They're often stored in TXD
 (Texture Dictionaries) which are just easily unpacked archives of DDS images.
@@ -25,7 +26,7 @@ Images are primarily DDS (DirectDraw Surface) format. They're often stored in TX
 should be helpful here. Most of the TXDs used here are actually just ZIP format.
 
 Video files are USM format. This includes cut scenes, menu backgrounds, and crucially,
-battle animations for units are actually pre-rendered video, overlaid on top of 3d
+battle animations for units. Battles are actually pre-rendered video, overlaid on top of 3d
 environment and enhanced with other effects.
 
 Game data is largely contained in CDBs, DATs, ATPs, and some TBLs. There's
@@ -60,8 +61,8 @@ This means that editing the stat increase for a single stat on a single level up
 single characters requires non-trivial changes across three files.
 
 The indexes are spread all over the place but don't seem to be necessarily mean anything
-to the game. In other words, no hard coded magic numbers. It's a pain to recalculate these
-values over multiple files but the game doesn't seem to otherwise care as long as the data
+to the game itself. In other words, very few hard coded magic numbers. It's a pain to repopulate changes
+ across multiple files but the game doesn't seem to otherwise care as long as the data
 is correctly formatted.
 
 Ideally, a mod manager will handle this behind the scenes so modders only have to
@@ -91,7 +92,15 @@ have the same format except it's an N instead a C.
 
 * data/resident/CharacterSpecList.pkd/CharacterSpecList.cdb
 
-Primary data about characters. References records in other files by index.
+Primary data about characters. References records in other files.
+Key indexes:
+    * names from CharacterStringTable.tbl
+    * personality
+    * character growth
+    * skill acquisition pattern
+    * default BGM
+    * innate abilities
+    * DLC set
 
 * data/resident/CharacterSpecList.pkd/CharacterGrowthList.cdb
 
@@ -100,6 +109,8 @@ Profiles for how stats increase on each level up.
 * data/resident/CharacterSpecList.pkd/SkillAcquisitionPatternList.cdb
 
 Profiles for which skills are gained as a character levels up.
+Key indexes:
+    * skills
 
 * data/resident/PersonalMachineList.cdb
 
