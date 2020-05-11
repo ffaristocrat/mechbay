@@ -21,8 +21,8 @@ def mod_merge(game_path: str, mod_path: str):
 
     # launch ggcr
     current_directory = os.getcwd()
-    os.chdir(game_path)
-    command = os.path.join(game_path, "togg.exe")
+    os.chdir(os.path.join(game_path, ".."))
+    command = "togg.exe"
     subprocess.run(command)
     os.chdir(current_directory)
 
