@@ -13,7 +13,7 @@ class Characters:
                 CharacterGrowthList.cdb - Stat growth profiles
                 SkillAcquisitionPatternList.cdb - Skill gain profiles
                 MyCharacterConfigurations.cdb - Custom character configs
-        
+
             data/resident/CellAttributeList.pkd - Container for
                 BattleBgList.cdb - Maps BGM music to files
 
