@@ -27,11 +27,7 @@ class AbilitySpecList(GundamDataFile):
     data_path = "resident"
     default_filename = "AbilitySpecList.cdb"
     header = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
-    definition = {
-        "unk1": "uint:2",
-        "index": "uint:2",
-        "name_index": "uint:4",
-    }
+    definition = {"unk1": "uint:2", "index": "uint:2", "name_index": "uint:4"}
     modifications_definition = {
         "unk1": "uint:2",
         "index": "int:2",
@@ -74,7 +70,9 @@ class AbilitySpecList(GundamDataFile):
 
         unit_abilities = self.read_records(self.definition, buffer, unit_ability_count)
         buffer.seek(modifications_pointer)
-        modifications = self.read_records(self.modifications_definition, buffer, modifications_count)
+        modifications = self.read_records(
+            self.modifications_definition, buffer, modifications_count
+        )
         buffer.seek(character_ability_pointer)
 
         return unit_abilities + modifications
@@ -235,7 +233,9 @@ class CharacterGrowthList(GundamDataFile):
         records = [
             {
                 "profile_constant": self.read_int(buffer.read(2)),
-                "level_ups": [self.read_int(buffer.read(2)) for _ in range(self.level_ups)]
+                "level_ups": [
+                    self.read_int(buffer.read(2)) for _ in range(self.level_ups)
+                ],
             }
             for __ in range(profile_count)
         ]
@@ -390,13 +390,15 @@ class CharacterSpecList(GundamDataFile):
         personality_pointer = self.read_int(buffer.read(4))
         self.read_int(buffer.read(2))  # unknown = 832
         self.read_int(buffer.read(2))  # unknown = 20
-        
+
         chars = self.read_records(self.character_definition, buffer, ms_count)
         buffer.seek(npc_pointer)
         npcs = self.read_records(self.npc_definition, buffer, npc_count)
         buffer.seek(personality_pointer)
         personality_count = self.read_int(buffer.read(4))
-        personalities = self.read_records(self.personality_definition, buffer, personality_count)
+        personalities = self.read_records(
+            self.personality_definition, buffer, personality_count
+        )
         records = chars + npcs
 
         for r in records:
@@ -498,9 +500,7 @@ class BTLIdSet(GundamDataFile):
     data_path = "sound/voice/BTL"
     header = b"\x54\x53\x44\x49\x00\x01\x02\x00"
 
-    definition = {
-        "guint": "uint:4",
-    }
+    definition = {"guint": "uint:4"}
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -517,9 +517,7 @@ class BTLVoiceTable(GundamDataFile):
     data_path = "sound/voice/BTL"
     header = b"\x54\x4F\x56\x42\x00\x04\x02\x00"
 
-    definition = {
-        "guint": "uint:4",
-    }
+    definition = {"guint": "uint:4"}
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
@@ -845,11 +843,7 @@ class MyCharacterConfigurations(GundamDataFile):
         "voice_actor": "uint:2",
         "is_male": "uint:4",
     }
-    random_name_definition = {
-        "index": "uint:2",
-        "name": "uint:2",
-        "is_male": "uint:2",
-    }
+    random_name_definition = {"index": "uint:2", "name": "uint:2", "is_male": "uint:2"}
     bgm_definition = {
         "unknown": "pointer",
         "series": "uint:2",
@@ -870,27 +864,26 @@ class MyCharacterConfigurations(GundamDataFile):
     def write(self, records: Dict[str, List[Dict]]) -> bytes:
         outfit_count = len(records["outfits"])
         string_bytes = self.write_header(outfit_count)
-        
+
         voice_count = len(records["voices"])
         random_name_count = len(records["names"])
         bgm_count = len(records["bgm"])
         outfit_bytes = self.write_records(self.definition, records["outfits"])
         voice_bytes = self.write_records(self.voice_definition, records["voices"])
         name_bytes = self.write_records(self.random_name_definition, records["names"])
-        
+
         string_bytes += self.write_int(voice_count, 4)
         string_bytes += self.write_int(random_name_count, 4)
         string_bytes += self.write_int(bgm_count, 4)
-        
+
         # pointers
         string_bytes += self.write_int(0, 4)
         string_bytes += self.write_int(40 + len(outfit_bytes), 4)
-        string_bytes += self.write_int(
-            40 + len(outfit_bytes) + len(voice_bytes), 4)
+        string_bytes += self.write_int(40 + len(outfit_bytes) + len(voice_bytes), 4)
         string_bytes += self.write_int(
             40 + len(outfit_bytes) + len(voice_bytes) + len(name_bytes), 4
         )
-        
+
         string_bytes += outfit_bytes + voice_bytes + name_bytes
 
         all_values = []
@@ -902,8 +895,7 @@ class MyCharacterConfigurations(GundamDataFile):
             if vals not in all_values:
                 all_values.append(vals)
             r["unknown_pointer"] = (
-                    bgm_bytes_size - len(bgm_bytes) +
-                    (unk_len * all_values.index(vals))
+                bgm_bytes_size - len(bgm_bytes) + (unk_len * all_values.index(vals))
             )
             bgm_bytes += self.write_record(self.bgm_definition, r)
 
@@ -911,7 +903,7 @@ class MyCharacterConfigurations(GundamDataFile):
         for vals in all_values:
             unk_bytes += self.write_record(
                 self.unknown_definition,
-                {k: v for k, v in zip(self.unknown_definition.keys(), vals)}
+                {k: v for k, v in zip(self.unknown_definition.keys(), vals)},
             )
 
         string_bytes += bgm_bytes + unk_bytes
@@ -937,9 +929,7 @@ class MyCharacterConfigurations(GundamDataFile):
             self.random_name_definition, buffer, random_name_count
         )
         buffer.seek(bgm_pointer)
-        bgm = self.read_records(
-            self.bgm_definition, buffer, bgm_count
-        )
+        bgm = self.read_records(self.bgm_definition, buffer, bgm_count)
 
         for r in bgm:
             buffer.seek(r.pop("unknown"))
@@ -949,7 +939,7 @@ class MyCharacterConfigurations(GundamDataFile):
             "outfits": outfits,
             "voices": voices,
             "names": random_names,
-            "bgm": bgm
+            "bgm": bgm,
         }
 
         return records
@@ -1429,38 +1419,33 @@ class DlcList(GundamDataFile):
 class EffectList(GundamDataFile):
     default_filename = "effectList.dat"
     header = b"\x4C\x45\x4D\x54"
-    definition = {
-        "effect_id": "uint:4",
-        "effect_name": "string_len_prefix",
-    }
+    definition = {"effect_id": "uint:4", "effect_name": "string_len_prefix"}
 
 
 class MapWeaponList(GundamDataFile):
     default_filename = "mapWeaponList.dat"
     header = b"\x57\x4D\x4D\x54"
-    
+
     def write(self, records: List[Dict]) -> bytes:
         record_count = len(records)
         string_bytes = self.write_header(record_count)
-        
+
         return string_bytes
-    
+
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
-        
+
         for _ in range(record_count):
             record = {
                 "unit_id": self.read_string_length(buffer),
                 "weapon_id": self.read_string_length(buffer),
             }
             records.append(record)
-        
+
         for record in records:
-            record["values"] = [
-                self.read_int(buffer.read(1)) for _ in range(4)
-            ]
-        
+            record["values"] = [self.read_int(buffer.read(1)) for _ in range(4)]
+
         return records
 
 
@@ -1474,7 +1459,7 @@ class PowerUpList(GundamDataFile):
     default_filename = "powerUpList.dat"
     data_path = "tmap/resident"
     header = b"\x44\x4C\x55\x50"
-    
+
     definition = {
         "stage_id": "uint:4",
         "part": "uint:1",
@@ -1508,19 +1493,19 @@ class SteamDlcGroupList(GundamDataFile):
 class Stage(GundamDataFile):
     default_filename = "Stage.dat"
     header = b"\x49\x53\x4D\x54\x2F\x01\x00\x00"
-    
+
     def write(self, records: List[Dict]) -> bytes:
         record_count = len(records)
         string_bytes = self.write_header(record_count)
-        
+
         return string_bytes
-    
+
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         records = []
 
         # incomplete mess
-        
+
         for i in range(record_count):
             values = [self.read_int(buffer.read(1)) for _ in range(2)]
             size_x = self.read_int(buffer.read(1))
@@ -1533,14 +1518,14 @@ class Stage(GundamDataFile):
                 "size_y": size_y,
                 "minimap": self.read_string_length(buffer),
                 "background": self.read_string_length(buffer),
-                "values2": [self.read_int(buffer.read(1), signed=True) for _ in
-                    range(36)],
+                "values2": [
+                    self.read_int(buffer.read(1), signed=True) for _ in range(36)
+                ],
                 "map_tiles": [
                     [self.read_int(buffer.read(4)) for x in range(size_x)]
                     for y in range(size_y)
                 ],
-                "values3": [self.read_int(buffer.read(1)) for _ in
-                    range(59)],
+                "values3": [self.read_int(buffer.read(1)) for _ in range(59)],
                 "bytething": buffer.read(self.read_int(buffer.read(1))),
                 "null": buffer.read(2),
                 "bytething2": buffer.read(self.read_int(buffer.read(1))),
@@ -1550,10 +1535,8 @@ class Stage(GundamDataFile):
                 "null3": buffer.read(1),
                 "values4": [self.read_int(buffer.read(1)) for _ in range(4)],
                 "bytething4": buffer.read(self.read_int(buffer.read(1))),
-                "valuesz": [self.read_int(buffer.read(1)) for _ in
-                    range(8)],
-                
+                "valuesz": [self.read_int(buffer.read(1)) for _ in range(8)],
             }
             records.append(record)
-        
+
         return records
