@@ -181,3 +181,8 @@ class PKDArchive(GundamDataFile):
             archive = self.read(buffer)
 
         return archive
+
+    def write_file(self, records: Dict[str, bytes], filename: str):
+        os.makedirs(os.path.split(filename)[0], exist_ok=True)
+        with open(filename, "wb") as buffer:
+            buffer.write(self.write(records))
