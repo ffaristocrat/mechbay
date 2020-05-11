@@ -134,6 +134,7 @@ class GundamDataFile:
             self.default_filename
             or os.path.split(data_filename)[1]: self.read_file(data_filename)
         }
+        os.makedirs(os.path.split(json_filename)[0], exist_ok=True)
         json.dump(data, open(json_filename, "wt"), indent=4)
 
     def load(self, json_filename: str = None, data_filename: str = None):
@@ -157,6 +158,7 @@ class GundamDataFile:
 
     def write_file(self, records: List[Dict], filename: str):
         filename = filename or self.default_file_path()
+        os.makedirs(os.path.split(filename)[0], exist_ok=True)
         with open(filename, "wb") as buffer:
             buffer.write(self.write(records))
 
@@ -260,7 +262,6 @@ class GundamDataFile:
 
         for i in range(record_count):
             record = cls.read_record(definition, buffer)
-            record["__order"] = i
             records.append(record)
 
         cls.remove_constants(records)
