@@ -1,6 +1,8 @@
+from io import BytesIO
 from typing import List, Dict, BinaryIO
 
 from .data import GundamDataFile
+from .strings import StringTBL
 
 CHARACTER_STATS = [
     "cmd",
@@ -127,6 +129,40 @@ class BattleBgList(GundamDataFile):
         string_bytes += b"\x00".join([b.encode("utf-8") for b in all_strings]) + b"\x00"
 
         return string_bytes
+
+
+class BTLIdSet(GundamDataFile):
+    default_filename = "idset.tbl"
+    data_path = "sound/voice/BTL"
+    header = b"\x54\x53\x44\x49\x00\x01\x02\x00"
+
+    definition = {"guint": "uint:4"}
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        unknown1_count = self.read_int(buffer.read(4))
+        unknown2_count = self.read_int(buffer.read(4))
+        unknown3_count = self.read_int(buffer.read(4))
+        records = self.read_records(self.definition, buffer, record_count)
+
+        return records
+
+
+class BTLVoiceTable(GundamDataFile):
+    default_filename = "voice_table.tbl"
+    data_path = "sound/voice/BTL"
+    header = b"\x54\x4F\x56\x42\x00\x04\x02\x00"
+
+    definition = {"guint": "uint:4"}
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        unknown1_count = self.read_int(buffer.read(4))
+        unknown2_count = self.read_int(buffer.read(4))
+        unknown3_count = self.read_int(buffer.read(4))
+        records = self.read_records(self.definition, buffer, record_count)
+
+        return records
 
 
 class CellAttributeList(GundamDataFile):
@@ -435,6 +471,79 @@ class CreditBgmList(GundamDataFile):
     header = b""
 
 
+class CutIn(GundamDataFile):
+    default_filename = "cutin.tbl"
+    data_path = "battle/table"
+    header = b"\x54\x54\x55\x43\x00\x01\x01\x00"
+    definition = {
+        # 28 bytes
+        "fprefix": "uint:4",
+        "null1": "null:1",
+        "unk2": "uint:1",
+        "unk3": "binary:1",
+        "null2": "null:3",
+        "unk5b": "uint:2",
+        "unk6": "uint:1",
+        "unk7": "uint:1",
+        "unk8": "uint:1",
+        "unk9": "uint:1",
+        "guid": "uint:4", # for special cutins?
+        "null3": "null:8",
+    }
+
+    def write(self, records: List[Dict]) -> bytes:
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+
+        return string_bytes
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        records = self.read_records(self.definition, buffer, record_count)
+
+        # There's then a normal string table attached to the end
+        strings = StringTBL().read(BytesIO(buffer.read()))
+        print(record_count, len(strings))
+        
+        for r in records:
+            index = r["fprefix"]
+            r["fprefix"] = strings[index]["string"]
+
+        return records
+
+
+class IdSet(GundamDataFile):
+    default_filename = "idset.tbl"
+    data_path = "battle/table"
+    header = b"\x54\x53\x44\x49\x00\x01\x02\x00"
+    definition = {
+        # 68 bytes
+        "guid": "uint:4",
+        "null1": "null:1",
+        "unk1": "uint:1",
+        "null2": "null:4",
+        "unk4": "uint:2",
+        "null3": "null:56",
+    }
+
+    def write(self, records: List[Dict]) -> bytes:
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+        
+        return string_bytes
+    
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        unknown1 = self.read_int(buffer.read(4))
+        unknown2 = self.read_int(buffer.read(4))
+        unknown3 = self.read_int(buffer.read(4))
+        print(unknown1, unknown2, unknown3)
+
+        records = self.read_records(self.definition, buffer, record_count)
+        
+        return records
+
+
 class DatabaseCalculation(GundamDataFile):
     # Yes, the source file is misspelled
     default_filename = "DatabaseCalcuclation.cdb"
@@ -493,40 +602,6 @@ class GroupSendingMissionList(GundamDataFile):
         "unknown27": "uint:2",
         "unknown28": "uint:2",
     }
-
-
-class BTLIdSet(GundamDataFile):
-    default_filename = "idset.tbl"
-    data_path = "sound/voice/BTL"
-    header = b"\x54\x53\x44\x49\x00\x01\x02\x00"
-
-    definition = {"guint": "uint:4"}
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        unknown1_count = self.read_int(buffer.read(4))
-        unknown2_count = self.read_int(buffer.read(4))
-        unknown3_count = self.read_int(buffer.read(4))
-        records = self.read_records(self.definition, buffer, record_count)
-
-        return records
-
-
-class BTLVoiceTable(GundamDataFile):
-    default_filename = "voice_table.tbl"
-    data_path = "sound/voice/BTL"
-    header = b"\x54\x4F\x56\x42\x00\x04\x02\x00"
-
-    definition = {"guint": "uint:4"}
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        unknown1_count = self.read_int(buffer.read(4))
-        unknown2_count = self.read_int(buffer.read(4))
-        unknown3_count = self.read_int(buffer.read(4))
-        records = self.read_records(self.definition, buffer, record_count)
-
-        return records
 
 
 class MachineConversionList(GundamDataFile):
