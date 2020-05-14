@@ -592,9 +592,6 @@ class GroupSendingMissionList(GundamDataFile):
                 r[field] = [
                     self.read_record(definition, BytesIO(val)) for val in r[field]
                 ]
-
-            print(r)
-            
     
         return records
 
@@ -1107,11 +1104,11 @@ class QuestList(GundamDataFile):
         "pilot_rewards": "pointer:list:guid",
         "ability_rewards": "pointer:list:uint:2",
         "prereq_stage_id": "uint:4",
-        "quest_id": "uint:2",
+        "index": "uint:2",
         "dlc_set": "uint:2",
-        "quest_name_index": "uint:2",
-        "quest_spacing_index": "uint:2",
-        "desc_index": "uint:2",
+        "name": "uint:2",
+        "description2": "uint:2",
+        "description": "uint:2",
         "null2": "null:2",
         "unknown1": "uint:1",  # TODO: Usually 1, sometimes 2
         "cooldown_reward": "uint:1",
@@ -1148,7 +1145,7 @@ class QuestList(GundamDataFile):
         91: "Clear stages in list",
         93: "Total number of kills",
         94: "Register number of units to production/scout lists",
-        96: "Clear all stages in list? series?",
+        96: "Clear all stages in all series",
         99: "Not sure",
     }
 
@@ -1157,6 +1154,12 @@ class QuestList(GundamDataFile):
             # Just repeats the series id for some reason
             if record["quest_type"] in [1]:
                 record["stage_id"] = self.write_series_bytes(record["stage_id"])
+
+            if record["quest_type"] in [96]:
+                record["stage_id"] = self.write_series_bytes(record["stage_id"])
+                record["stages"] = [
+                    self.write_series_bytes(s) for s in record["stages"]
+                ]
 
             # instead of a guid it's an ability id
             elif record["quest_type"] in [30]:
@@ -1176,6 +1179,14 @@ class QuestList(GundamDataFile):
             if record["quest_type"] in [1]:
                 stage_bytes = self.write_int(record["stage_id"], 4)
                 record["stage_id"] = self.read_series_bytes(stage_bytes)
+
+            if record["quest_type"] in [96]:
+                stage_bytes = self.write_int(record["stage_id"], 4)
+                record["stage_id"] = self.read_series_bytes(stage_bytes)
+                record["stages"] = [
+                    self.read_series_bytes(self.write_int(s, 4))
+                    for s in record["stages"]
+                ]
 
             # instead of a guid it's an ability id
             elif record["quest_type"] in [30]:
