@@ -535,7 +535,7 @@ class GroupSendingMissionList(GundamDataFile):
         "exp": "uint:4",
         "cap": "uint:4",
         "recommended": "pointer:list:bytes:16",  # 16 bytes
-        "dispatch_time": "uint:4",
+        "unknown1": "uint:4",
         "completion_rewards": "pointer:list:bytes:12",  # 12 bytes
         "unit_rewards": "pointer:list:bytes:12",  # 12 bytes
         "components": "pointer:list:bytes:4",  # 4 bytes
@@ -547,7 +547,7 @@ class GroupSendingMissionList(GundamDataFile):
         "dispatch_id2": "uint:2",
         "name": "uint:2",
         "description": "uint:2",
-        "unknown22": "uint:2",
+        "dispatch_time": "uint:2",
         "unknown23": "uint:2",
         "unknown24": "uint:2",
         "unknown25": "uint:2",
