@@ -812,8 +812,8 @@ class MachineSpecList(GundamDataFile):
         "atk": "uint:2",
         "def": "uint:2",
         "mob": "uint:2",
-        "exp": "uint:2",
-        "unknown12": "uint:2",  # increments of 10, to 500
+        "base_exp_level_up": "uint:2",
+        "points": "uint:2",  # increments of 10, to 500
         "unknown14": "uint:1",  # 0 - 255
         "unknown15": "uint:1",  # 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 32
         "unknown16": "uint:1",  # might be binary, 38 distinct
@@ -828,8 +828,8 @@ class MachineSpecList(GundamDataFile):
         "weapon_index": "int:2",
         "map_weapon_index": "int:2",
         "mov": "uint:1",
-        "dimension1": "int:1",  # footprint?
-        "dimension2": "int:1",
+        "unknown22a": "int:1",  # footprint?
+        "unknown22b": "int:1",
         "weapon_count": "uint:1",
         "map_weapon_count": "uint:1",
         "unknown23": "int:1",  # -1, 0, 1, 2, 3, 4
@@ -865,8 +865,8 @@ class MachineSpecList(GundamDataFile):
         "atk": "uint:2",
         "def": "uint:2",
         "mob": "uint:2",
-        "exp": "uint:2",
-        "unknown12": "uint:2",  # increments of 10, to 500
+        "base_exp_level_up": "uint:2",
+        "points": "uint:2",  # increments of 10, to 500
         "unknown14": "uint:1",  # might be binary? 0 - 255, 67 distinct
         "unknown15": "uint:1",  # 18, 19, 22, 23, 24, 25, 26, 27
         "unknown16": "uint:1",  # 0, 3, 4, 24, 27, 28, 32, 35, 36, 219
@@ -881,8 +881,8 @@ class MachineSpecList(GundamDataFile):
         "weapon_index": "int:2",
         "map_weapon_index": "int:2",
         "mov": "uint:1",
-        "dimension1": "int:1",  # footprint
-        "dimension2": "int:1",
+        "unknown22a": "int:1",  # footprint?
+        "unknown22b": "int:1",
         "weapon_count": "uint:1",
         "map_weapon_count": "uint:1",
         "unknown23": "int:1",  # -1, 0, 2, 4
