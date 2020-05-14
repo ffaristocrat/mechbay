@@ -532,14 +532,14 @@ class GroupSendingMissionList(GundamDataFile):
     header = b"\x4C\x53\x50\x47\x00\x00\x07\x01"
 
     definition = {
-        "exp": "uint:4",
-        "cap": "uint:4",
+        "difficulty": "uint:4",
+        "completion": "uint:4",
         "recommended": "pointer:list:bytes:16",  # 16 bytes
-        "unknown1": "uint:4",
+        "capital": "uint:4",
         "completion_rewards": "pointer:list:bytes:12",  # 12 bytes
         "unit_rewards": "pointer:list:bytes:12",  # 12 bytes
-        "components": "pointer:list:bytes:4",  # 4 bytes
         "abilities": "pointer:list:bytes:4",  # 4 bytes
+        "components": "pointer:list:bytes:4",  # 4 bytes
         "days_available": "pointer:list:uint:1",  # 1 byte
         "null": "null:8",
         "dlc_set": "uint:2",
@@ -548,15 +548,16 @@ class GroupSendingMissionList(GundamDataFile):
         "name": "uint:2",
         "description": "uint:2",
         "dispatch_time": "uint:2",
-        "unknown23": "uint:2",
-        "unknown24": "uint:2",
+        "exp": "uint:2",
+        "req_progress": "uint:2",
         "unknown25": "uint:2",
-        "unknown26": "uint:2",
-        "unknown27": "uint:1",
-        "unknown27b": "uint:1",
-        "unknown28": "uint:2",
+        "timing": "uint:1",
+        "terrain": "uint:1",
+        "cooldowns": "uint:1",
+        "cooldown_chance": "uint:1",
+        "null2": "null:2",
     }
-    
+
     child_definitions = {
         "recommended": {
             "filter": "uint:4",
@@ -567,32 +568,55 @@ class GroupSendingMissionList(GundamDataFile):
         },
         "completion_rewards": {
             "guid": "guid",   # this can also be a bgm identifier
-            "completion": "uint:4",
+            "completion": "uint:1",
+            "type": "uint:1",
+            "null": "null:2",
         },
         "unit_rewards": {
             "guid": "guid",
-            "weight": "uint:4",
+            "chance": "uint:1",
+            "quantity": "uint:1",
+            "null": "null:2",
         },
         "components": {
             "id": "uint:2",
-            "weight": "uint:2",
+            "chance": "uint:1",
+            "quantity": "uint:1",
         },
         "abilities": {
             "id": "uint:2",
-            "weight": "uint:2",
+            "chance": "uint:1",
+            "quantity": "uint:1",
         },
     }
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
+        terrain = ["atmospheric", "ground", "underwater"]
         record_count = self.read_header(buffer)
         records = self.read_records(self.definition, buffer, record_count)
 
-        for r in records:
+        for record in records:
             for field, definition in self.child_definitions.items():
-                r[field] = [
-                    self.read_record(definition, BytesIO(val)) for val in r[field]
+                record[field] = [
+                    self.read_record(definition, BytesIO(val)) for val in record[field]
                 ]
-    
+
+            for cr in record["completion_rewards"]:
+                if cr["type"] in [2, 3, 4, 5]:
+                    value = self.read_int(cr.pop("guid")[4:8])
+                    if cr["type"] == 2:
+                        cr["component"] = value
+                    elif cr["type"] == 3:
+                        cr["skill"] = value
+                    elif cr["type"] == 4:
+                        cr["bgm"] = value
+                    elif cr["type"] == 5:
+                        cr["cooldowns"] = value
+
+
+            record["terrain_space"] = 1 if record["terrain"] == 0 else 0
+            record.update(self.bit_smash("terrain", record.pop("terrain"), terrain))
+
         return records
 
 
@@ -1315,10 +1339,10 @@ class StageList(GundamDataFile):
 
     def read(self, buffer: BinaryIO) -> List[Dict]:
         difficulties = ["NORMAL", "HARD", "EXTRA", "HELL"]  # INFERNO coming
-        terrain = ["space", "air", "land", "surface", "underwater"]
         record_count = self.read_header(buffer)
         records = self.read_records(self.definition, buffer, record_count)
 
+        terrain = ["space", "air", "land", "surface", "underwater"]
         for record in records:
             record.update(self.bit_smash("terrain", record.pop("terrain"), terrain))
 
