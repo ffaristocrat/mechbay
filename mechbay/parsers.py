@@ -452,18 +452,6 @@ class CockpitBgTable(GundamDataFile):
     header = b"\xC2\x3E\x10\x0A"
     record_count_length = 0
 
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-
-        return string_bytes
-
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        return records
-
 
 class CreditBgmList(GundamDataFile):
     default_filename = "CreditBgmList.cdb"
@@ -512,44 +500,16 @@ class CutIn(GundamDataFile):
         return records
 
 
-class IdSet(GundamDataFile):
-    default_filename = "idset.tbl"
-    data_path = "battle/table"
-    header = b"\x54\x53\x44\x49\x00\x01\x02\x00"
-    definition = {
-        # 68 bytes
-        "guid": "uint:4",
-        "null1": "null:1",
-        "unk1": "uint:1",
-        "null2": "null:4",
-        "unk4": "uint:2",
-        "null3": "null:56",
-    }
-
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        
-        return string_bytes
-    
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        unknown1 = self.read_int(buffer.read(4))
-        unknown2 = self.read_int(buffer.read(4))
-        unknown3 = self.read_int(buffer.read(4))
-        print(unknown1, unknown2, unknown3)
-
-        records = self.read_records(self.definition, buffer, record_count)
-        
-        return records
-
-
 class DatabaseCalculation(GundamDataFile):
     # Yes, the source file is misspelled
     default_filename = "DatabaseCalcuclation.cdb"
     data_path = "resident"
     package = "MiscData.pkd"
     header = b"\x43\x4C\x41\x43\x00\x00\x06\x01"
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        return []
 
 
 class GalleryMovieList(GundamDataFile):
@@ -560,7 +520,7 @@ class GalleryMovieList(GundamDataFile):
 
 class GetUnitList(GundamDataFile):
     default_filename = "GetUnitList.cdb"
-    data_path = "tmap/stage"
+    data_path = "resident"
     header = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
     definition = {"guid": "guid", "required_xp": "uint:4"}
 
@@ -574,34 +534,101 @@ class GroupSendingMissionList(GundamDataFile):
     definition = {
         "exp": "uint:4",
         "cap": "uint:4",
-        "unknown2": "uint:4",
-        "unknown3": "pointer",
-        "unknown4": "uint:4",
-        "unknown5": "pointer",
-        "unknown5_count": "uint:4",
-        "unknown7": "uint:4",
-        "unknown8": "uint:4",
-        "unknown9": "uint:4",
-        "unknown10": "uint:4",
-        "unknown11": "uint:4",
-        "unknown12": "uint:4",
-        "unknown13": "uint:4",
-        "unknown14": "uint:4",
-        "unknown15": "uint:4",
-        "unknown16": "uint:4",
+        "recommended": "pointer:list:bytes:16",  # 16 bytes
+        "dispatch_time": "uint:4",
+        "completion_rewards": "pointer:list:bytes:12",  # 12 bytes
+        "unit_rewards": "pointer:list:bytes:12",  # 12 bytes
+        "components": "pointer:list:bytes:4",  # 4 bytes
+        "abilities": "pointer:list:bytes:4",  # 4 bytes
+        "days_available": "pointer:list:uint:1",  # 1 byte
+        "null": "null:8",
         "dlc_set": "uint:2",
         "dispatch_id": "uint:2",
         "dispatch_id2": "uint:2",
-        "unknown20": "uint:2",
-        "unknown21": "uint:2",
+        "name": "uint:2",
+        "description": "uint:2",
         "unknown22": "uint:2",
         "unknown23": "uint:2",
         "unknown24": "uint:2",
         "unknown25": "uint:2",
         "unknown26": "uint:2",
-        "unknown27": "uint:2",
+        "unknown27": "uint:1",
+        "unknown27b": "uint:1",
         "unknown28": "uint:2",
     }
+    
+    child_definitions = {
+        "recommended": {
+            "filter": "uint:4",
+            "filter_count": "uint:4",
+            "bonus": "uint:2",
+            "name": "uint:2",
+            "unk2": "uint:4",
+        },
+        "completion_rewards": {
+            "guid": "guid",   # this can also be a bgm identifier
+            "completion": "uint:4",
+        },
+        "unit_rewards": {
+            "guid": "guid",
+            "weight": "uint:4",
+        },
+        "components": {
+            "id": "uint:2",
+            "weight": "uint:2",
+        },
+        "abilities": {
+            "id": "uint:2",
+            "weight": "uint:2",
+        },
+    }
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        records = self.read_records(self.definition, buffer, record_count)
+
+        for r in records:
+            for field, definition in self.child_definitions.items():
+                r[field] = [
+                    self.read_record(definition, BytesIO(val)) for val in r[field]
+                ]
+
+            print(r)
+            
+    
+        return records
+
+
+class IdSet(GundamDataFile):
+    default_filename = "idset.tbl"
+    data_path = "battle/table"
+    header = b"\x54\x53\x44\x49\x00\x01\x02\x00"
+    definition = {
+        # 68 bytes
+        "guid": "uint:4",
+        "null1": "null:1",
+        "unk1": "uint:1",
+        "null2": "null:4",
+        "unk4": "uint:2",
+        "null3": "null:56",
+    }
+    
+    def write(self, records: List[Dict]) -> bytes:
+        record_count = len(records)
+        string_bytes = self.write_header(record_count)
+        
+        return string_bytes
+    
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        unknown1 = self.read_int(buffer.read(4))
+        unknown2 = self.read_int(buffer.read(4))
+        unknown3 = self.read_int(buffer.read(4))
+        print(unknown1, unknown2, unknown3)
+        
+        records = self.read_records(self.definition, buffer, record_count)
+        
+        return records
 
 
 class MachineConversionList(GundamDataFile):
@@ -647,7 +674,7 @@ class MachineDevelopmentList(GundamDataFile):
     header = b"\x56\x45\x44\x4D\x00\x00\x02\x01"
     definition = {
         "guid": "guid",
-        "children_pointer": "uint:4",
+        "children_pointer": "pointer",
         "index": "uint:2",
         "children_count": "uint:2",
     }
@@ -841,7 +868,6 @@ class MachineSpecList(GundamDataFile):
         unknown2 = self.read_int(buffer.read(4))
         ws_pointer = self.read_int(buffer.read(4))  # to ships
         self.read_int(buffer.read(4))  # file length?
-        print(unknown1, unknown2)
 
         ms_records = self.read_records(self.definition, buffer, ms_count)
         buffer.seek(ws_pointer)
@@ -915,7 +941,7 @@ class MyCharacterConfigurations(GundamDataFile):
     voice_definition = {
         "voice_guid": "guid",
         "index": "uint:2",
-        "voice_actor": "uint:2",
+        "name": "uint:2",
         "is_male": "uint:4",
     }
     random_name_definition = {"index": "uint:2", "name": "uint:2", "is_male": "uint:2"}
@@ -926,7 +952,7 @@ class MyCharacterConfigurations(GundamDataFile):
         "null": "null:4",
         "index": "uint:2",
         "dlc_set": "uint:2",
-        "song_name": "uint:2",
+        "name": "uint:2",
         "unk10": "uint:2",
     }
     unknown_definition = {
@@ -1142,11 +1168,6 @@ class RangeDataList(GundamDataFile):
         "mask": "uint:2",
     }
 
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        return string_bytes
-
     def read(self, buffer: BinaryIO) -> List[Dict]:
         record_count = self.read_header(buffer)
         other_count = self.read_int(buffer.read(4))
@@ -1173,7 +1194,7 @@ class SeriesList(GundamDataFile):
     definition = {
         "series_logo_l": "series",
         "series_logo_s": "series",
-        "string_index": "uint:2",
+        "name": "uint:2",
         "era": "uint:1",
         "unknown1": "uint:1",  # always 1 or 0
     }
@@ -1237,16 +1258,9 @@ class StageList(GundamDataFile):
         "unknown11": "uint:2",
         "unknown12": "uint:2",
         "unknown13": "uint:2",
-        "unknown14": "uint:2",
-        "unknown15": "uint:2",
-        "unknown16": "uint:2",
-        "unknown17": "uint:2",
-        "unknown18": "uint:2",
-        "unknown19": "uint:2",
-        "unknown20": "uint:2",
+        "null": "null:16",
         "unknown21": "uint:2",
-        "unknown22": "uint:1",
-        "unknown23": "uint:1",
+        "unknown22": "uint:2",
         "unknown24": "uint:1",
         "unknown25": "uint:1",
         "unknown26": "uint:1",
@@ -1263,7 +1277,7 @@ class StageList(GundamDataFile):
         records = self.read_records(self.definition, buffer, record_count)
 
         for record in records:
-            record.update(self.bit_smash("terrain", record["terrain"], terrain))
+            record.update(self.bit_smash("terrain", record.pop("terrain"), terrain))
 
             # available units appears to be only for informational purposes in the
             # stage screen
@@ -1280,6 +1294,7 @@ class StageList(GundamDataFile):
 
 class SkillAcquisitionPatternList(GundamDataFile):
     default_filename = "SkillAcquisitionPatternList.cdb"
+    data_path = "resident"
     header = b"\x4C\x51\x41\x53\x00\x00\x00\x01"
 
     definition = {
@@ -1615,3 +1630,10 @@ class Stage(GundamDataFile):
             records.append(record)
 
         return records
+
+
+class StageCondition(GundamDataFile):
+    default_filename = "StageConditions.dat"
+    header = b"\x43\x53\x4D\x54\x64\x00\x00\x00"
+
+
