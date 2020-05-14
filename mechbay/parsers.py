@@ -718,7 +718,39 @@ class MachineGrowthList(GundamDataFile):
     data_path = "resident"
     package = "MachineSpecList.pkd"
     header = b"\x00\x00\x01\x01\x52\x47\x43\x4D"
-    definition = {}
+    definition = {
+        "unk1": "uint:2",
+        "index": "uint:1",
+        "unk3": "uint:1",
+        "unk4": "uint:1",
+        "unk5": "uint:1",
+        "unk6": "uint:2",
+    }
+    unknown1_definition = {
+        "unk1": "uint:2",
+        "index": "uint:2",
+    }
+    unknown2_definition = {
+        "unk1": "uint:2",
+        "index": "uint:2",
+    }
+
+    def read(self, buffer: BinaryIO) -> List[Dict]:
+        record_count = self.read_header(buffer)
+        unknown1_count = self.read_int(buffer.read(4))
+        unknown2_count = self.read_int(buffer.read(4))
+        unknown1_pointer = self.read_int(buffer.read(4))
+        unknown2_pointer = self.read_int(buffer.read(4))
+
+        records = self.read_records(self.definition, buffer, record_count)
+        buffer.seek(unknown1_pointer)
+        unknown1_records = self.read_records(self.unknown1_definition, buffer, unknown1_count)
+        buffer.seek(unknown2_pointer)
+        unknown2_records = self.read_records(self.unknown1_definition, buffer, unknown2_count)
+
+        records += unknown1_records + unknown2_records
+
+        return records
 
 
 class MachineSpecList(GundamDataFile):
@@ -735,7 +767,7 @@ class MachineSpecList(GundamDataFile):
         "hp": "uint:4",
         "index1": "uint:2",
         "dlc_set": "uint:2",
-        "name_index": "uint:2",
+        "name": "uint:2",
         "unknown1": "uint:1",  # 0 - 248 (49 distinct)
         "unknown2": "uint:1",  # 0, 1, 2, 3, 5, 13, 15, 16, 22, 23, 26, 27, 31, 39, 40, 42, 43, 44, 45, 46, 51, 52, 54, 55, 56, 58, 59, 62, 67, 69, 70, 71, 76, 77
         "unknown3": "uint:1",  # 0 - 255 (172 distinct)
@@ -761,15 +793,15 @@ class MachineSpecList(GundamDataFile):
         "unknown17": "uint:1",  # 0, 1, 6, 7, 9, 16, 17, 25, 32, 33, 38, 39, 48, 49, 64, 65, 73
         "size": "uint:1",
         "fixed7": "uint:1",  # always 7
-        "unknown18": "int:2",  # -1, 0-86, 34 distinct
-        "unknown19": "int:2",  # -1, 1-85, 52 distinct
-        "unknown20": "int:2",  # -1, 2-85, 39 distinct
-        "unknown21": "int:2",  # -1, 15, 26, 39, 40, 42, 43, 48, 50, 51, 52, 54, 56, 58, 59, 60, 74, 82
-        "unknown22": "int:2",  # -1 or 50
+        "ability1": "int:2",  # -1, 0-86, 34 distinct
+        "ability2": "int:2",  # -1, 1-85, 52 distinct
+        "ability3": "int:2",  # -1, 2-85, 39 distinct
+        "ability4": "int:2",  # -1, 15, 26, 39, 40, 42, 43, 48, 50, 51, 52, 54, 56, 58, 59, 60, 74, 82
+        "ability5": "int:2",  # -1 or 50
         "weapon_index": "int:2",
         "map_weapon_index": "int:2",
         "mov": "uint:1",
-        "dimension1": "int:1",  # footprint
+        "dimension1": "int:1",  # footprint?
         "dimension2": "int:1",
         "weapon_count": "uint:1",
         "map_weapon_count": "uint:1",
@@ -779,7 +811,7 @@ class MachineSpecList(GundamDataFile):
         "unknown28": "uint:1",  # 0, 1, 2, 16, 32, 33, 64, 80, 128, 129, 144, 160
         "unknown29": "uint:1",  # 0, 1, 2, 4, 8, 16, 24
         "unknown30": "uint:1",  # 0, 2, 16, 17, 20, 21, 24, 25
-        "null3": "binary:1",
+        "null3": "null:1",
     }
     definition_ws = {
         "guid": "guid",  # profile?
@@ -788,7 +820,7 @@ class MachineSpecList(GundamDataFile):
         "hp": "uint:4",
         "index1": "uint:2",
         "dlc_set": "uint:2",
-        "name_index": "uint:2",
+        "name": "uint:2",
         "unknown1": "uint:1",  # 0, 19, 23, 27, 68, 77, 84, 95, 102, 130, 134, 136, 140, 202, 211, 213, 233
         "unknown2": "uint:1",  # 0, 3, 23, 78, 81, 86, 88, 90, 93, 95, 96, 97, 101, 102
         "unknown3": "uint:1",  # 0 - 255, 83 distinct
@@ -814,11 +846,11 @@ class MachineSpecList(GundamDataFile):
         "unknown17": "uint:1",  # 0, 1, 6, 7, 8, 38, 48, 64
         "size": "uint:1",
         "fixed7": "uint:1",  # always 7
-        "unknown18": "int:2",  # -1, 8, 20, 30, 42, 46
-        "unknown19": "int:2",  # -1, 17, 38, 49, 61
-        "unknown20": "int:2",  # -1
-        "unknown21": "int:2",  # -1
-        "unknown22": "int:2",  # -1
+        "ability1": "int:2",  # -1, 8, 20, 30, 42, 46
+        "ability2": "int:2",  # -1, 17, 38, 49, 61
+        "ability3": "int:2",  # -1
+        "ability4": "int:2",  # -1
+        "ability5": "int:2",  # -1
         "weapon_index": "int:2",
         "map_weapon_index": "int:2",
         "mov": "uint:1",
@@ -829,10 +861,10 @@ class MachineSpecList(GundamDataFile):
         "unknown23": "int:1",  # -1, 0, 2, 4
         "shadow_texture": "int:1",
         "null2": "null:3",
-        "unknown28": "uint:1",  # 0, 1, 2
+        "teams": "uint:1",  # 0, 1, 2
         "unknown29": "uint:1",  # 100
         "unknown30": "uint:1",  # 80
-        "null3": "binary:1",
+        "unknown31": "binary:1",
     }
 
     size_map = {}
@@ -1376,12 +1408,14 @@ class TutorialList(GundamDataFile):
     data_path = "resident"
     package = "MiscData.pkd"
     header = b"\x4F\x54\x55\x54\x00\x00\x01\x01"
+
+    # Uses messagestrings.tbl
     definition = {
-        "tutorial_id1": "uint:4",
-        "tutorial_id2": "uint:4",
-        "tutorial_id3": "uint:4",
+        "title": "uint:4",
+        "text": "uint:4",
+        "next": "uint:4",
         "index": "uint:2",
-        "unknown": "uint:2",
+        "unknown": "uint:2",  # Mostly 1, some 3, one 0
     }
 
 
