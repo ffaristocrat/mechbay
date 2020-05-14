@@ -538,8 +538,8 @@ class GroupSendingMissionList(GundamDataFile):
         "capital": "uint:4",
         "completion_rewards": "pointer:list:bytes:12",  # 12 bytes
         "unit_rewards": "pointer:list:bytes:12",  # 12 bytes
-        "abilities": "pointer:list:bytes:4",  # 4 bytes
-        "components": "pointer:list:bytes:4",  # 4 bytes
+        "ability_rewards": "pointer:list:bytes:4",  # 4 bytes
+        "component_rewards": "pointer:list:bytes:4",  # 4 bytes
         "days_available": "pointer:list:uint:1",  # 1 byte
         "null": "null:8",
         "dlc_set": "uint:2",
@@ -549,7 +549,7 @@ class GroupSendingMissionList(GundamDataFile):
         "description": "uint:2",
         "dispatch_time": "uint:2",
         "exp": "uint:2",
-        "req_progress": "uint:2",
+        "unknown24": "uint:2",
         "unknown25": "uint:2",
         "timing": "uint:1",
         "terrain": "uint:1",
@@ -560,14 +560,14 @@ class GroupSendingMissionList(GundamDataFile):
 
     child_definitions = {
         "recommended": {
-            "filter": "uint:4",
+            "filter_pointer": "uint:4",
             "filter_count": "uint:4",
             "bonus": "uint:2",
             "name": "uint:2",
             "unk2": "uint:4",
         },
         "completion_rewards": {
-            "guid": "guid",   # this can also be a bgm identifier
+            "id": "bytes:8",   # identifer depends on type
             "completion": "uint:1",
             "type": "uint:1",
             "null": "null:2",
@@ -578,13 +578,13 @@ class GroupSendingMissionList(GundamDataFile):
             "quantity": "uint:1",
             "null": "null:2",
         },
-        "components": {
-            "id": "uint:2",
+        "component_rewards": {
+            "component": "uint:2",
             "completion": "uint:1",
             "quantity": "uint:1",
         },
-        "abilities": {
-            "id": "uint:2",
+        "ability_rewards": {
+            "ability": "uint:2",
             "completion": "uint:1",
             "quantity": "uint:1",
         },
@@ -595,15 +595,22 @@ class GroupSendingMissionList(GundamDataFile):
         record_count = self.read_header(buffer)
         records = self.read_records(self.definition, buffer, record_count)
 
-        for record in records:
+        for i, record in enumerate(records):
             for field, definition in self.child_definitions.items():
                 record[field] = [
-                    self.read_record(definition, BytesIO(val)) for val in record[field]
+                    self.read_record(definition, BytesIO(val)) for val in record.pop(field)
                 ]
 
+            del record["dispatch_id2"]
+
+            # for cr in record["recommended"]:
+            #     cr["filter"] += location
+
             for cr in record["completion_rewards"]:
-                if cr["type"] in [2, 3, 4, 5]:
-                    value = self.read_int(cr.pop("guid")[4:8])
+                if cr["type"] in [1]:
+                    cr["guid"] = self.read_guid_bytes(cr.pop("id"))
+                elif cr["type"] in [2, 3, 4, 5]:
+                    value = self.read_int(cr.pop("id")[4:8])
                     if cr["type"] == 2:
                         cr["component"] = value
                     elif cr["type"] == 3:
@@ -612,7 +619,6 @@ class GroupSendingMissionList(GundamDataFile):
                         cr["bgm"] = value
                     elif cr["type"] == 5:
                         cr["cooldowns"] = value
-
 
             record["terrain_space"] = 1 if record["terrain"] == 0 else 0
             record.update(self.bit_smash("terrain", record.pop("terrain"), terrain))
