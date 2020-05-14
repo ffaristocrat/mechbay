@@ -359,20 +359,17 @@ class GundamDataFile:
         elif base_type in ["null"]:
             buffer.read(byte_count)
         elif "pointer" in base_type:
-            pointer = cls.read_int(buffer.read(byte_count)) + location
-
             if not is_list and not child_type:
-                value = pointer
+                return cls.read_int(buffer.read(byte_count)) + location
 
             elif is_list:
-                list_count = cls.read_int(buffer.read(4))
-
                 # list count is first in the pair
                 if base_type == "cfpointer":
-                    list_count, pointer = pointer, list_count
-                    # fix location
-                    list_count -= location
-                    pointer += location
+                    list_count = cls.read_int(buffer.read(4))
+                    pointer = cls.read_int(buffer.read(byte_count - 4)) + location
+                else:
+                    pointer = cls.read_int(buffer.read(byte_count - 4)) + location
+                    list_count = cls.read_int(buffer.read(4))
 
                 value = []
                 save_location = buffer.tell()
@@ -383,6 +380,7 @@ class GundamDataFile:
                 buffer.seek(save_location)
 
             else:
+                pointer = cls.read_int(buffer.read(byte_count)) + location
                 save_location = buffer.tell()
                 buffer.seek(pointer)
                 value = cls.read_field(child_type, buffer)
