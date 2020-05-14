@@ -29,55 +29,173 @@ class AbilitySpecList(GundamDataFile):
     data_path = "resident"
     default_filename = "AbilitySpecList.cdb"
     header = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
-    definition = {"unk1": "uint:2", "index": "uint:2", "name_index": "uint:4"}
-    modifications_definition = {
-        "unk1": "uint:2",
-        "index": "int:2",
-        "unk2": "uint:2",
-        "unk3": "uint:2",
-        "unk4": "uint:2",
-        "unk5": "uint:2",
-        "unk6": "uint:2",
-        "unk7": "uint:2",
-        "unk8": "uint:2",
-        "unk9": "uint:2",
-        "unk10": "uint:2",
-        "unk11": "uint:2",
-        "null1": "null:10",
-        "unk17": "uint:2",
-        "unk18": "uint:2",
-        "null2": "null:2",
+    definitions = {
+        "unitAbilities": {  # 8 bytes
+            "unk1": "uint:2",
+            "name": "uint:2",
+            "unk2": "uint:2",
+            "null": "null:2",
+        },
+        "unitModifications": {  # 40 bytes
+            "component_id": "uint:2",
+            "name": "int:2",
+            "unk2": "uint:2",
+            "fixed1": "uint:2",
+            "cost": "uint:2",
+            "unk5": "uint:2",
+            "unk6": "uint:2",
+            "unk7": "uint:2",
+            "unk8": "uint:2",
+            "unk9": "uint:2",
+            "unk10": "uint:2",
+            "unk11": "uint:2",
+            "null1": "null:10",
+            "unk17": "uint:2",
+            "unk18": "uint:2",
+            "null2": "null:2",
+        },
+        "characterAbilities": {  # 34 bytes
+            "ability_id": "uint:2",
+            "name": "uint:2",
+            "unk1": "uint:2",
+            "unk2": "uint:2",
+            "unk3": "uint:2",
+            "unk4": "uint:2",
+            "unk5": "uint:2",
+            "unk5b": "uint:2",
+            "unk6": "uint:2",
+            "null": "null:10",
+            "cost": "uint:2",
+            "rarity": "uint:1",
+            "fixed99": "uint:1",
+            "fixed1": "uint:2",
+        },
+        "characterSkills": {
+            "skill_id": "uint:2",
+            "name": "uint:2",
+            "unk1": "uint:2",
+            "unk2": "uint:2",
+            "unk3": "uint:1",
+            "unk4": "uint:1",
+            "unk5": "uint:1",
+            "unk6": "uint:1",
+            "unk7": "uint:1",
+            "unk8": "uint:1",
+        },
+        "effects": {  # 132 bytes
+            "name": "uint:2",
+            "unit_hp": "int:2",
+            "unit_energy": "int:2",
+            "unit_attack": "int:2",
+            "unit_defense": "int:2",
+            "unit_mobility": "int:2",
+            "power_ranged": "int:2",
+            "power_melee": "int:2",
+            "power_physical": "int:2",
+            "power_beam": "int:2",
+            "power_map": "int:2",
+            "power_linkup_warship": "int:2",
+            "power_linkup_raid": "int:2",
+            "char_melee": "int:2",
+            "char_ranged": "int:2",
+            "char_defense": "int:2",
+            "char_reaction": "int:2",
+            "char_awaken": "int:2",
+            "char_command": "int:2",
+            "char_auxiliary": "int:2",
+            "char_communication": "int:2",
+            "char_navigation": "int:2",
+            "char_maintenance": "int:2",
+            "char_charisma": "int:2",
+            "mp": "int:2",
+            "hp": "int:2",
+            "en": "int:2",
+            "bonus_xp": "int:2",
+            "bonus_score": "int:2",
+            "high_price": "int:2",
+            "reduce_physical_ranged": "int:2",
+            "reduce_physical_melee": "int:2",
+            "reduce_beam_ranged": "int:2",
+            "reduce_beam_melee": "int:2",
+            "null3": "null:6",
+            "nullify_physical_ranged": "int:2",
+            "nullify_physical_melee": "int:2",
+            "nullify_beam_ranged": "int:2",
+            "nullify_beam_melee": "int:2",
+            "null4": "null:4",
+            "reduce_map_pct": "int:2",
+            "damage_dealt": "int:2",
+            "damage_taken": "int:2",
+            "condition1": "int:2",
+            "condition2": "int:2",
+            "condition3": "int:2",
+            "unk50a": "binary:1",
+            "null9": "null:1",
+            "movement": "int:1",
+            "terrain_space": "int:1",
+            "terrain_atmospheric": "int:1",
+            "terrain_ground": "int:1",
+            "terrain_surface": "int:1",
+            "terrain_underwater": "int:1",
+            "range_ranged": "int:1",
+            "range_melee": "int:1",
+            "range_physical": "int:1",
+            "range_beam": "int:1",
+            "null7": "null:1",
+            "en_consumption_ranged": "int:1",
+            "en_consumption_melee": "int:1",
+
+            "null5": "null:5",
+            "crit_rate_ranged": "int:1",
+            "crit_rate_melee": "int:1",
+            "crit_rate_physical": "int:1",
+            "crit_rate_beam": "int:1",
+            "null8": "null:1",
+            "accuracy": "int:1",
+            "evasion": "int:1",
+            "null1": "null:1",
+            "max_chance_step": "int:1",
+            "max_areas": "int:1",
+            "null2": "null:1",
+            "range": "int:1",
+            "type": "int:2",
+        },
     }
 
-    def write(self, records: List[Dict]) -> bytes:
+    def write(self, records: Dict[str, List[Dict]]) -> bytes:
         record_count = len(records)
         string_bytes = self.write_header(record_count)
 
         return string_bytes
 
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        unit_ability_count = self.read_header(buffer)
+    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+        records = {}
+        counts = {
+            "unitAbilities": self.read_header(buffer),
+            "unitModifications": self.read_int(buffer.read(4)),
+            "characterAbilities": self.read_int(buffer.read(4)),
+            "characterSkills": self.read_int(buffer.read(4)),
+            "effects": self.read_int(buffer.read(4)),
+        }
 
-        modifications_count = self.read_int(buffer.read(4))
-        character_ability_count = self.read_int(buffer.read(4))
-        character_skill_count = self.read_int(buffer.read(4))
-        pointer = self.read_int(buffer.read(4))
         pointer2 = self.read_int(buffer.read(4))
-        modifications_pointer = self.read_int(buffer.read(4))
-        character_ability_pointer = self.read_int(buffer.read(4))
-        pointer5 = self.read_int(buffer.read(4))
-        pointer6 = self.read_int(buffer.read(4))
-        print(pointer, pointer2, pointer5, pointer6)
-        print(buffer.tell())
+        print("pointer2?", pointer2)
 
-        unit_abilities = self.read_records(self.definition, buffer, unit_ability_count)
-        buffer.seek(modifications_pointer)
-        modifications = self.read_records(
-            self.modifications_definition, buffer, modifications_count
-        )
-        buffer.seek(character_ability_pointer)
+        pointers = {
+            "unitModifications": self.read_int(buffer.read(4)),
+            "characterAbilities": self.read_int(buffer.read(4)),
+            "characterSkills": self.read_int(buffer.read(4)),
+            "effects": self.read_int(buffer.read(4)),
+            "unitAbilities": buffer.tell(),
+        }
 
-        return unit_abilities + modifications
+        for k in self.definitions:
+            print(k, counts[k], hex(buffer.tell()), hex(pointers[k]))
+            buffer.seek(pointers[k])
+            print("definition_size", self.definition_size(self.definitions[k]))
+            records[k] = self.read_records(self.definitions[k], buffer, counts[k])
+
+        return records
 
 
 class ActAbilityEffectList(GundamDataFile):
