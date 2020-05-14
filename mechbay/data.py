@@ -55,6 +55,9 @@ class GundamDataFile:
         try:
             series = int.from_bytes(byte_string[0:2], byteorder="little")
             gundam = chr(byte_string[2])
+            if gundam != "G":
+                raise TypeError
+
             unit_type = chr(byte_string[4])
             spec = byte_string[5]
             model = int.from_bytes(byte_string[6:8], byteorder="little")
