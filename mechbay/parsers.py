@@ -574,18 +574,18 @@ class GroupSendingMissionList(GundamDataFile):
         },
         "unit_rewards": {
             "guid": "guid",
-            "chance": "uint:1",
+            "completion": "uint:1",
             "quantity": "uint:1",
             "null": "null:2",
         },
         "components": {
             "id": "uint:2",
-            "chance": "uint:1",
+            "completion": "uint:1",
             "quantity": "uint:1",
         },
         "abilities": {
             "id": "uint:2",
-            "chance": "uint:1",
+            "completion": "uint:1",
             "quantity": "uint:1",
         },
     }
