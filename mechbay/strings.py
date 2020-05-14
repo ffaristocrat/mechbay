@@ -79,6 +79,7 @@ class Localisation:
                 with open(full_path, "rb") as f:
                     data[language] = f.read()
             except FileNotFoundError:
+                print(f"{full_path} not found!")
                 data[language] = None
 
         records = cls.read_bytes(data)
