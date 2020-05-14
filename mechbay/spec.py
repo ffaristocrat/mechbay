@@ -5,7 +5,7 @@ from .pkd import PKDArchive
 from .strings import Localisation
 
 
-class Characters:
+class CharacterSpecList:
     """
         Character data is composed of
             data/resident/CharacterSpecList.pkd
@@ -13,9 +13,6 @@ class Characters:
                 CharacterGrowthList.cdb - Stat growth profiles
                 SkillAcquisitionPatternList.cdb - Skill gain profiles
                 MyCharacterConfigurations.cdb - Custom character configs
-
-            data/resident/CellAttributeList.pkd - Container for
-                BattleBgList.cdb - Maps BGM music to files
 
             data/language/**/CharacterSpecList.tbl - localisation
 
@@ -26,7 +23,7 @@ class Characters:
 
     """
 
-    character_spec_list_files = [
+    file_list = [
         ("CharacterSpecList.cdb", CharacterSpecList),
         ("CharacterGrowthList.cdb", CharacterGrowthList),
         ("SkillAcquisitionPatternList.cdb", SkillAcquisitionPatternList),
@@ -38,17 +35,20 @@ class Characters:
         self.write_path = write_data_path
 
     def read_files(self) -> Dict:
+        archive_file = "MiscData.pkd"
+        string_file = "MiscData.tbl"
+
         archive = PKDArchive().read_file(
-            os.path.join(self.read_path, "resident", "CharacterSpecList.pkd")
+            os.path.join(self.read_path, "resident", archive_file)
         )
         data = {}
 
-        for filename, cls in self.character_spec_list_files:
+        for filename, cls in self.file_list:
             obj = cls(self.read_path)
             data[filename.split(".")[0]] = obj.read(BytesIO(archive[filename]))
 
         strings = Localisation.read_files(
-            os.path.join(self.read_path, "language"), "CharacterSpecList.tbl"
+            os.path.join(self.read_path, "language"), string_file
         )
 
         for r in data["CharacterSpecList"]:
@@ -58,19 +58,16 @@ class Characters:
                     strings[r["unique_name"]] if r["unique_name"] > 0 else {}
                 )
 
-        name_fields = [
-            ("outfits", "name"),
-            ("voices", "voice_actor"),
-            ("names", "name"),
-            ("bgm", "song_name"),
-        ]
-        for dataset, field in name_fields:
-            for r in data["MyCharacterConfigurations"][dataset]:
-                r[field] = strings[r[field]]
+        for dataset in data["MyCharacterConfigurations"].values():
+            for r in dataset:
+                r["name"] = strings[r["name"]]
 
         return data
 
     def write_files(self, data: Dict):
+        archive_file = "MiscData.pkd"
+        string_file = "MiscData.tbl"
+
         archive = {}
         strings = []
 
@@ -84,26 +81,94 @@ class Characters:
                 else:
                     r["unique_name"] = -1
 
-        name_fields = [
-            ("outfits", "name"),
-            ("voices", "voice_actor"),
-            ("names", "name"),
-            ("bgm", "song_name"),
-        ]
-
-        for dataset, field in name_fields:
-            for r in data["MyCharacterConfigurations"][dataset]:
-                strings.append(r[field])
-                r[field] = len(strings) - 1
+        for dataset in data["MyCharacterConfigurations"].values():
+            for r in dataset:
+                strings.append(r["name"])
+                r["name"] = len(strings) - 1
 
         Localisation.write_files(
-            strings, os.path.join(self.write_path, "language"), "CharacterSpecList.tbl"
+            strings, os.path.join(self.write_path, "language"), string_file
         )
 
-        for filename, cls in self.character_spec_list_files:
+        for filename, cls in self.file_list:
             obj = cls(self.write_path)
             archive[filename] = obj.write(data[filename.split(".")[0]])
 
         PKDArchive().write_file(
-            archive, os.path.join(self.write_path, "resident", "CharacterSpecList.pkd")
+            archive, os.path.join(self.write_path, "resident", archive_file)
+        )
+
+
+class MiscData:
+    file_list = [
+        ("DatabaseCaluclation.cdb", DatabaseCalculation),
+        ("SeriesList.cdb", SeriesList),
+        ("GroupSendingMissionList.cdb", GroupSendingMissionList),
+        ("TutorialList.cdb", TutorialList),
+    ]
+
+    data_sets = [
+        ("SeriesList", "name"),
+        ("GroupSendingMissionList", "name"),
+        ("GroupSendingMissionList", "description"),
+    ]
+
+    def __init__(self, read_data_path: str = "./data", write_data_path: str = "./mods"):
+        self.read_path = read_data_path
+        self.write_path = write_data_path
+
+    def read_files(self) -> Dict:
+        archive_file = "MiscData.pkd"
+        string_file = "MiscData.tbl"
+
+        archive = PKDArchive().read_file(
+            os.path.join(self.read_path, "resident", archive_file)
+        )
+        data = {}
+
+        for filename, cls in self.file_list:
+            obj = cls(self.read_path)
+            data[filename.split(".")[0]] = obj.read(BytesIO(archive[filename]))
+
+        strings = Localisation.read_files(
+            os.path.join(self.read_path, "language"), string_file
+        )
+
+        for data_set, field in self.data_sets:
+            for r in data[data_set]:
+                r[field] = strings[r[field]]
+
+        for record in data["GroupSendingMissionList"]:
+            for r in record["recommended"]:
+                r["name"] = strings[r["name"]]
+
+        return data
+
+    def write_files(self, data: Dict):
+        archive_file = "MiscData.pkd"
+        string_file = "MiscData.tbl"
+
+        archive = {}
+        strings = []
+
+        for data_set, field in self.data_sets:
+            for r in data[data_set]:
+                strings.append(r[field])
+                r[field] = len(strings) - 1
+
+        for record in data["GroupSendingMissionList"]:
+            for r in record["recommended"]:
+                strings.append(r["name"])
+                r["name"] = len(strings) - 1
+
+        Localisation.write_files(
+            strings, os.path.join(self.write_path, "language"), string_file
+        )
+
+        for filename, cls in self.file_list:
+            obj = cls(self.write_path)
+            archive[filename] = obj.write(data[filename.split(".")[0]])
+
+        PKDArchive().write_file(
+            archive, os.path.join(self.write_path, "resident", archive_file)
         )
