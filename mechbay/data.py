@@ -278,8 +278,9 @@ class GundamDataFile:
         for field, field_type in definition.items():
             value = cls.read_field(field_type, buffer, location)
 
-            if not field_type.startswith("null") and value is not None:
-                record[field] = value
+            if field_type.startswith("null") and value is None:
+                continue
+            record[field] = value
 
         return record
 
@@ -297,15 +298,6 @@ class GundamDataFile:
                 byte_string += cls.write_field("uint:4", record.pop(f"{field}_count"))
             elif base_type in ["pointer"] and not is_list:
                 byte_string += cls.write_field("uint:4", record.pop(f"{field}_pointer"))
-            elif base_type in ["null"]:
-                if (
-                    record.get(field) is not None
-                    and isinstance(record[field], bytes)
-                    and len(record[field]) == byte_count
-                ):
-                    byte_string += record.get(field)
-                else:
-                    byte_string += b"\x00" * byte_count
             else:
                 byte_string += cls.write_field(field_type, record[field])
 
@@ -369,7 +361,7 @@ class GundamDataFile:
         elif base_type in ["null"]:
             value = buffer.read(byte_count)
             if value != (b"\x00" * byte_count):
-                print(f"Value not null: {value}")
+                print(f"{field_type} not null: {value}")
             else:
                 value = None
         elif "pointer" in base_type:
@@ -428,7 +420,14 @@ class GundamDataFile:
         elif base_type in ["bytes"]:
             byte_string += (value + ("\x00" * byte_count))[0:byte_count]
         elif base_type in ["null"]:
-            byte_string += b"\x00" * byte_count
+            if (
+                value is not None
+                and isinstance(value, bytes)
+                and len(value) == byte_count
+            ):
+                byte_string += value
+            else:
+                byte_string += b"\x00" * byte_count
         elif "pointer" in base_type:
             byte_string += cls.write_int(value, byte_count)
 
