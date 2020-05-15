@@ -31,18 +31,18 @@ class AbilitySpecList(GundamDataFile):
     header = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
     definitions = {
         "unitAbilities": {  # 8 bytes
-            "unk1": "uint:2",
+            "unit_ability_id": "uint:2",
             "name": "uint:2",
-            "unk2": "uint:2",
-            "null": "null:2",
+            "effect": "uint:2",
+            "unk1": "uint:2",
         },
         "unitModifications": {  # 40 bytes
-            "component_id": "uint:2",
+            "modification_id": "uint:2",
             "name": "int:2",
-            "unk2": "uint:2",
+            "effect": "uint:2",
             "fixed1": "uint:2",
             "cost": "uint:2",
-            "unk5": "uint:2",
+            "dlc_set": "uint:2",
             "unk6": "uint:2",
             "unk7": "uint:2",
             "unk8": "uint:2",
@@ -52,12 +52,12 @@ class AbilitySpecList(GundamDataFile):
             "null1": "null:10",
             "unk17": "uint:2",
             "unk18": "uint:2",
-            "null2": "null:2",
+            "unk19": "uint:2",
         },
         "characterAbilities": {  # 34 bytes
-            "ability_id": "uint:2",
+            "character_ability_id": "uint:2",
             "name": "uint:2",
-            "unk1": "uint:2",
+            "effect": "uint:2",
             "unk2": "uint:2",
             "unk3": "uint:2",
             "unk4": "uint:2",
@@ -74,7 +74,7 @@ class AbilitySpecList(GundamDataFile):
             "skill_id": "uint:2",
             "name": "uint:2",
             "unk1": "uint:2",
-            "unk2": "uint:2",
+            "desc": "uint:2",
             "unk3": "uint:1",
             "unk4": "uint:1",
             "unk5": "uint:1",
@@ -84,11 +84,13 @@ class AbilitySpecList(GundamDataFile):
         },
         "effects": {  # 132 bytes
             "name": "uint:2",
+
             "unit_hp": "int:2",
             "unit_energy": "int:2",
             "unit_attack": "int:2",
             "unit_defense": "int:2",
             "unit_mobility": "int:2",
+
             "power_ranged": "int:2",
             "power_melee": "int:2",
             "power_physical": "int:2",
@@ -96,6 +98,7 @@ class AbilitySpecList(GundamDataFile):
             "power_map": "int:2",
             "power_linkup_warship": "int:2",
             "power_linkup_raid": "int:2",
+
             "char_melee": "int:2",
             "char_ranged": "int:2",
             "char_defense": "int:2",
@@ -107,56 +110,80 @@ class AbilitySpecList(GundamDataFile):
             "char_navigation": "int:2",
             "char_maintenance": "int:2",
             "char_charisma": "int:2",
+
             "mp": "int:2",
             "hp": "int:2",
             "en": "int:2",
+
             "bonus_xp": "int:2",
             "bonus_score": "int:2",
             "high_price": "int:2",
+
             "reduce_physical_ranged": "int:2",
             "reduce_physical_melee": "int:2",
             "reduce_beam_ranged": "int:2",
             "reduce_beam_melee": "int:2",
-            "null3": "null:6",
+
+            "null1": "null:6",
+
             "nullify_physical_ranged": "int:2",
             "nullify_physical_melee": "int:2",
             "nullify_beam_ranged": "int:2",
             "nullify_beam_melee": "int:2",
-            "null4": "null:4",
-            "reduce_map_pct": "int:2",
+
+            "null2": "null:4",
+
+            "reduce_map": "int:2",
             "damage_dealt": "int:2",
             "damage_taken": "int:2",
+
             "condition1": "int:2",
             "condition2": "int:2",
             "condition3": "int:2",
-            "unk50a": "binary:1",
-            "null9": "null:1",
+            "unk1": "binary:1",
+
+            "null3": "null:1",
+
             "movement": "int:1",
+
             "terrain_space": "int:1",
             "terrain_atmospheric": "int:1",
             "terrain_ground": "int:1",
             "terrain_surface": "int:1",
             "terrain_underwater": "int:1",
+
             "range_ranged": "int:1",
             "range_melee": "int:1",
             "range_physical": "int:1",
             "range_beam": "int:1",
-            "null7": "null:1",
+
+            "null4": "null:1",
+
             "en_consumption_ranged": "int:1",
             "en_consumption_melee": "int:1",
+            "en_consumption_physical": "int:1",
+            "en_consumption_beam": "int:1",
+            "en_consumption_map": "int:1",
+    
+            "null5": "null:2",
 
-            "null5": "null:5",
             "crit_rate_ranged": "int:1",
             "crit_rate_melee": "int:1",
             "crit_rate_physical": "int:1",
             "crit_rate_beam": "int:1",
-            "null8": "null:1",
+
+            "null6": "null:1",
+
             "accuracy": "int:1",
             "evasion": "int:1",
-            "null1": "null:1",
+
+            "null7": "null:1",
+
             "max_chance_step": "int:1",
             "max_areas": "int:1",
-            "null2": "null:1",
+
+            "null8": "null:1",
+
             "range": "int:1",
             "type": "int:2",
         },
@@ -194,6 +221,11 @@ class AbilitySpecList(GundamDataFile):
             buffer.seek(pointers[k])
             print("definition_size", self.definition_size(self.definitions[k]))
             records[k] = self.read_records(self.definitions[k], buffer, counts[k])
+
+        for r in records["effects"]:
+            for k in list(r.keys()):
+                if r[k] == 0:
+                    r.pop(k)
 
         return records
 
