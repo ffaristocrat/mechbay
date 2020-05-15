@@ -203,7 +203,15 @@ class GundamDataFile:
         return len(cls.header) + cls.record_count_length
 
     @classmethod
-    def apply_constants(cls, records: List[Dict]) -> None:
+    def apply_constants(cls, records: Union[List[Dict], Dict[str, List[Dict]]]) -> None:
+        if isinstance(records, dict):
+            for record_set in records.values():
+                cls._apply_constants(record_set)
+        else:
+            cls._apply_constants(records)
+
+    @classmethod
+    def _apply_constants(cls, records: List[Dict]) -> None:
         if not cls.constants:
             return
 
@@ -215,7 +223,17 @@ class GundamDataFile:
                     r[c] = v
 
     @classmethod
-    def remove_constants(cls, records: List[Dict]) -> None:
+    def remove_constants(
+        cls, records: Union[List[Dict], Dict[str, List[Dict]]]
+    ) -> None:
+        if isinstance(records, dict):
+            for record_set in records.values():
+                cls._remove_constants(record_set)
+        else:
+            cls._remove_constants(records)
+
+    @classmethod
+    def _remove_constants(cls, records: List[Dict]) -> None:
         if not cls.constants:
             return
 
