@@ -208,7 +208,11 @@ class GundamDataFile:
             return
 
         for r in records:
-            r.update(**cls.constants)
+            for c, v in cls.constants.items():
+                if r.get(c) is not None and r[c] != v:
+                    print(f"WARNING: {c} has mismatched constant {r[c]} != {v}")
+                else:
+                    r[c] = v
 
     @classmethod
     def remove_constants(cls, records: List[Dict]) -> None:
@@ -216,9 +220,11 @@ class GundamDataFile:
             return
 
         for r in records:
-            for c in cls.constants:
-                if c in r:
-                    del r[c]
+            for c, v in cls.constants.items():
+                if r.get(c) is not None and r[c] != v:
+                    print(f"WARNING: {c} has mismatched constant {r[c]} != {v}")
+                else:
+                    r.pop(c, None)
 
     @classmethod
     def write_records(cls, definition: Dict, records: List[Dict]) -> bytes:
