@@ -35,8 +35,8 @@ class CharacterSpecList:
         self.write_path = write_data_path
 
     def read_files(self) -> Dict:
-        archive_file = "MiscData.pkd"
-        string_file = "MiscData.tbl"
+        archive_file = "CharacterSpecList.pkd"
+        string_file = "CharacterSpecList.tbl"
 
         archive = PKDArchive().read_file(
             os.path.join(self.read_path, "resident", archive_file)
@@ -44,47 +44,50 @@ class CharacterSpecList:
         data = {}
 
         for filename, cls in self.file_list:
+            table_name = filename.split(".")[0]
+            print(f"Reading {table_name}")
             obj = cls(self.read_path)
-            data[filename.split(".")[0]] = obj.read(BytesIO(archive[filename]))
+            records = obj.read(BytesIO(archive[filename]))
+            if isinstance(records, dict):
+                for sub_table, values in records.items():
+                    data[f"{table_name}.{sub_table}"] = values
+            else:
+                data[table_name] = records
 
         strings = Localisation.read_files(
             os.path.join(self.read_path, "language"), string_file
         )
 
-        for r in data["CharacterSpecList"]:
-            r["name"] = strings[r["name"]]
-            if "C" in r["guid"]:
-                r["unique_name"] = (
-                    strings[r["unique_name"]] if r["unique_name"] > 0 else {}
-                )
-
-        for dataset in data["MyCharacterConfigurations"].values():
-            for r in dataset:
-                r["name"] = strings[r["name"]]
-
+        fields = ["name", "unique_name"]
+        for table_name, records in data.items():
+            for r in records:
+                for f in fields:
+                    if f not in r:
+                        continue
+                    elif r.get(f) == -1:
+                        r[f] = None
+                    else:
+                        try:
+                            r[f] = strings[r[f]]
+                        except IndexError:
+                            r[f] = f"Bad string index {r[f]}"
         return data
 
     def write_files(self, data: Dict):
-        archive_file = "MiscData.pkd"
-        string_file = "MiscData.tbl"
+        archive_file = "CharacterSpecList.pkd"
+        string_file = "CharacterSpecList.tbl"
 
         archive = {}
         strings = []
 
-        for r in data["CharacterSpecList"]:
-            strings.append(r["name"])
-            r["name"] = len(strings) - 1
-            if "C" in r["guid"]:
-                if r["unique_name"]:
-                    strings.append(r["unique_name"])
-                    r["unique_name"] = len(strings) - 1
-                else:
-                    r["unique_name"] = -1
-
-        for dataset in data["MyCharacterConfigurations"].values():
-            for r in dataset:
-                strings.append(r["name"])
-                r["name"] = len(strings) - 1
+        fields = ["name", "unique_name"]
+        for table_name, records in data.items():
+            for f in fields:
+                for r in records:
+                    if f not in records:
+                        continue
+                    strings.append(r.pop(f))
+                    r[f] = len(strings) - 1
 
         Localisation.write_files(
             strings, os.path.join(self.write_path, "language"), string_file
@@ -127,16 +130,30 @@ class MiscData:
         data = {}
 
         for filename, cls in self.file_list:
+            table_name = filename.split(".")[0]
+            print(f"Reading {table_name}")
             obj = cls(self.read_path)
-            data[filename.split(".")[0]] = obj.read(BytesIO(archive[filename]))
+            records = obj.read(BytesIO(archive[filename]))
+            if isinstance(records, dict):
+                for sub_table, values in records.items():
+                    data[f"{table_name}.{sub_table}"] = values
+            else:
+                data[table_name] = records
 
         strings = Localisation.read_files(
             os.path.join(self.read_path, "language"), string_file
         )
 
-        for data_set, field in self.data_sets:
-            for r in data[data_set]:
-                r[field] = strings[r[field]]
+        fields = ["name"]
+        for table_name, records in data.items():
+            for r in records:
+                for f in fields:
+                    if f not in r:
+                        continue
+                    try:
+                        r[f] = strings[r[f]]
+                    except IndexError:
+                        r[f] = f"Bad string index {r[f]}"
 
         for record in data["GroupSendingMissionList"]:
             for r in record["recommended"]:
@@ -151,10 +168,14 @@ class MiscData:
         archive = {}
         strings = []
 
-        for data_set, field in self.data_sets:
-            for r in data[data_set]:
-                strings.append(r[field])
-                r[field] = len(strings) - 1
+        fields = ["name", "unique_name"]
+        for table_name, records in data.items():
+            for f in fields:
+                for r in records:
+                    if f not in records:
+                        continue
+                    strings.append(r.pop(f))
+                    r[f] = len(strings) - 1
 
         for record in data["GroupSendingMissionList"]:
             for r in record["recommended"]:
