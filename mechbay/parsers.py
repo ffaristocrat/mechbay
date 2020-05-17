@@ -1151,6 +1151,9 @@ class MyCharacterConfigurations(GundamDataFile):
     data_path = "resident"
     package = "CharacterSpecList.pkd"
     header = b"\x43\x48\x43\x4D\x01\x00\x02\x01"
+    constants = {
+        "fixed71": 71,
+    }
 
     definitions = {
         "outfits": {
@@ -1185,6 +1188,8 @@ class MyCharacterConfigurations(GundamDataFile):
     }
 
     def write(self, records: Dict[str, List[Dict]]) -> bytes:
+        self.apply_constants(records)
+
         outfit_count = len(records["outfits"])
         string_bytes = self.write_header(outfit_count)
 
@@ -1259,6 +1264,8 @@ class MyCharacterConfigurations(GundamDataFile):
         for r in records["bgm"]:
             buffer.seek(r.pop("unknown"))
             r["unknown"] = self.read_record(self.unknown_definition, buffer)
+        
+        self.remove_constants(records)
 
         return records
 
