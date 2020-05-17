@@ -154,7 +154,7 @@ class Container:
         self.write_files(raw_data)
 
 
-class CharacterSpecList:
+class CharacterSpecList(Container):
     """
         Character data is composed of
             data/resident/CharacterSpecList.pkd
@@ -353,7 +353,7 @@ class MiscData(Container):
         return localisations
 
 
-class AbilitySpecList:
+class AbilitySpecList(Container):
     read_list = [
         {"filename": "AbilitySpecList.cdb", "data_path": "resident", "archive": None}
     ]
