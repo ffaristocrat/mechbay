@@ -103,10 +103,13 @@ class Container:
                     and record[mapping["field"]] == mapping["missing_value"]
                 ):
                     record[mapping["field"]] = {}
+                    continue
 
                 try:
-                    record[mapping["field"]] = localisations[record[mapping["field"]]]
-                except IndexError:
+                    record[mapping["field"]] = localisations[mapping["strings"]][
+                        record[mapping["field"]]
+                    ]
+                except KeyError:
                     print(
                         f"Missing index {mapping['field']} "
                         f"in {mapping['table']} for {mapping['strings']}"
@@ -312,16 +315,8 @@ class MiscData(Container):
     ]
 
     string_maps = [
-        {
-            "table": "SeriesList",
-            "field": "name",
-            "strings": "MiscData",
-        },
-        {
-            "table": "GroupSendingMissionList",
-            "field": "name",
-            "strings": "MiscData",
-        },
+        {"table": "SeriesList", "field": "name", "strings": "MiscData"},
+        {"table": "GroupSendingMissionList", "field": "name", "strings": "MiscData"},
         {
             "table": "GroupSendingMissionList",
             "field": "description",
@@ -351,9 +346,7 @@ class MiscData(Container):
 
 
 class AbilitySpecList(Container):
-    read_list = [
-        {"filename": "AbilitySpecList.cdb", "data_path": "resident"}
-    ]
+    read_list = [{"filename": "AbilitySpecList.cdb", "data_path": "resident"}]
 
     parse_list = [
         {
@@ -394,9 +387,5 @@ class AbilitySpecList(Container):
             "field": "name",
             "strings": "MiscData",
         },
-        {
-            "table": "AbilitySpecList.effects",
-            "field": "name",
-            "strings": "MiscData",
-        },
+        {"table": "AbilitySpecList.effects", "field": "name", "strings": "MiscData"},
     ]
