@@ -20,7 +20,7 @@ class Container:
         # first read in the raw bytes of all the files
         raw_data = {}
         for file in self.read_list:
-            print(f"Reading {file['file_name']}")
+            print(f"Reading {file['filename']}")
             with open(
                 os.path.join(self.read_path, file["data_path"], file["filename"]), "rb"
             ) as f:
@@ -34,7 +34,7 @@ class Container:
 
     def write_files(self, raw_data: Dict[str, bytes]):
         for file in self.read_list:
-            print(f"Writing {file['file_name']}")
+            print(f"Writing {file['filename']}")
             full_path = os.path.join(
                 self.write_path, file["data_path"], file["filename"]
             )
