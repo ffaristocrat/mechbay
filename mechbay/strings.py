@@ -71,7 +71,7 @@ class StringTBL(GundamDataFile):
 
 class Localisation:
     @classmethod
-    def read_files(cls, input_data_path: str, filename: str):
+    def read_files(cls, input_data_path: str, filename: str) -> Dict[int, Dict[str, str]]:
         data = {}
         for language in LANGUAGES:
             full_path = os.path.join(input_data_path, language, filename)
@@ -87,7 +87,7 @@ class Localisation:
         return records
 
     @classmethod
-    def read_bytes(cls, data: Dict[str, bytes]) -> List[Dict]:
+    def read_bytes(cls, data: Dict[str, bytes]) -> Dict[int, Dict[str, str]]:
         records = []
         for language, byte_string in data.items():
             if not byte_string:
@@ -104,14 +104,16 @@ class Localisation:
             for r, l in zip(records, localisation):
                 r[language] = l["string"]
 
-        for r in records:
+        record_dict = {}
+        for i, r in enumerate(records):
             del r["string"]
             del r["index"]
+            record_dict[i] = r
 
-        return records
+        return record_dict
 
     @classmethod
-    def write_files(cls, records: List[Dict], output_data_path: str, filename: str):
+    def write_files(cls, records: Dict[int, Dict[str, str]], output_data_path: str, filename: str):
         data = cls.write_bytes(records)
 
         for language, byte_string in data.items():
@@ -121,12 +123,12 @@ class Localisation:
                 f.write(byte_string)
 
     @classmethod
-    def write_bytes(cls, records: List[Dict]) -> Dict[str, bytes]:
+    def write_bytes(cls, records: Dict[int, Dict[str, str]]) -> Dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
             localisation = [
-                {"string": r.get(language, ""), "index": 0}
-                for r in records
+                {"string": records[i].get(language, ""), "index": 0}
+                for i in range(len(records))
             ]
             data[language] = StringTBL().write(localisation)
 
@@ -139,7 +141,7 @@ class LocalisationIndexed(Localisation):
     """
 
     @classmethod
-    def read_bytes(cls, data: Dict[str, bytes]) -> Dict[int, Dict]:
+    def read_bytes(cls, data: Dict[str, bytes]) -> Dict[int, Dict[str, str]]:
         records = {}
         for language, byte_string in data.items():
             if not byte_string:
@@ -154,44 +156,17 @@ class LocalisationIndexed(Localisation):
         return records
 
     @classmethod
-    def read_files(cls, input_data_path: str, filename: str) -> Dict[int, Dict]:
-        data = {}
-        for language in LANGUAGES:
-            full_path = os.path.join(input_data_path, language, filename)
-            try:
-                with open(full_path, "rb") as f:
-                    data[language] = f.read()
-            except FileNotFoundError:
-                data[language] = None
-
-        records = cls.read_bytes(data)
-
-        return records
-
-    @classmethod
-    def write_bytes(cls, records: Dict[int, Dict]) -> Dict[str, bytes]:
+    def write_bytes(cls, records: Dict[int, Dict[str, str]]) -> Dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
             localisation = [
-                {"string": r[language], "index": index}
-                for index, r in records.items()
-                if r.get(language) is not None
+                {"string": record[language], "index": index}
+                for index, record in records.items()
+                if record.get(language) is not None
             ]
             data[language] = StringTBL().write(localisation)
 
         return data
-
-    @classmethod
-    def write_files(
-        cls, records: Dict[int, Dict], output_data_path: str, filename: str
-    ):
-        data = cls.write_bytes(records)
-
-        for language, byte_string in data.items():
-            full_path = os.path.join(output_data_path, language, filename)
-            os.makedirs(os.path.split(full_path)[0], exist_ok=True)
-            with open(full_path, "wb") as f:
-                f.write(byte_string)
 
 
 class StageLocalisation:
@@ -217,7 +192,6 @@ class StageLocalisation:
             "string": "SeriesEndingStringTable.tbl",
         },
     }
-    voice_fields = ["voice_id", "val1", "val2", "val3"]
 
     @classmethod
     def read_files(cls, input_data_path: str, stage_id: int) -> Dict[int, Dict]:
@@ -246,7 +220,6 @@ class StageLocalisation:
 
             for v in voice:
                 index = int(v["index"])
-                parts[part][index]["voice_id"] = v["voice_id"]
                 for vf in VoiceTable.fields:
                     parts[part][index][vf] = v[vf]
 
@@ -267,31 +240,30 @@ class StageLocalisation:
                 "StringTable",
             )
             LocalisationIndexed.write_files(records[part], output_data_path, stage_path)
+
             voice_path = os.path.join(
                 output_data_path,
                 tables["dir"],
                 f"{campaign}_{stage}{part}",
                 tables["voice"],
             )
-
             voices = []
             for index, v in records[part].items():
-                voice = {"index": index, "voice_id": records[part][index]["voice_id"]}
+                voice = {"index": index}
                 for vf in VoiceTable.fields:
                     voice[vf] = records[part][index][vf]
                 voices.append(voice)
-
             VoiceTable().write_file(voices, voice_path)
 
 
 class VoiceTable(StringTBL):
     header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
     # TODO: What do these values mean?
-    fields = ["val1", "val2", "val3"]
+    fields = ["voice_id", "unk1", "unk1", "unk1"]
 
     def write(self, records: List[Dict]) -> bytes:
         for r in records:
-            r["string"] = ",".join([r["voice_id"]] + [r[f] for f in self.fields])
+            r["string"] = ",".join([str(r[f]) for f in self.fields])
         byte_string = super().write(records)
 
         return byte_string
@@ -300,9 +272,7 @@ class VoiceTable(StringTBL):
         records = super().read(buffer)
 
         for record in records:
-            unpack = record.pop("string").split(",")
-            record["voice_id"] = unpack[0]
-            for i, f in enumerate(self.fields):
-                record[f] = int(unpack[i + 1])
+            for field, value in zip(self.fields, record.pop("string").split(",")):
+                record[field] = value if field == "voice_id" else int(value)
 
         return records
