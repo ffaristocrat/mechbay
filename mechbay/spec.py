@@ -193,3 +193,74 @@ class MiscData:
         PKDArchive().write_file(
             archive, os.path.join(self.write_path, "resident", archive_file)
         )
+
+
+class AbilitySpecList:
+    file_list = [
+        ("AbilitySpecList.cdb", AbilitySpecList),
+    ]
+
+    data_sets = [
+        ("SeriesList", "name"),
+        ("GroupSendingMissionList", "name"),
+        ("GroupSendingMissionList", "description"),
+    ]
+
+    def __init__(self, read_data_path: str = "./data", write_data_path: str = "./mods"):
+        self.read_path = read_data_path
+        self.write_path = write_data_path
+
+    def read_files(self) -> Dict:
+        string_file = "AbilitySpecList.tbl"
+
+        data = AbilitySpecList(self.read_path).read_file()
+
+        strings = Localisation.read_files(
+            os.path.join(self.read_path, "language"), string_file
+        )
+
+        fields = ["name"]
+        for table_name, records in data.items():
+            for r in records:
+                for f in fields:
+                    if f not in r:
+                        continue
+                    try:
+                        r[f] = strings[r[f]]
+                    except IndexError:
+                        r[f] = f"Bad string index {r[f]}"
+
+        return data
+
+    def write_files(self, data: Dict):
+        archive_file = "MiscData.pkd"
+        string_file = "MiscData.tbl"
+
+        archive = {}
+        strings = []
+
+        fields = ["name", "unique_name"]
+        for table_name, records in data.items():
+            for f in fields:
+                for r in records:
+                    if f not in records:
+                        continue
+                    strings.append(r.pop(f))
+                    r[f] = len(strings) - 1
+
+        for record in data["GroupSendingMissionList"]:
+            for r in record["recommended"]:
+                strings.append(r["name"])
+                r["name"] = len(strings) - 1
+
+        Localisation.write_files(
+            strings, os.path.join(self.write_path, "language"), string_file
+        )
+
+        for filename, cls in self.file_list:
+            obj = cls(self.write_path)
+            archive[filename] = obj.write(data[filename.split(".")[0]])
+
+        PKDArchive().write_file(
+            archive, os.path.join(self.write_path, "resident", archive_file)
+        )
