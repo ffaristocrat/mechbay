@@ -25,7 +25,7 @@ class Container:
                 os.path.join(self.read_path, file["data_path"], file["filename"]), "rb"
             ) as f:
                 raw_bytes = f.read()
-            if isinstance(file["archive"], list):
+            if file.get("archive") and isinstance(file["archive"], list):
                 raw_data.update(**PKDArchive().read(BytesIO(raw_bytes)))
             else:
                 raw_data[file["filename"]] = raw_bytes
@@ -98,6 +98,12 @@ class Container:
     ) -> None:
         for mapping in self.string_maps:
             for record in data[mapping["table"]]:
+                if (
+                    mapping.get("missing_value") is not None
+                    and record[mapping["field"]] == mapping["missing_value"]
+                ):
+                    record[mapping["field"]] = {}
+
                 try:
                     record[mapping["field"]] = localisations[record[mapping["field"]]]
                 except IndexError:
@@ -223,7 +229,6 @@ class CharacterSpecList(Container):
             "table": "CharacterSpecList.characters",
             "field": "name",
             "strings": "CharacterSpecList",
-            "missing_value": None,
         },
         {
             "table": "CharacterSpecList.characters",
@@ -235,31 +240,26 @@ class CharacterSpecList(Container):
             "table": "CharacterSpecList.npcs",
             "field": "name",
             "strings": "CharacterSpecList",
-            "missing_value": None,
         },
         {
             "table": "MyCharacterConfigurations.outfits",
             "field": "name",
             "strings": "CharacterSpecList",
-            "missing_value": None,
         },
         {
             "table": "MyCharacterConfigurations.voices",
             "field": "name",
             "strings": "CharacterSpecList",
-            "missing_value": None,
         },
         {
             "table": "MyCharacterConfigurations.names",
             "field": "name",
             "strings": "CharacterSpecList",
-            "missing_value": None,
         },
         {
             "table": "MyCharacterConfigurations.bgm",
             "field": "name",
             "strings": "CharacterSpecList",
-            "missing_value": None,
         },
     ]
 
@@ -316,19 +316,16 @@ class MiscData(Container):
             "table": "SeriesList",
             "field": "name",
             "strings": "MiscData",
-            "missing_value": None,
         },
         {
             "table": "GroupSendingMissionList",
             "field": "name",
             "strings": "MiscData",
-            "missing_value": None,
         },
         {
             "table": "GroupSendingMissionList",
             "field": "description",
             "strings": "MiscData",
-            "missing_value": None,
         },
     ]
 
@@ -355,7 +352,7 @@ class MiscData(Container):
 
 class AbilitySpecList(Container):
     read_list = [
-        {"filename": "AbilitySpecList.cdb", "data_path": "resident", "archive": None}
+        {"filename": "AbilitySpecList.cdb", "data_path": "resident"}
     ]
 
     parse_list = [
@@ -381,30 +378,25 @@ class AbilitySpecList(Container):
             "table": "AbilitySpecList.unitAbilities",
             "field": "name",
             "strings": "MiscData",
-            "missing_value": None,
         },
         {
             "table": "AbilitySpecList.unitModifications",
             "field": "name",
             "strings": "MiscData",
-            "missing_value": None,
         },
         {
             "table": "AbilitySpecList.characterAbilities",
             "field": "name",
             "strings": "MiscData",
-            "missing_value": None,
         },
         {
             "table": "AbilitySpecList.characterSkills",
             "field": "name",
             "strings": "MiscData",
-            "missing_value": None,
         },
         {
             "table": "AbilitySpecList.effects",
             "field": "name",
             "strings": "MiscData",
-            "missing_value": None,
         },
     ]
