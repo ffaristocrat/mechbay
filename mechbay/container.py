@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 from io import BytesIO
 from typing import Dict, List
 import mechbay.parsers as parsers
@@ -150,6 +151,8 @@ class Container:
         return data
 
     def write(self, data: Dict[str, List[Dict]]):
+        data = deepcopy(data)
+
         # compile the localisations
         localisations = self.index_strings(data)
 
