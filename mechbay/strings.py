@@ -71,7 +71,9 @@ class StringTBL(GundamDataFile):
 
 class Localisation:
     @classmethod
-    def read_files(cls, input_data_path: str, filename: str) -> Dict[int, Dict[str, str]]:
+    def read_files(
+        cls, input_data_path: str, filename: str
+    ) -> Dict[int, Dict[str, str]]:
         data = {}
         for language in LANGUAGES:
             full_path = os.path.join(input_data_path, language, filename)
@@ -113,7 +115,9 @@ class Localisation:
         return record_dict
 
     @classmethod
-    def write_files(cls, records: Dict[int, Dict[str, str]], output_data_path: str, filename: str):
+    def write_files(
+        cls, records: Dict[int, Dict[str, str]], output_data_path: str, filename: str
+    ):
         data = cls.write_bytes(records)
 
         for language, byte_string in data.items():
