@@ -1,8 +1,157 @@
 import os
 from io import BytesIO
-from .parsers import *
+from typing import Dict, List
+import mechbay.parsers as parsers
 from .pkd import PKDArchive
 from .strings import Localisation
+
+
+class Container:
+    read_list: List[Dict] = []
+    parse_list: List[Dict] = []
+    localisations: List[Dict] = []
+    string_maps: List[Dict] = []
+
+    def __init__(self, read_data_path: str = "./data", write_data_path: str = "./mods"):
+        self.read_path = read_data_path
+        self.write_path = write_data_path
+
+    def read_files(self) -> Dict[str, bytes]:
+        # first read in the raw bytes of all the files
+        raw_data = {}
+        for file in self.read_list:
+            print(f"Reading {file['file_name']}")
+            with open(
+                os.path.join(self.read_path, file["data_path"], file["filename"]), "rb"
+            ) as f:
+                raw_bytes = f.read()
+            if isinstance(file["archive"], list):
+                raw_data.update(**PKDArchive().read(BytesIO(raw_bytes)))
+            else:
+                raw_data[file["filename"]] = raw_bytes
+
+        return raw_data
+
+    def write_files(self, raw_data: Dict[str, bytes]):
+        for file in self.read_list:
+            print(f"Writing {file['file_name']}")
+            full_path = os.path.join(
+                self.write_path, file["data_path"], file["filename"]
+            )
+            with open(full_path, "wb") as f:
+                if file["archive"]:
+                    f.write(
+                        PKDArchive().write({f: raw_data[f] for f in file["archive"]})
+                    )
+                else:
+                    f.write(raw_data[file["filename"]])
+
+    def parse_data(self, raw_data: Dict[str, bytes]) -> Dict[str, List[Dict]]:
+        data = {}
+        for file in self.parse_list:
+            print(f"Parsing {file['table']}")
+            records = file["parser_class"]().read(BytesIO(raw_data[file["filename"]]))
+            if isinstance(records, dict):
+                for sub_table, values in records.items():
+                    data[f"{file['table']}.{sub_table}"] = values
+            else:
+                data[file["table"]] = records
+
+        return data
+
+    def compose_data(self, data: Dict[str, List[Dict]]) -> Dict[str, bytes]:
+        # now compose them with their specific classes
+        raw_data = {}
+        for file in self.parse_list:
+            records = {}
+            for table, table_data in data.items():
+                if table == file["table"]:
+                    records = table_data
+                    break
+                elif table.startswith(file["table"]):
+                    sub_table = table.rpartition(".")
+                    records[sub_table] = table_data
+            print(f"Composing {file['table']}")
+            raw_data[file["filename"]] = file["parser_class"]().write(records)
+
+        return raw_data
+
+    def read_localisations(self) -> Dict[str, Dict[int, Dict]]:
+        # read in localisations
+        strings = {}
+        for file in self.localisations:
+            strings[file["table"]] = file["parser_class"].read_files(
+                os.path.join(self.read_path, file["data_path"]), file["filename"]
+            )
+        return strings
+
+    def write_localisations(self, localisations: Dict[str, Dict[int, Dict]]):
+        for file in self.localisations:
+            file["parser_class"].write_files(
+                records=localisations[file["table"]],
+                output_data_path=os.path.join(self.read_path, file["data_path"]),
+                filename=file["filename"],
+            )
+
+    def map_strings(
+        self, localisations: Dict[str, Dict[int, Dict]], data: Dict[str, List[Dict]]
+    ) -> None:
+        for mapping in self.string_maps:
+            for record in data[mapping["table"]]:
+                try:
+                    record[mapping["field"]] = localisations[record[mapping["field"]]]
+                except IndexError:
+                    print(
+                        f"Missing index {mapping['field']} "
+                        f"in {mapping['table']} for {mapping['strings']}"
+                    )
+
+    def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
+        localisations = {
+            localisation["table"]: {} for localisation in self.localisations
+        }
+        for mapping in self.string_maps:
+            for record in data[mapping["table"]]:
+                if (
+                    mapping.get("missing_value") is not None
+                    and mapping["field"] not in record
+                ):
+                    record[mapping["field"]] = mapping["missing_value"]
+                    continue
+
+                index = len(localisations[mapping["strings"]])
+                localisations[mapping["strings"]][index] = record.pop(mapping["field"])
+                record[mapping["field"]] = index
+
+        return localisations
+
+    def read(self) -> Dict[str, List[Dict]]:
+        # first read in the raw bytes of all the files
+        raw_data = self.read_files()
+
+        # now parse them with their specific classes
+        data = self.parse_data(raw_data)
+
+        # read in localisations
+        localisations = self.read_localisations()
+
+        # map localisation strings onto data
+        self.map_strings(localisations, data)
+
+        return data
+
+    def write(self, data: Dict[str, List[Dict]]):
+        # compile the localisations
+        localisations = self.index_strings(data)
+
+        # write them out
+        self.write_localisations(localisations)
+
+        # compose all the files
+        raw_data = self.compose_data(data)
+
+        # package and write all files
+        self.write_files(raw_data)
 
 
 class CharacterSpecList:
@@ -23,244 +172,239 @@ class CharacterSpecList:
 
     """
 
-    file_list = [
-        ("CharacterSpecList.cdb", CharacterSpecList),
-        ("CharacterGrowthList.cdb", CharacterGrowthList),
-        ("SkillAcquisitionPatternList.cdb", SkillAcquisitionPatternList),
-        ("MyCharacterConfigurations.cdb", MyCharacterConfigurations),
+    read_list = [
+        {
+            "filename": "CharacterSpecList.pkd",
+            "data_path": "resident",
+            "archive": [
+                "CharacterSpecList.cdb",
+                "CharacterGrowthList.cdb",
+                "SkillAcquisitionPatternList.cdb",
+                "MyCharacterConfigurations.cdb",
+            ],
+        }
     ]
 
-    def __init__(self, read_data_path: str = "./data", write_data_path: str = "./mods"):
-        self.read_path = read_data_path
-        self.write_path = write_data_path
-
-    def read_files(self) -> Dict:
-        archive_file = "CharacterSpecList.pkd"
-        string_file = "CharacterSpecList.tbl"
-
-        archive = PKDArchive().read_file(
-            os.path.join(self.read_path, "resident", archive_file)
-        )
-        data = {}
-
-        for filename, cls in self.file_list:
-            table_name = filename.split(".")[0]
-            print(f"Reading {table_name}")
-            obj = cls(self.read_path)
-            records = obj.read(BytesIO(archive[filename]))
-            if isinstance(records, dict):
-                for sub_table, values in records.items():
-                    data[f"{table_name}.{sub_table}"] = values
-            else:
-                data[table_name] = records
-
-        strings = Localisation.read_files(
-            os.path.join(self.read_path, "language"), string_file
-        )
-
-        fields = ["name", "unique_name"]
-        for table_name, records in data.items():
-            for r in records:
-                for f in fields:
-                    if f not in r:
-                        continue
-                    elif r.get(f) == -1:
-                        r[f] = None
-                    else:
-                        try:
-                            r[f] = strings[r[f]]
-                        except IndexError:
-                            r[f] = f"Bad string index {r[f]}"
-        return data
-
-    def write_files(self, data: Dict):
-        archive_file = "CharacterSpecList.pkd"
-        string_file = "CharacterSpecList.tbl"
-
-        archive = {}
-        strings = []
-
-        fields = ["name", "unique_name"]
-        for table_name, records in data.items():
-            for f in fields:
-                for r in records:
-                    if f not in records:
-                        continue
-                    strings.append(r.pop(f))
-                    r[f] = len(strings) - 1
-
-        Localisation.write_files(
-            strings, os.path.join(self.write_path, "language"), string_file
-        )
-
-        for filename, cls in self.file_list:
-            obj = cls(self.write_path)
-            archive[filename] = obj.write(data[filename.split(".")[0]])
-
-        PKDArchive().write_file(
-            archive, os.path.join(self.write_path, "resident", archive_file)
-        )
-
-
-class MiscData:
-    file_list = [
-        ("DatabaseCaluclation.cdb", DatabaseCalculation),
-        ("SeriesList.cdb", SeriesList),
-        ("GroupSendingMissionList.cdb", GroupSendingMissionList),
-        ("TutorialList.cdb", TutorialList),
+    parse_list = [
+        {
+            "filename": "CharacterSpecList.cdb",
+            "table": "CharacterSpecList",
+            "parser_class": parsers.CharacterSpecList,
+        },
+        {
+            "filename": "CharacterGrowthList.cdb",
+            "table": "CharacterGrowthList",
+            "parser_class": parsers.CharacterGrowthList,
+        },
+        {
+            "filename": "SkillAcquisitionPatternList.cdb",
+            "table": "SkillAcquisitionPatternList",
+            "parser_class": parsers.SkillAcquisitionPatternList,
+        },
+        {
+            "filename": "MyCharacterConfigurations.cdb",
+            "table": "MyCharacterConfigurations",
+            "parser_class": parsers.MyCharacterConfigurations,
+        },
     ]
 
-    data_sets = [
-        ("SeriesList", "name"),
-        ("GroupSendingMissionList", "name"),
-        ("GroupSendingMissionList", "description"),
+    localisations = [
+        # Filename, tablename, data path
+        {
+            "filename": "CharacterSpecList.tbl",
+            "table": "CharacterSpecList",
+            "data_path": "language",
+            "parser_class": Localisation,
+        }
     ]
 
-    def __init__(self, read_data_path: str = "./data", write_data_path: str = "./mods"):
-        self.read_path = read_data_path
-        self.write_path = write_data_path
+    string_maps = [
+        {
+            "table": "CharacterSpecList.characters",
+            "field": "name",
+            "strings": "CharacterSpecList",
+            "missing_value": None,
+        },
+        {
+            "table": "CharacterSpecList.characters",
+            "field": "unique_name",
+            "strings": "CharacterSpecList",
+            "missing_value": -1,
+        },
+        {
+            "table": "CharacterSpecList.npcs",
+            "field": "name",
+            "strings": "CharacterSpecList",
+            "missing_value": None,
+        },
+        {
+            "table": "MyCharacterConfigurations.outfits",
+            "field": "name",
+            "strings": "CharacterSpecList",
+            "missing_value": None,
+        },
+        {
+            "table": "MyCharacterConfigurations.voices",
+            "field": "name",
+            "strings": "CharacterSpecList",
+            "missing_value": None,
+        },
+        {
+            "table": "MyCharacterConfigurations.names",
+            "field": "name",
+            "strings": "CharacterSpecList",
+            "missing_value": None,
+        },
+        {
+            "table": "MyCharacterConfigurations.bgm",
+            "field": "name",
+            "strings": "CharacterSpecList",
+            "missing_value": None,
+        },
+    ]
 
-    def read_files(self) -> Dict:
-        archive_file = "MiscData.pkd"
-        string_file = "MiscData.tbl"
 
-        archive = PKDArchive().read_file(
-            os.path.join(self.read_path, "resident", archive_file)
-        )
-        data = {}
+class MiscData(Container):
+    read_list = [
+        {
+            "filename": "MiscData.pkd",
+            "data_path": "resident",
+            "archive": [
+                "DatabaseCaluclation.cdb",
+                "SeriesList.cdb",
+                "GroupSendingMissionList.cdb",
+                "TutorialList.cdb",
+            ],
+        }
+    ]
 
-        for filename, cls in self.file_list:
-            table_name = filename.split(".")[0]
-            print(f"Reading {table_name}")
-            obj = cls(self.read_path)
-            records = obj.read(BytesIO(archive[filename]))
-            if isinstance(records, dict):
-                for sub_table, values in records.items():
-                    data[f"{table_name}.{sub_table}"] = values
-            else:
-                data[table_name] = records
+    parse_list = [
+        {
+            "filename": "DatabaseCaluclation.cdb",
+            "table": "DatabaseCalculation",
+            "parser_class": parsers.DatabaseCalculation,
+        },
+        {
+            "filename": "SeriesList.cdb",
+            "table": "SeriesList",
+            "parser_class": parsers.SeriesList,
+        },
+        {
+            "filename": "GroupSendingMissionList.cdb",
+            "table": "GroupSendingMissionList",
+            "parser_class": parsers.GroupSendingMissionList,
+        },
+        {
+            "filename": "TutorialList.cdb",
+            "table": "TutorialList",
+            "parser_class": parsers.TutorialList,
+        },
+    ]
 
-        strings = Localisation.read_files(
-            os.path.join(self.read_path, "language"), string_file
-        )
+    localisations = [
+        # Filename, tablename, data path
+        {
+            "filename": "MiscData.tbl",
+            "table": "MiscData",
+            "data_path": "language",
+            "parser_class": Localisation,
+        }
+    ]
 
-        fields = ["name"]
-        for table_name, records in data.items():
-            for r in records:
-                for f in fields:
-                    if f not in r:
-                        continue
-                    try:
-                        r[f] = strings[r[f]]
-                    except IndexError:
-                        r[f] = f"Bad string index {r[f]}"
+    string_maps = [
+        {
+            "table": "SeriesList",
+            "field": "name",
+            "strings": "MiscData",
+            "missing_value": None,
+        },
+        {
+            "table": "GroupSendingMissionList",
+            "field": "name",
+            "strings": "MiscData",
+            "missing_value": None,
+        },
+        {
+            "table": "GroupSendingMissionList",
+            "field": "description",
+            "strings": "MiscData",
+            "missing_value": None,
+        },
+    ]
+
+    def map_strings(
+        self, localisations: Dict[str, Dict[int, Dict]], data: Dict[str, List[Dict]]
+    ) -> None:
+        super().map_strings(localisations, data)
+
+        for record in data["GroupSendingMissionList"]:
+            for recommended in record["recommended"]:
+                recommended["name"] = localisations["MiscData"][recommended["name"]]
+
+    def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
+        localisations = super().index_strings(data)
 
         for record in data["GroupSendingMissionList"]:
             for r in record["recommended"]:
-                r["name"] = strings[r["name"]]
+                index = len(localisations["MiscData"])
+                localisations["MiscData"][index] = r["name"]
+                r["name"] = index
 
-        return data
-
-    def write_files(self, data: Dict):
-        archive_file = "MiscData.pkd"
-        string_file = "MiscData.tbl"
-
-        archive = {}
-        strings = []
-
-        fields = ["name", "unique_name"]
-        for table_name, records in data.items():
-            for f in fields:
-                for r in records:
-                    if f not in records:
-                        continue
-                    strings.append(r.pop(f))
-                    r[f] = len(strings) - 1
-
-        for record in data["GroupSendingMissionList"]:
-            for r in record["recommended"]:
-                strings.append(r["name"])
-                r["name"] = len(strings) - 1
-
-        Localisation.write_files(
-            strings, os.path.join(self.write_path, "language"), string_file
-        )
-
-        for filename, cls in self.file_list:
-            obj = cls(self.write_path)
-            archive[filename] = obj.write(data[filename.split(".")[0]])
-
-        PKDArchive().write_file(
-            archive, os.path.join(self.write_path, "resident", archive_file)
-        )
+        return localisations
 
 
 class AbilitySpecList:
-    file_list = [
-        ("AbilitySpecList.cdb", AbilitySpecList),
+    read_list = [
+        {"filename": "AbilitySpecList.cdb", "data_path": "resident", "archive": None}
     ]
 
-    data_sets = [
-        ("SeriesList", "name"),
-        ("GroupSendingMissionList", "name"),
-        ("GroupSendingMissionList", "description"),
+    parse_list = [
+        {
+            "filename": "AbilitySpecList.cdb",
+            "table": "AbilitySpecList",
+            "parser_class": parsers.AbilitySpecList,
+        }
     ]
 
-    def __init__(self, read_data_path: str = "./data", write_data_path: str = "./mods"):
-        self.read_path = read_data_path
-        self.write_path = write_data_path
+    localisations = [
+        # Filename, tablename, data path
+        {
+            "filename": "AbilitySpecList.tbl",
+            "table": "AbilitySpecList",
+            "data_path": "language",
+            "parser_class": Localisation,
+        }
+    ]
 
-    def read_files(self) -> Dict:
-        string_file = "AbilitySpecList.tbl"
-
-        data = AbilitySpecList(self.read_path).read_file()
-
-        strings = Localisation.read_files(
-            os.path.join(self.read_path, "language"), string_file
-        )
-
-        fields = ["name"]
-        for table_name, records in data.items():
-            for r in records:
-                for f in fields:
-                    if f not in r:
-                        continue
-                    try:
-                        r[f] = strings[r[f]]
-                    except IndexError:
-                        r[f] = f"Bad string index {r[f]}"
-
-        return data
-
-    def write_files(self, data: Dict):
-        archive_file = "MiscData.pkd"
-        string_file = "MiscData.tbl"
-
-        archive = {}
-        strings = []
-
-        fields = ["name", "unique_name"]
-        for table_name, records in data.items():
-            for f in fields:
-                for r in records:
-                    if f not in records:
-                        continue
-                    strings.append(r.pop(f))
-                    r[f] = len(strings) - 1
-
-        for record in data["GroupSendingMissionList"]:
-            for r in record["recommended"]:
-                strings.append(r["name"])
-                r["name"] = len(strings) - 1
-
-        Localisation.write_files(
-            strings, os.path.join(self.write_path, "language"), string_file
-        )
-
-        for filename, cls in self.file_list:
-            obj = cls(self.write_path)
-            archive[filename] = obj.write(data[filename.split(".")[0]])
-
-        PKDArchive().write_file(
-            archive, os.path.join(self.write_path, "resident", archive_file)
-        )
+    string_maps = [
+        {
+            "table": "AbilitySpecList.unitAbilities",
+            "field": "name",
+            "strings": "MiscData",
+            "missing_value": None,
+        },
+        {
+            "table": "AbilitySpecList.unitModifications",
+            "field": "name",
+            "strings": "MiscData",
+            "missing_value": None,
+        },
+        {
+            "table": "AbilitySpecList.characterAbilities",
+            "field": "name",
+            "strings": "MiscData",
+            "missing_value": None,
+        },
+        {
+            "table": "AbilitySpecList.characterSkills",
+            "field": "name",
+            "strings": "MiscData",
+            "missing_value": None,
+        },
+        {
+            "table": "AbilitySpecList.effects",
+            "field": "name",
+            "strings": "MiscData",
+            "missing_value": None,
+        },
+    ]
