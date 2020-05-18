@@ -19,14 +19,14 @@ def main():
     for pkd_filename in paths:
         path, filename = os.path.split(pkd_filename)
         print(filename)
-        records = PKDArchive().read_file(pkd_filename)
+        archive = PKDArchive().read_file(pkd_filename)
 
-        for record in records:
-            output_path = os.path.join(path, record["filename"])
+        for filename, raw_bytes in archive.items():
+            output_path = os.path.join(path, filename)
 
             with open(output_path, "wb") as f:
-                print("*", record["filename"])
-                f.write(record["bytes"])
+                print("*", filename)
+                f.write(raw_bytes)
 
 
 if __name__ == "__main__":
