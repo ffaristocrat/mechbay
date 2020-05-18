@@ -92,17 +92,24 @@ class PkdFile:
 
 
 class PKDArchive(GundamDataFile):
-    header = b"\x20\x44\x4B\x50\x00\x01\x03\x00"
+    signature = b"\x20\x44\x4B\x50\x00\x01\x03\x00"
+    definitions = {
+        "main": {
+            "file_pointer": "uint:4",
+            "file_size": "uint:4",
+            "name_pointer": "uint:4",
+        }
+    }
 
     def write(self, records: Dict[str, bytes]) -> bytes:
         padding = 64
         string_bytes = bytes()
 
-        string_bytes += self.header
+        string_bytes += self.signature
         record_count = len(records)
         string_bytes += self.write_int(record_count, 4)
-        # Maybe number of bits for long? Always seems to 0x40000000
-        string_bytes += self.write_int(64, 4)
+        # Maybe number of bits for padding? long? Always seems to 0x40000000
+        string_bytes += self.write_int(padding, 4)
 
         # index size
         index_size = (record_count * 12) + sum(
@@ -138,33 +145,42 @@ class PKDArchive(GundamDataFile):
 
         return string_bytes
 
-    def read(self, buffer: BinaryIO) -> Dict[str, bytes]:
-        record_count = self.read_header(buffer)
-        records = []
+    @classmethod
+    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+        signature = buffer.read(len(cls.signature))
+        assert signature == cls.signature
 
+        header = {
+            "counts": {
+                "main": cls.read_int(buffer.read(cls.record_count_length))
+            },
+            "pointers": {},
+        }
         # Maybe number of bits for long? Always seems to 0x40000000
-        self.read_int(buffer.read(4))
+        cls.read_int(buffer.read(4))
         # Size of the index block which we don't care about tbh
-        self.read_int(buffer.read(4))
+        cls.read_int(buffer.read(4))
+        header["pointers"]["main"] = buffer.tell()
 
-        for _ in range(record_count):
-            record = {
-                "__file_pointer": self.read_int(buffer.read(4)),
-                "__file_size": self.read_int(buffer.read(4)),
-                # +20 for header bytes
-                "__name_pointer": self.read_int(buffer.read(4)) + 20,
-            }
-            records.append(record)
+        return header
 
-        for record in records:
-            record["filename"] = self.read_string_null_term(
-                buffer, record["__name_pointer"]
+    def read(self, buffer: BinaryIO) -> Dict[str, bytes]:
+        header = self.read_header(buffer)
+        files = self.read_records(
+            self.definitions["main"],
+            buffer,
+            header["counts"]["main"]
+        )
+
+        for file in files:
+            file["filename"] = self.read_string_null_term(
+                buffer, file["name_pointer"] + 20
             )
 
         archive = {}
-        for record in records:
-            buffer.seek(record["__file_pointer"])
-            archive[record["filename"]] = buffer.read(record["__file_size"])
+        for file in files:
+            buffer.seek(file["file_pointer"])
+            archive[file["filename"]] = buffer.read(file["file_size"])
 
         return archive
 

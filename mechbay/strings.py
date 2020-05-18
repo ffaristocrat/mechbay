@@ -30,22 +30,25 @@ def read_byte_dict(file_list: List[str], base_path: str) -> Dict[str, bytes]:
 
 
 class StringTBL(GundamDataFile):
-    header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
+    signature = b"\x54\x52\x54\x53\x00\x01\x01\x00"
 
-    definition = {"index": "uint:4", "string": "uint:4"}
+    definitions = {"strings": {"index": "uint:4", "string": "uint:4"}}
 
-    def write(self, records: List[Dict]) -> bytes:
+    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+        pad_length = 16
+        string_bytes = bytes()
+        string_bytes += self.signature
         record_count = len(records)
-        string_bytes = self.write_header(record_count)
+        string_bytes += self.write_int(record_count, 4)
 
         string_start = len(string_bytes) + (record_count * 8)
 
         # We pad out a 16 byte row with null bytes
         # after the index
-        padding = 16 - (string_start % 16)
+        padding = pad_length - (string_start % pad_length)
         string_start += padding
 
-        for record in records:
+        for record in records["strings"]:
             string_bytes += self.write_int(record.get("index", 0), 4)
             string_bytes += self.write_int(string_start, 4)
 
@@ -53,18 +56,17 @@ class StringTBL(GundamDataFile):
 
         string_bytes += b"\x00" * padding
 
-        for record in records:
+        for record in records["strings"]:
             string_bytes += self.write_string_null_term(record["string"])
 
         return string_bytes
 
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = self.read_records(self.definition, buffer, record_count)
+    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+        records = super().read(buffer)
 
-        for record in records:
+        for record in records["strings"]:
             # Pointers in StringTBLs work slightly differently
-            record["string"] = self.read_string_null_term(buffer, record["string"])
+            record["string"] = self.read_string_null_term(buffer, record.pop("string"))
 
         return records
 
@@ -95,7 +97,7 @@ class Localisation:
             if not byte_string:
                 continue
 
-            localisation = StringTBL().read(BytesIO(byte_string))
+            localisation = StringTBL().read(BytesIO(byte_string))["strings"]
 
             if not records:
                 records = localisation[:]
@@ -130,10 +132,10 @@ class Localisation:
     def write_bytes(cls, records: Dict[int, Dict[str, str]]) -> Dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
-            localisation = [
+            localisation = {"strings": [
                 {"string": records[i].get(language, ""), "index": 0}
                 for i in range(len(records))
-            ]
+            ]}
             data[language] = StringTBL().write(localisation)
 
         return data
@@ -150,7 +152,7 @@ class LocalisationIndexed(Localisation):
         for language, byte_string in data.items():
             if not byte_string:
                 continue
-            localisation = StringTBL().read(BytesIO(byte_string))
+            localisation = StringTBL().read(BytesIO(byte_string))["strings"]
             for line in localisation:
                 index = int(line["index"])
                 if index not in records:
@@ -163,11 +165,11 @@ class LocalisationIndexed(Localisation):
     def write_bytes(cls, records: Dict[int, Dict[str, str]]) -> Dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
-            localisation = [
+            localisation = {"strings": [
                 {"string": record[language], "index": index}
                 for index, record in records.items()
                 if record.get(language) is not None
-            ]
+            ]}
             data[language] = StringTBL().write(localisation)
 
         return data
@@ -218,7 +220,7 @@ class StageLocalisation:
                 tables["voice"],
             )
             try:
-                voice = VoiceTable().read_file(voice_path)
+                voice = VoiceTable().read_file(voice_path)["strings"]
             except FileNotFoundError:
                 voice = []
 
@@ -257,25 +259,24 @@ class StageLocalisation:
                 for vf in VoiceTable.fields:
                     voice[vf] = records[part][index][vf]
                 voices.append(voice)
-            VoiceTable().write_file(voices, voice_path)
+            VoiceTable().write_file({"strings": voices}, voice_path)
 
 
 class VoiceTable(StringTBL):
-    header = b"\x54\x52\x54\x53\x00\x01\x01\x00"
-    # TODO: What do these values mean?
+    signature = b"\x54\x52\x54\x53\x00\x01\x01\x00"
     fields = ["voice_id", "unk1", "unk1", "unk1"]
 
-    def write(self, records: List[Dict]) -> bytes:
-        for r in records:
+    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+        for r in records["main"]:
             r["string"] = ",".join([str(r[f]) for f in self.fields])
         byte_string = super().write(records)
 
         return byte_string
 
-    def read(self, buffer: BinaryIO) -> List[Dict]:
+    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
         records = super().read(buffer)
 
-        for record in records:
+        for record in records["main"]:
             for field, value in zip(self.fields, record.pop("string").split(",")):
                 record[field] = value if field == "voice_id" else int(value)
 
