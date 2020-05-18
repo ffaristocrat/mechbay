@@ -26,7 +26,7 @@ class Container:
                 os.path.join(self.read_path, file["data_path"], file["filename"]), "rb"
             ) as f:
                 raw_bytes = f.read()
-            if file.get("archive") and isinstance(file["archive"], list):
+            if isinstance(file.get("archive"), list):
                 raw_data.update(**PKDArchive().read(BytesIO(raw_bytes)))
             else:
                 raw_data[file["filename"]] = raw_bytes
