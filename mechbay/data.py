@@ -1,16 +1,17 @@
 import json
 import os
+from copy import deepcopy
 from functools import lru_cache
 from typing import List, Dict, ByteString, BinaryIO, Union, Any, Tuple, Optional
 
 
 class GundamDataFile:
-    header: ByteString = None
+    signature: ByteString = None
     data_path: str = None
     package: str = None
     default_filename: str = None
     record_count_length: int = 4
-    definition: Dict[str, str] = None
+    definitions: Dict[str, Dict[str, Dict]] = {}
     constants: Dict = None
 
     def __init__(self, base_path: str = "."):
@@ -117,17 +118,59 @@ class GundamDataFile:
         return byte_string
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> int:
-        header = buffer.read(len(cls.header))
-        assert header == cls.header
-        record_count = cls.read_int(buffer.read(cls.record_count_length))
-        return record_count
+    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+        signature = buffer.read(len(cls.signature))
+        assert signature == cls.signature
+
+        header = {
+            "counts": {},
+            "pointers": {},
+            "size": {
+                table: cls.definition_size(definition)
+                for table, definition in cls.definitions.items()
+            },
+        }
+
+        for table, definition in cls.definitions.items():
+            header["counts"][table] = cls.read_int(buffer.read(cls.record_count_length))
+
+        tables = list(cls.definitions.keys())
+        for table in tables[1:]:
+            header["pointers"][table] = cls.read_int(buffer.read(4))
+        header["pointers"][tables[0]] = buffer.tell()
+
+        return header
 
     @classmethod
-    def write_header(cls, record_count: int) -> bytes:
+    def calculate_header(
+        cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
+    ) -> Dict[str, Dict[str, int]]:
+        header = {
+            "counts": {table: len(data) for table, data in records.items()},
+            "pointers": {},
+            "size": {
+                table: cls.definition_size(definition)
+                for table, definition in cls.definitions.items()
+            },
+        }
+        # skip the first table by default
+        tables = list(records.keys())
+        block_start = (len(tables) * cls.record_count_length + len(tables[1:]) * 4)
+        for table in tables[1:]:
+            header["pointers"][table] = block_start + len(byte_strings[table])
+
+        return header
+
+    @classmethod
+    def write_header(cls, header: Dict[str, Dict[str, int]]) -> bytes:
         string_bytes = bytes()
-        string_bytes += cls.header
-        string_bytes += cls.write_int(record_count, cls.record_count_length)
+        string_bytes += cls.signature
+        for table, record_count in header["counts"].items():
+            string_bytes += cls.write_int(record_count, cls.record_count_length)
+
+        for table, pointer in header["pointers"].items():
+            string_bytes += cls.write_int(pointer, 4)
+
         return string_bytes
 
     def dump(self, data_filename: str = None, json_filename: str = None):
@@ -148,27 +191,42 @@ class GundamDataFile:
         ]
         self.write_file(records, data_filename)
 
-    def read_file(self, filename: str = None) -> List[Dict]:
+    def read_file(self, filename: str = None) -> Dict[str, List[Dict]]:
         filename = filename or self.default_file_path()
         with open(filename, "rb") as buffer:
             records = self.read(buffer)
         return records
 
-    def read(self, buffer: BinaryIO) -> List[Dict]:
-        record_count = self.read_header(buffer)
-        records = self.read_records(self.definition, buffer, record_count)
+    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+        records = {}
+        header = self.read_header(buffer)
+        for table_name, definition in self.definitions.items():
+            buffer.seek(header["pointers"][table_name])
+            records[table_name] = self.read_records(
+                definition, buffer, header["counts"][table_name]
+            )
+
+        self.remove_constants(records)
         return records
 
-    def write_file(self, records: List[Dict], filename: str):
+    def write_file(self, records: Dict[str, List[Dict]], filename: str):
         filename = filename or self.default_file_path()
         os.makedirs(os.path.split(filename)[0], exist_ok=True)
         with open(filename, "wb") as buffer:
             buffer.write(self.write(records))
 
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        string_bytes += self.write_records(self.definition, records)
+    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+        records = deepcopy(records)
+        self.apply_constants(records)
+        
+        byte_strings = {}
+        for table, definition in self.definitions.items():
+            byte_strings[table] = self.write_records(definition, records[table])
+
+        header = self.calculate_header(records, byte_strings)
+        string_bytes = self.write_header(header)
+        for table, byte_string in byte_strings.items():
+            string_bytes += byte_string
 
         return string_bytes
 
@@ -200,7 +258,7 @@ class GundamDataFile:
 
     @classmethod
     def header_length(cls) -> int:
-        return len(cls.header) + cls.record_count_length
+        return len(cls.signature) + cls.record_count_length
 
     @classmethod
     def apply_constants(cls, records: Union[List[Dict], Dict[str, List[Dict]]]) -> None:
@@ -290,8 +348,6 @@ class GundamDataFile:
         for i in range(record_count):
             record = cls.read_record(definition, buffer)
             records.append(record)
-
-        cls.remove_constants(records)
 
         return records
 
