@@ -319,9 +319,9 @@ class MiscData(Container):
 
     string_maps = [
         {"table": "SeriesList", "field": "name", "strings": "MiscData"},
-        {"table": "GroupSendingMissionList", "field": "name", "strings": "MiscData"},
+        {"table": "GroupSendingMissionList.missions", "field": "name", "strings": "MiscData"},
         {
-            "table": "GroupSendingMissionList",
+            "table": "GroupSendingMissionList.missions",
             "field": "description",
             "strings": "MiscData",
         },
@@ -339,7 +339,7 @@ class MiscData(Container):
     def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
         localisations = super().index_strings(data)
 
-        for record in data["GroupSendingMissionList"]:
+        for record in data["GroupSendingMissionList.missions"]:
             for r in record["recommended"]:
                 index = len(localisations["MiscData"])
                 localisations["MiscData"][index] = r["name"]
@@ -373,22 +373,22 @@ class AbilitySpecList(Container):
         {
             "table": "AbilitySpecList.unitAbilities",
             "field": "name",
-            "strings": "MiscData",
+            "strings": "AbilitySpecList",
         },
         {
             "table": "AbilitySpecList.unitModifications",
             "field": "name",
-            "strings": "MiscData",
+            "strings": "AbilitySpecList",
         },
         {
             "table": "AbilitySpecList.characterAbilities",
             "field": "name",
-            "strings": "MiscData",
+            "strings": "AbilitySpecList",
         },
         {
             "table": "AbilitySpecList.characterSkills",
             "field": "name",
-            "strings": "MiscData",
+            "strings": "AbilitySpecList",
         },
-        {"table": "AbilitySpecList.effects", "field": "name", "strings": "MiscData"},
+        {"table": "AbilitySpecList.effects", "field": "name", "strings": "AbilitySpecList"},
     ]
