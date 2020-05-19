@@ -235,6 +235,31 @@ class AbilitySpecList(GundamDataFile):
 
         return records
 
+    @classmethod
+    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        # return zeroes
+        for r in records["effects"]:
+            for k in list(r.keys()):
+                if r.get(k) is None:
+                    r[k] = 0
+    
+        # Values between -1000 and 1000 are percents
+        # everything else is an absolute value increased by 1000
+        for r in records["effects"]:
+            for k, v in r.items():
+                for p in cls.prefixes:
+                    if k.startswith(p):
+                        if v > 1:
+                            r[k] = v + 1000
+                        elif v < -1:
+                            r[k] = v - 1000
+                        else:
+                            r[k] = int(v * 100)
+
+            r["flag"] = cls.bit_smush("flag", r.pop("flag"), list(range(8)))
+
+        return records
+
 
 class ActAbilityEffectList(GundamDataFile):
     data_path = "tmap/resident"
