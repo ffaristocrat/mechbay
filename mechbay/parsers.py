@@ -242,7 +242,7 @@ class AbilitySpecList(GundamDataFile):
             for k in list(r.keys()):
                 if r.get(k) is None:
                     r[k] = 0
-    
+
         # Values between -1000 and 1000 are percents
         # everything else is an absolute value increased by 1000
         for r in records["effects"]:
@@ -265,7 +265,9 @@ class ActAbilityEffectList(GundamDataFile):
     data_path = "tmap/resident"
     default_filename = "ActAbilityEffectList.cdb"
     signature = b"\x4C\x45\x41\x41\x00\x00\x01\x01"
-    definitions = {"units": {"guid": "guid", "unknown1": "uint:4", "unknown2": "uint:4"}}
+    definitions = {
+        "units": {"guid": "guid", "unknown1": "uint:4", "unknown2": "uint:4"}
+    }
 
 
 class BattleBgList(GundamDataFile):
@@ -366,7 +368,11 @@ class CharacterConversionList(GundamDataFile):
     data_path = "resident"
     signature = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
     definitions = {
-        "characters": {"character_id": "guid", "new_character_id": "guid", "unk1": "uint:4"}
+        "characters": {
+            "character_id": "guid",
+            "new_character_id": "guid",
+            "unk1": "uint:4",
+        }
     }
 
 
@@ -520,10 +526,7 @@ class CharacterGrowthList(GundamDataFile):
                 "profiles": len(records["profiles"]),
                 "level_ups": len(records["level_ups"]),
             },
-            "pointers": {
-                "level_ups": len(table_bytes["profiles"]) + 20
-            }
-            
+            "pointers": {"level_ups": len(table_bytes["profiles"]) + 20},
         }
         string_bytes = self.write_header(header)
         string_bytes += table_bytes["profiles"] + table_bytes["level_ups"]
@@ -692,7 +695,7 @@ class CharacterSpecList(GundamDataFile):
                 "custom": cls.definition_size(cls.definitions["characters"]),
                 "npcs": cls.definition_size(cls.definitions["npcs"]),
                 "personalities": cls.definition_size(cls.definitions["personalities"]),
-            }
+            },
         }
 
         # it then gives a count for characters & custom characters
@@ -701,7 +704,7 @@ class CharacterSpecList(GundamDataFile):
 
         header["pointers"]["characters"] = buffer.tell()
         character_block_size = (
-                header["size"]["characters"] * header["counts"]["characters"]
+            header["size"]["characters"] * header["counts"]["characters"]
         )
         header["pointers"]["custom"] = (
             header["pointers"]["characters"] + character_block_size
@@ -1496,16 +1499,14 @@ class QuestList(GundamDataFile):
                 stage_bytes = cls.write_int(record["stage_id"], 4)
                 record["stage_id"] = cls.read_series_bytes(stage_bytes)
                 record["stages"] = [
-                    cls.read_series_bytes(cls.write_int(s, 4))
-                    for s in record["stages"]
+                    cls.read_series_bytes(cls.write_int(s, 4)) for s in record["stages"]
                 ]
 
             # instead of a guid it's an ability id
             elif record["quest_type"] in [30]:
                 # we need to skip 4 bytes
                 record["guid2"] = [
-                    cls.read_int(cls.write_guid_bytes(v)[4:8])
-                    for v in record["guid2"]
+                    cls.read_int(cls.write_guid_bytes(v)[4:8]) for v in record["guid2"]
                 ]
 
         return records
