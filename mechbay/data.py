@@ -201,12 +201,25 @@ class GundamDataFile:
         records = {}
         header = self.read_header(buffer)
         for table_name, definition in self.definitions.items():
-            buffer.seek(header["pointers"][table_name])
+            try:
+                buffer.seek(header["pointers"][table_name])
+            except KeyError:
+                pass
             records[table_name] = self.read_records(
                 definition, buffer, header["counts"][table_name]
             )
 
+        records = self.post_processing(records)
         self.remove_constants(records)
+
+        return records
+
+    @classmethod
+    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        return records
+
+    @classmethod
+    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         return records
 
     def write_file(self, records: Dict[str, List[Dict]], filename: str):
@@ -218,7 +231,8 @@ class GundamDataFile:
     def write(self, records: Dict[str, List[Dict]]) -> bytes:
         records = deepcopy(records)
         self.apply_constants(records)
-        
+        records = self.pre_processing(records)
+
         byte_strings = {}
         for table, definition in self.definitions.items():
             byte_strings[table] = self.write_records(definition, records[table])
