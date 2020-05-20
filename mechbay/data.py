@@ -233,16 +233,16 @@ class GundamDataFile:
         self.apply_constants(records)
         records = self.pre_processing(records)
 
-        byte_strings = {}
+        byte_blocks = {}
         for table, definition in self.definitions.items():
-            byte_strings[table] = self.write_records(definition, records[table])
+            byte_blocks[table] = self.write_records(definition, records[table])
 
-        header = self.calculate_header(records, byte_strings)
-        string_bytes = self.write_header(header)
-        for table, byte_string in byte_strings.items():
-            string_bytes += byte_string
+        header = self.calculate_header(records, byte_blocks)
+        byte_string = self.write_header(header)
+        for table, definition in self.definitions.items():
+            byte_string += byte_blocks[table]
 
-        return string_bytes
+        return byte_string
 
     @classmethod
     def definition_size(cls, definition: Dict) -> int:
