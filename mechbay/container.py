@@ -433,11 +433,11 @@ class MachineSpecList(Container):
     ]
 
     parse_list = [
-        # {
-        #     "filename": "RangeDataList.cdb",
-        #     "table": "RangeDataList",
-        #     "parser_class": parsers.RangeDataList,
-        # },
+        {
+            "filename": "RangeDataList.cdb",
+            "table": "RangeDataList",
+            "parser_class": parsers.RangeDataList,
+        },
         {
             "filename": "MachineGrowthList.cdb",
             "table": "MachineGrowthList",
@@ -524,4 +524,3 @@ class MachineSpecList(Container):
         },
 
     ]
-
