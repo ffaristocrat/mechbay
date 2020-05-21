@@ -1446,15 +1446,15 @@ class QuestList(GundamDataFile):
     definitions = {
         "quests": {
             "guid1": "pointer:list:guid",
-            "guid2": "pointer:list:guid",
+            "guid2": "pointer:list:bytes:8",
             "guid3": "pointer:list:guid",
             "quest_value": "uint:4",
-            "stages": "pointer:list:uint:4",
+            "stages": "pointer:list:bytes:4",
             "turns": "uint:2",
             "quest_type": "uint:2",
             "null": "null:8",
             "series": "series",
-            "stage_id": "uint:4",
+            "stage_id": "bytes:4",
             "component_rewards": "pointer:list:uint:2",
             "machine_rewards": "pointer:list:guid",
             "pilot_rewards": "pointer:list:guid",
@@ -1509,22 +1509,29 @@ class QuestList(GundamDataFile):
     @classmethod
     def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for record in records["quests"]:
-            # Just repeats the series id for some reason
-            if record["quest_type"] in [1]:
+            if record["quest_type"] in [1, 96]:
                 record["stage_id"] = cls.write_series_bytes(record["stage_id"])
+            else:
+                record["stage_id"] = cls.write_int(record["stage_id"], 4)
 
             if record["quest_type"] in [96]:
-                record["stage_id"] = cls.write_series_bytes(record["stage_id"])
                 record["stages"] = [
                     cls.write_series_bytes(s) for s in record["stages"]
                 ]
+            else:
+                record["stages"] = [
+                    cls.write_int(s, 4) for s in record["stages"]
+                ]
 
             # instead of a guid it's an ability id
-            elif record["quest_type"] in [30]:
+            if record["quest_type"] in [30]:
                 # we need to skip 4 bytes
                 record["guid2"] = [
-                    b"\x00\x00\x00\x00" + cls.write_int(int(v), 4)
-                    for v in record["guid2"]
+                    b"\x00\x00\x00\x00" + cls.write_int(int(r), 4) for r in record["guid2"]
+                ]
+            else:
+                record["guid2"] = [
+                    cls.write_guid_bytes(r) for r in record["guid2"]
                 ]
 
         return records
@@ -1533,22 +1540,29 @@ class QuestList(GundamDataFile):
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for record in records["quests"]:
             # Just repeats the series id for some reason
-            if record["quest_type"] in [1]:
-                stage_bytes = cls.write_int(record["stage_id"], 4)
-                record["stage_id"] = cls.read_series_bytes(stage_bytes)
+            if record["quest_type"] in [1, 96]:
+                record["stage_id"] = cls.read_series_bytes(record["stage_id"])
+            else:
+                record["stage_id"] = cls.read_int(record["stage_id"])
 
             if record["quest_type"] in [96]:
-                stage_bytes = cls.write_int(record["stage_id"], 4)
-                record["stage_id"] = cls.read_series_bytes(stage_bytes)
                 record["stages"] = [
-                    cls.read_series_bytes(cls.write_int(s, 4)) for s in record["stages"]
+                    cls.read_series_bytes(s) for s in record["stages"]
+                ]
+            else:
+                record["stages"] = [
+                    cls.read_int(s) for s in record["stages"]
                 ]
 
             # instead of a guid it's an ability id
-            elif record["quest_type"] in [30]:
+            if record["quest_type"] in [30]:
                 # we need to skip 4 bytes
                 record["guid2"] = [
-                    cls.read_int(cls.write_guid_bytes(v)[4:8]) for v in record["guid2"]
+                    cls.read_int(r[4:8]) for r in record["guid2"]
+                ]
+            else:
+                record["guid2"] = [
+                    cls.read_guid_bytes(r) for r in record["guid2"]
                 ]
 
         return records
