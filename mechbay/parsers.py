@@ -1515,24 +1515,19 @@ class QuestList(GundamDataFile):
                 record["stage_id"] = cls.write_int(record["stage_id"], 4)
 
             if record["quest_type"] in [96]:
-                record["stages"] = [
-                    cls.write_series_bytes(s) for s in record["stages"]
-                ]
+                record["stages"] = [cls.write_series_bytes(s) for s in record["stages"]]
             else:
-                record["stages"] = [
-                    cls.write_int(s, 4) for s in record["stages"]
-                ]
+                record["stages"] = [cls.write_int(s, 4) for s in record["stages"]]
 
             # instead of a guid it's an ability id
             if record["quest_type"] in [30]:
                 # we need to skip 4 bytes
                 record["guid2"] = [
-                    b"\x00\x00\x00\x00" + cls.write_int(int(r), 4) for r in record["guid2"]
+                    b"\x00\x00\x00\x00" + cls.write_int(int(r), 4)
+                    for r in record["guid2"]
                 ]
             else:
-                record["guid2"] = [
-                    cls.write_guid_bytes(r) for r in record["guid2"]
-                ]
+                record["guid2"] = [cls.write_guid_bytes(r) for r in record["guid2"]]
 
         return records
 
@@ -1546,24 +1541,16 @@ class QuestList(GundamDataFile):
                 record["stage_id"] = cls.read_int(record["stage_id"])
 
             if record["quest_type"] in [96]:
-                record["stages"] = [
-                    cls.read_series_bytes(s) for s in record["stages"]
-                ]
+                record["stages"] = [cls.read_series_bytes(s) for s in record["stages"]]
             else:
-                record["stages"] = [
-                    cls.read_int(s) for s in record["stages"]
-                ]
+                record["stages"] = [cls.read_int(s) for s in record["stages"]]
 
             # instead of a guid it's an ability id
             if record["quest_type"] in [30]:
                 # we need to skip 4 bytes
-                record["guid2"] = [
-                    cls.read_int(r[4:8]) for r in record["guid2"]
-                ]
+                record["guid2"] = [cls.read_int(r[4:8]) for r in record["guid2"]]
             else:
-                record["guid2"] = [
-                    cls.read_guid_bytes(r) for r in record["guid2"]
-                ]
+                record["guid2"] = [cls.read_guid_bytes(r) for r in record["guid2"]]
 
         return records
 
@@ -1574,9 +1561,7 @@ class RangeDataList(GundamDataFile):
     signature = b"\x4C\x47\x4E\x52\x01\x00\x00\x01"
 
     # TODO: identify mask
-    definitions = {
-        "ranges": {"values": "pointer2c:list:uint:2", "mask": "uint:2"}
-    }
+    definitions = {"ranges": {"values": "pointer2c:list:uint:2", "mask": "uint:2"}}
 
     @classmethod
     def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
