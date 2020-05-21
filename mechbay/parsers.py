@@ -1506,27 +1506,28 @@ class QuestList(GundamDataFile):
         99: "Unknown",
     }
 
-    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+    @classmethod
+    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for record in records["quests"]:
             # Just repeats the series id for some reason
             if record["quest_type"] in [1]:
-                record["stage_id"] = self.write_series_bytes(record["stage_id"])
+                record["stage_id"] = cls.write_series_bytes(record["stage_id"])
 
             if record["quest_type"] in [96]:
-                record["stage_id"] = self.write_series_bytes(record["stage_id"])
+                record["stage_id"] = cls.write_series_bytes(record["stage_id"])
                 record["stages"] = [
-                    self.write_series_bytes(s) for s in record["stages"]
+                    cls.write_series_bytes(s) for s in record["stages"]
                 ]
 
             # instead of a guid it's an ability id
             elif record["quest_type"] in [30]:
                 # we need to skip 4 bytes
                 record["guid2"] = [
-                    b"\x00\x00\x00\x00" + self.write_int(int(v), 4)
+                    b"\x00\x00\x00\x00" + cls.write_int(int(v), 4)
                     for v in record["guid2"]
                 ]
 
-        return super().write(records)
+        return records
 
     @classmethod
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
