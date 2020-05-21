@@ -135,6 +135,14 @@ class Container:
 
         return localisations
 
+    def post_processing(
+        self, localisations: Dict[str, Dict[int, Dict]], data: Dict[str, List[Dict]]
+    ) -> Dict[str, List[Dict]]:
+        return data
+
+    def pre_processing(self, data: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        return data
+
     def read(self) -> Dict[str, List[Dict]]:
         # first read in the raw bytes of all the files
         raw_data = self.read_files()
@@ -148,10 +156,14 @@ class Container:
         # map localisation strings onto data
         self.map_strings(localisations, data)
 
+        data = self.post_processing(localisations, data)
+
         return data
 
     def write(self, data: Dict[str, List[Dict]]):
         data = deepcopy(data)
+
+        data = self.pre_processing(data)
 
         # compile the localisations
         localisations = self.index_strings(data)
@@ -285,11 +297,11 @@ class MiscData(Container):
     ]
 
     parse_list = [
-        {
-            "filename": "DatabaseCaluclation.cdb",
-            "table": "DatabaseCalculation",
-            "parser_class": parsers.DatabaseCalculation,
-        },
+        # {
+        #     "filename": "DatabaseCaluclation.cdb",
+        #     "table": "DatabaseCalculation",
+        #     "parser_class": parsers.DatabaseCalculation,
+        # },
         {
             "filename": "SeriesList.cdb",
             "table": "SeriesList",
@@ -318,8 +330,12 @@ class MiscData(Container):
     ]
 
     string_maps = [
-        {"table": "SeriesList", "field": "name", "strings": "MiscData"},
-        {"table": "GroupSendingMissionList.missions", "field": "name", "strings": "MiscData"},
+        {"table": "SeriesList.series", "field": "name", "strings": "MiscData"},
+        {
+            "table": "GroupSendingMissionList.missions",
+            "field": "name",
+            "strings": "MiscData",
+        },
         {
             "table": "GroupSendingMissionList.missions",
             "field": "description",
@@ -327,14 +343,14 @@ class MiscData(Container):
         },
     ]
 
-    def map_strings(
+    def post_processing(
         self, localisations: Dict[str, Dict[int, Dict]], data: Dict[str, List[Dict]]
-    ) -> None:
-        super().map_strings(localisations, data)
-
-        for record in data["GroupSendingMissionList"]:
+    ) -> Dict[str, List[Dict]]:
+        for record in data["GroupSendingMissionList.missions"]:
             for recommended in record["recommended"]:
                 recommended["name"] = localisations["MiscData"][recommended["name"]]
+
+        return data
 
     def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
         localisations = super().index_strings(data)
@@ -390,5 +406,122 @@ class AbilitySpecList(Container):
             "field": "name",
             "strings": "AbilitySpecList",
         },
-        {"table": "AbilitySpecList.effects", "field": "name", "strings": "AbilitySpecList"},
+        {
+            "table": "AbilitySpecList.effects",
+            "field": "name",
+            "strings": "AbilitySpecList",
+        },
     ]
+
+
+class MachineSpecList(Container):
+    read_list = [
+        {
+            "filename": "MachineSpecList.pkd",
+            "data_path": "resident",
+            "archive": [
+                "RangeDataList.cdb",
+                "MachineGrowthList.cdb",
+                "WeaponSpecList.cdb",
+                "MachineSpecList.cdb",
+                "MachineConversionList.cdb",
+                "PersonalMachineList.cdb",
+                "MachineDevelopmentList.cdb",
+                "MachineDesignList.cdb",
+            ],
+        }
+    ]
+
+    parse_list = [
+        # {
+        #     "filename": "RangeDataList.cdb",
+        #     "table": "RangeDataList",
+        #     "parser_class": parsers.RangeDataList,
+        # },
+        {
+            "filename": "MachineGrowthList.cdb",
+            "table": "MachineGrowthList",
+            "parser_class": parsers.MachineGrowthList,
+        },
+        {
+            "filename": "WeaponSpecList.cdb",
+            "table": "WeaponSpecList",
+            "parser_class": parsers.WeaponSpecList,
+        },
+        {
+            "filename": "MachineSpecList.cdb",
+            "table": "MachineSpecList",
+            "parser_class": parsers.MachineSpecList,
+        },
+        {
+            "filename": "MachineConversionList.cdb",
+            "table": "MachineConversionList",
+            "parser_class": parsers.MachineConversionList,
+        },
+        {
+            "filename": "PersonalMachineList.cdb",
+            "table": "PersonalMachineList",
+            "parser_class": parsers.PersonalMachineList,
+        },
+        {
+            "filename": "MachineDevelopmentList.cdb",
+            "table": "MachineDevelopmentList",
+            "parser_class": parsers.MachineDevelopmentList,
+        },
+        {
+            "filename": "MachineDesignList.cdb",
+            "table": "MachineDesignList",
+            "parser_class": parsers.MachineDesignList,
+        },
+    ]
+
+    localisations = [
+        # Filename, tablename, data path
+        {
+            "filename": "MachineSpecList.tbl",
+            "table": "MachineSpecList",
+            "data_path": "language",
+            "parser_class": Localisation,
+        }
+    ]
+
+    string_maps = [
+        {
+            "table": "MachineSpecList.units",
+            "field": "name",
+            "strings": "MachineSpecList",
+        },
+        {
+            "table": "MachineSpecList.warships",
+            "field": "name",
+            "strings": "MachineSpecList",
+        },
+        {
+            "table": "WeaponSpecList.weapons",
+            "field": "name",
+            "strings": "MachineSpecList",
+        },
+        {
+            "table": "WeaponSpecList.mapWeapons",
+            "field": "name",
+            "strings": "MachineSpecList",
+        },
+        {
+            "table": "WeaponSpecList.types",
+            "field": "name",
+            "strings": "MachineSpecList",
+            "missing_value": -1,
+        },
+        {
+            "table": "WeaponSpecList.effects",
+            "field": "name",
+            "strings": "MachineSpecList",
+        },
+        {
+            "table": "WeaponSpecList.effects",
+            "field": "desc",
+            "strings": "MachineSpecList",
+        },
+
+    ]
+
