@@ -240,19 +240,35 @@ class GundamDataFile:
         with open(filename, "wb") as buffer:
             buffer.write(self.write(records))
 
+    @classmethod
+    def write_blocks(cls, records: Dict[str, List[Dict]]) -> Dict[str, bytes]:
+        byte_blocks = {}
+        for table, definition in cls.definitions.items():
+            byte_blocks[table] = cls.write_records(definition, records[table])
+        return byte_blocks
+
+    @classmethod
+    def combine_blocks(
+        cls, byte_blocks: Dict[str, bytes], header: bytes = None
+    ) -> bytes:
+        byte_string = bytes()
+        if header is not None:
+            byte_string += header
+        for table, block in byte_blocks.items():
+            byte_string += block
+        return byte_string
+
     def write(self, records: Dict[str, List[Dict]]) -> bytes:
         records = deepcopy(records)
         self.apply_constants(records)
         records = self.pre_processing(records)
 
-        byte_blocks = {}
-        for table, definition in self.definitions.items():
-            byte_blocks[table] = self.write_records(definition, records[table])
+        byte_blocks = self.write_blocks(records)
 
         header = self.calculate_header(records, byte_blocks)
-        byte_string = self.write_header(header)
-        for table, definition in self.definitions.items():
-            byte_string += byte_blocks[table]
+        header_bytes = self.write_header(header)
+
+        byte_string = self.combine_blocks(byte_blocks, header_bytes)
 
         return byte_string
 
