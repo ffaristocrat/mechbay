@@ -143,7 +143,7 @@ class GundamDataFile:
 
     @classmethod
     def make_basic_header(
-        cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
+        cls, records: Dict[str, List[Dict]], byte_blocks: Dict[str, bytes]
     ) -> Dict[str, Dict[str, int]]:
         header = {
             "counts": {table: len(data) for table, data in records.items()},
@@ -153,7 +153,7 @@ class GundamDataFile:
                 for table, definition in cls.definitions.items()
             },
             "block_size": {
-                table: len(byte_string) for table, byte_string in byte_strings.items()
+                table: len(byte_string) for table, byte_string in byte_blocks.items()
             },
         }
         return header
@@ -243,8 +243,8 @@ class GundamDataFile:
     @classmethod
     def write_blocks(cls, records: Dict[str, List[Dict]]) -> Dict[str, bytes]:
         byte_blocks = {}
-        for table, definition in cls.definitions.items():
-            byte_blocks[table] = cls.write_records(definition, records[table])
+        for table, data in records.items():
+            byte_blocks[table] = cls.write_records(cls.definitions[table], data)
         return byte_blocks
 
     @classmethod
