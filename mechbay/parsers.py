@@ -1559,13 +1559,15 @@ class RangeDataList(GundamDataFile):
     signature = b"\x4C\x47\x4E\x52\x01\x00\x00\x01"
 
     # TODO: identify mask
-    definitions = {"main": {"values": "pointer:list:uint:2", "mask": "uint:2"}}
+    definitions = {
+        "ranges": {"values": "pointer2c:list:uint:2", "mask": "uint:2"}
+    }
 
     @classmethod
     def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
         header = super().read_header(buffer)
         header["counts"]["other"] = cls.read_int(buffer.read(4))
-        header["pointers"]["main"] = buffer.tell()
+        header["pointers"]["ranges"] = buffer.tell()
 
         return header
 
