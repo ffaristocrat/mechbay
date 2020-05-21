@@ -284,34 +284,43 @@ class BattleBgList(GundamDataFile):
         }
     }
 
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        record_size = self.definition_size(self.definitions["main"])
+    def write(self, records: Dict[str, List[Dict]]) -> bytes:
         fields = ["bgm1", "bgm2", "bgm3"]
+        main_table = "bgm"
 
         # Consolidate all the string into a set
         all_strings = []
-        for r in records:
+        for r in records[main_table]:
             for f in fields:
                 if r[f] not in all_strings:
                     all_strings.append(r[f])
 
         pointer = 0
         locations = {}
-        index_end = (record_count * record_size) + len(string_bytes)
+        index_end = (
+            len(records[main_table])
+            * self.definition_size(self.definitions[main_table])
+        ) + 12
         for t in all_strings:
             locations[t] = pointer + index_end
             pointer += len(t.encode("utf-8")) + 1
 
         # and then assign them to the records
-        for r in records:
-            location = len(string_bytes)
+        for r in records[main_table]:
+            location = 12
             for f in fields:
                 r[f] = locations[f] - location
 
-        string_bytes += self.write_records(self.definitions["main"], records)
-        string_bytes += b"\x00".join([b.encode("utf-8") for b in all_strings]) + b"\x00"
+        byte_blocks = {
+            main_table: self.write_records(
+                self.definitions[main_table], records[main_table]
+            ),
+            "all_strings": b"\x00".join([b.encode("utf-8") for b in all_strings])
+            + b"\x00",
+        }
+        header = self.make_basic_header(records, byte_blocks)
+        header_bytes = self.write_header(header)
+        string_bytes = self.combine_blocks(byte_blocks, header_bytes)
 
         return string_bytes
 
@@ -1266,36 +1275,38 @@ class MapTypes(GundamDataFile):
         }
     }
 
-    def write(self, records: List[Dict]) -> bytes:
-        record_count = len(records)
-        string_bytes = self.write_header(record_count)
-        record_size = self.definition_size(self.definition)
+    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+        header = self.calculate_header(records, {})
+        header_bytes = self.write_header(header)
+
         fields = ["type1", "type2", "type3"]
 
         # Consolidate all the string into a set
         all_strings = []
-        for r in records:
+        for r in records["types"]:
             for f in fields:
                 if r[f] not in all_strings:
                     all_strings.append(r[f])
 
         pointer = 0
         locations = {}
-        index_end = (record_count * record_size) + len(string_bytes)
+        index_end = (header["counts"]["types"] * header["size"]["types"]) + len(
+            header_bytes
+        )
         for t in all_strings:
             locations[t] = pointer + index_end
             pointer += len(t.encode("utf-8")) + 1
 
         # and then assign them to the records
-        for r in records:
-            location = len(string_bytes)
+        for r in records["types"]:
+            location = len(header_bytes)
             for f in fields:
                 r[f] = locations[f] - location
 
-        string_bytes += self.write_records(self.definition, records)
-        string_bytes += b"\x00".join([b.encode("utf-8") for b in all_strings]) + b"\x00"
+        type_bytes = self.write_records(self.definitions["types"], records["types"])
+        name_bytes = b"\x00".join([b.encode("utf-8") for b in all_strings]) + b"\x00"
 
-        return string_bytes
+        return header_bytes + name_bytes + type_bytes
 
 
 class MyCharacterConfigurations(GundamDataFile):
@@ -1337,33 +1348,27 @@ class MyCharacterConfigurations(GundamDataFile):
         "unk4": "uint:1",
     }
 
+    @classmethod
+    def calculate_header(
+        cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
+    ) -> Dict[str, Dict[str, int]]:
+        header = cls.make_basic_header(records, byte_strings)
+        header["pointers"]["outfits"] = 0
+        header["pointers"]["voices"] = 40 + header["block_size"]["outfits"]
+        header["pointers"]["names"] = (
+            header["pointers"]["voices"] + header["block_size"]["voices"]
+        )
+        header["pointers"]["bgm"] = (
+            header["pointers"]["names"] + header["block_size"]["names"]
+        )
+
+        return header
+
     def write(self, records: Dict[str, List[Dict]]) -> bytes:
         self.apply_constants(records)
 
-        outfit_count = len(records["outfits"])
-        string_bytes = self.write_header(outfit_count)
-
-        outfit_bytes = self.write_records(
-            self.definitions["outfits"], records["outfits"]
-        )
-        voice_bytes = self.write_records(self.definitions["voices"], records["voices"])
-        name_bytes = self.write_records(self.definitions["names"], records["names"])
-
-        string_bytes += self.write_int(len(records["voices"]), 4)
-        string_bytes += self.write_int(len(records["names"]), 4)
-        string_bytes += self.write_int(len(records["bgm"]), 4)
-
-        # pointers
-        pointer = 0
-        string_bytes += self.write_int(pointer, 4)
-        pointer += 40 + len(outfit_bytes)
-        string_bytes += self.write_int(pointer, 4)
-        pointer += len(voice_bytes)
-        string_bytes += self.write_int(pointer, 4)
-        pointer += len(name_bytes)
-        string_bytes += self.write_int(pointer, 4)
-
-        string_bytes += outfit_bytes + voice_bytes + name_bytes
+        bgm = records.pop("bgm")
+        byte_blocks = self.write_blocks(records)
 
         all_values = []
         unk_len = self.definition_size(self.unknown_definition)
@@ -1380,6 +1385,7 @@ class MyCharacterConfigurations(GundamDataFile):
                 bgm_bytes_size - len(bgm_bytes) + (unk_len * all_values.index(vals))
             )
             bgm_bytes += self.write_record(self.definitions["bgm"], r)
+        byte_blocks["bgm"] = bgm_bytes
 
         unk_bytes = bytes()
         for vals in all_values:
@@ -1387,8 +1393,11 @@ class MyCharacterConfigurations(GundamDataFile):
                 self.unknown_definition,
                 {k: v for k, v in zip(self.unknown_definition.keys(), vals)},
             )
+        byte_blocks["unk"] = unk_bytes
 
-        string_bytes += bgm_bytes + unk_bytes
+        header = self.calculate_header(records, byte_blocks)
+        header_bytes = self.write_header(header)
+        string_bytes = self.combine_blocks(byte_blocks, header_bytes)
 
         return string_bytes
 
@@ -1943,30 +1952,15 @@ class MapWeaponList(GundamDataFile):
     default_filename = "mapWeaponList.dat"
     signature = b"\x57\x4D\x4D\x54"
     definitions = {
-        "main": {"unit_id": "string_len_prefix", "weapon_id": "string_len_prefix"},
-        "unknown": {
+        "mapWeapons": {
+            "unit_id": "string_len_prefix",
+            "weapon_id": "string_len_prefix",
             "unk1": "uint:1",
             "unk2": "uint:1",
             "unk3": "uint:1",
             "unk4": "uint:1",
-        },
+        }
     }
-
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
-        record_count = self.read_header(buffer)
-        records = []
-
-        for _ in range(record_count):
-            record = {
-                "unit_id": self.read_string_length(buffer),
-                "weapon_id": self.read_string_length(buffer),
-            }
-            records.append(record)
-
-        for record in records:
-            record["values"] = [self.read_int(buffer.read(1)) for _ in range(4)]
-
-        return records
 
 
 class MovieList(GundamDataFile):
