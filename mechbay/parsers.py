@@ -28,13 +28,13 @@ class AbilitySpecList(GundamDataFile):
 
     definitions = {
         "unitAbilities": {  # 8 bytes
-            "unit_ability_id": "uint:2",
+            "index": "uint:2",
             "name": "uint:2",
             "effect": "uint:2",
             "null1": "null:2",
         },
         "unitModifications": {  # 40 bytes
-            "schip": "uint:2",
+            "index": "uint:2",
             "name": "int:2",
             "effect": "uint:2",
             "fixed1": "uint:2",
@@ -52,7 +52,7 @@ class AbilitySpecList(GundamDataFile):
             "null2": "null:2",
         },
         "characterAbilities": {  # 34 bytes
-            "schip": "uint:2",
+            "index": "uint:2",
             "name": "uint:2",
             "effect": "uint:2",
             "unk1": "uint:2",
@@ -68,7 +68,7 @@ class AbilitySpecList(GundamDataFile):
             "unk7": "uint:2",
         },
         "characterSkills": {
-            "schip": "uint:2",
+            "index": "uint:2",
             "name": "uint:2",
             "effect": "uint:2",
             "desc": "uint:2",
@@ -91,7 +91,7 @@ class AbilitySpecList(GundamDataFile):
             "unk8": "uint:1",  # 0 & 1 - offense vs defense?
         },
         "effects": {  # 132 bytes
-            "name": "uint:2",
+            "desc": "uint:2",
             "unit_hp": "int:2",
             "unit_energy": "int:2",
             "unit_attack": "int:2",
@@ -173,16 +173,6 @@ class AbilitySpecList(GundamDataFile):
         },
     }
 
-    prefixes = [
-        "unit_",
-        "power_",
-        "char_",
-        "consumption_",
-        "adjust_",
-        "nullify_",
-        "damage_",
-    ]
-
     @classmethod
     def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
         signature = buffer.read(len(cls.signature))
@@ -212,51 +202,15 @@ class AbilitySpecList(GundamDataFile):
 
     @classmethod
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
-        # Values between -1000 and 1000 are percents
-        # everything else is an absolute value increased by 1000
         for r in records["effects"]:
-            for k, v in r.items():
-                for p in cls.prefixes:
-                    if k.startswith(p):
-                        if v >= 1000:
-                            r[k] = v - 1000
-                        elif v <= -1000:
-                            r[k] = v + 1000
-                        else:
-                            r[k] = v / 100
-
             r.update(cls.bit_smash("flag", r.pop("flag"), list(range(8))))
-
-        # remove zeroes
-        for r in records["effects"]:
-            for k in list(r.keys()):
-                if r[k] == 0:
-                    r.pop(k)
 
         return records
 
     @classmethod
     def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
-        # return zeroes
         for r in records["effects"]:
-            for k in list(r.keys()):
-                if r.get(k) is None:
-                    r[k] = 0
-
-        # Values between -1000 and 1000 are percents
-        # everything else is an absolute value increased by 1000
-        for r in records["effects"]:
-            for k, v in r.items():
-                for p in cls.prefixes:
-                    if k.startswith(p):
-                        if v > 1:
-                            r[k] = v + 1000
-                        elif v < -1:
-                            r[k] = v - 1000
-                        else:
-                            r[k] = int(v * 100)
-
-            r["flag"] = cls.bit_smush("flag", r.pop("flag"), list(range(8)))
+            r["flag"] = cls.bit_smush("flag", r, list(range(8)))
 
         return records
 
@@ -862,14 +816,14 @@ class GroupSendingMissionList(GundamDataFile):
     definitions = {
         "missions": {
             "difficulty": "uint:4",
-            "completion": "uint:4",
+            "total_completion": "uint:4",
             "recommended": "pointer:list:bytes:16",  # 16 bytes
             "capital": "uint:4",
-            "completion_rewards": "pointer:list:bytes:12",  # 12 bytes
-            "unit_rewards": "pointer:list:bytes:12",  # 12 bytes
-            "ability_rewards": "pointer:list:bytes:4",  # 4 bytes
-            "component_rewards": "pointer:list:bytes:4",  # 4 bytes
-            "days_available": "pointer:list:uint:1",  # 1 byte
+            "onetime": "pointer:list:bytes:12",  # 12 bytes
+            "units": "pointer:list:bytes:12",  # 12 bytes
+            "characterAbilities": "pointer:list:bytes:4",  # 4 bytes
+            "unitModifications": "pointer:list:bytes:4",  # 4 bytes
+            "availability": "pointer:list:uint:1",  # 1 byte
             "null": "null:8",
             "dlc_set": "uint:2",
             "dispatch_id": "uint:2",
@@ -883,7 +837,7 @@ class GroupSendingMissionList(GundamDataFile):
             "timing": "uint:1",
             "terrain": "uint:1",
             "cooldowns": "uint:1",
-            "cooldown_chance": "uint:1",
+            "cooldown_threshold": "uint:1",
             "null2": "null:2",
         }
     }
@@ -896,26 +850,26 @@ class GroupSendingMissionList(GundamDataFile):
             "name": "uint:2",
             "unk2": "uint:4",
         },
-        "completion_rewards": {
-            "id": "bytes:8",  # identifer depends on type
+        "onetime": {
+            "id": "bytes:8",  # depends on type
             "completion": "uint:1",
             "type": "uint:1",
             "null": "null:2",
         },
-        "unit_rewards": {
-            "guid": "guid",
-            "completion": "uint:1",
+        "units": {
+            "unit": "guid",
+            "threshold": "uint:1",
             "quantity": "uint:1",
             "null": "null:2",
         },
-        "component_rewards": {
-            "component": "uint:2",
-            "completion": "uint:1",
+        "unitModifications": {
+            "unitModification": "uint:2",
+            "threshold": "uint:1",
             "quantity": "uint:1",
         },
-        "ability_rewards": {
-            "ability": "uint:2",
-            "completion": "uint:1",
+        "characterAbilities": {
+            "characterAbility": "uint:2",
+            "threshold": "uint:1",
             "quantity": "uint:1",
         },
     }
@@ -933,15 +887,22 @@ class GroupSendingMissionList(GundamDataFile):
 
             del record["dispatch_id2"]
 
-            for cr in record["completion_rewards"]:
+            for cr in record["onetime"]:
                 if cr["type"] in [1]:
-                    cr["guid"] = cls.read_guid_bytes(cr.pop("id"))
+                    guid = cls.read_guid_bytes(cr.pop("id"))
+                    if "C" in guid:
+                        cr["character"] = guid
+                    else:
+                        # rewards just the unit
+                        # doesn't register it
+                        cr["unit"] = guid
                 elif cr["type"] in [2, 3, 4, 5]:
+                    # only use last 4 bytes
                     value = cls.read_int(cr.pop("id")[4:8])
                     if cr["type"] == 2:
-                        cr["component"] = value
+                        cr["unitModification"] = value
                     elif cr["type"] == 3:
-                        cr["skill"] = value
+                        cr["characterAbility"] = value
                     elif cr["type"] == 4:
                         cr["bgm"] = value
                     elif cr["type"] == 5:
@@ -999,9 +960,9 @@ class MachineConversionList(GundamDataFile):
     signature = b"\x56\x4E\x43\x4D\x00\x00\x02\x01"
     definitions = {
         "units": {
-            "guid": "guid",
-            "transform_guid": "guid",
-            "conversion_type_id": "uint:4",
+            "unit": "guid",
+            "transform": "guid",
+            "type": "uint:4",
         }
     }
 
@@ -1009,11 +970,11 @@ class MachineConversionList(GundamDataFile):
         2: "refit_1",
         3: "refit_2",
         4: "refit_3",
-        5: "",
+        5: "purge",
         6: "",
-        8: "",
+        8: "leader",
         16: "transform",
-        19: "",
+        19: "special",  # only used for
     }
 
 
@@ -1023,10 +984,10 @@ class MachineDesignList(GundamDataFile):
     package = "MachineSpecList.pkd"
     signature = b"\x49\x53\x44\x4D\x00\x00\x02\x01"
     definitions = {
-        "main": {
-            "first_guid": "guid",
-            "second_guid": "guid",
-            "result_guid": "guid",
+        "designs": {
+            "first": "guid",
+            "second": "guid",
+            "result": "guid",
             "index": "uint:4",
         }
     }
@@ -1039,7 +1000,7 @@ class MachineDevelopmentList(GundamDataFile):
     signature = b"\x56\x45\x44\x4D\x00\x00\x02\x01"
     definitions = {
         "units": {
-            "guid": "guid",
+            "unit": "guid",
             "children_pointer": "pointer",
             "index": "uint:2",
             "children_count": "uint:2",
@@ -1443,7 +1404,7 @@ class PersonalMachineList(GundamDataFile):
     package = "MachineSpecList.pkd"
     signature = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
     definitions = {
-        "units": {"guid": "guid", "pilot_guid": "guid", "custom_guid": "guid"}
+        "units": {"unit": "guid", "pilot": "guid", "custom": "guid"}
     }
 
 
@@ -1593,7 +1554,7 @@ class SeriesList(GundamDataFile):
             "series_logo_s": "series",
             "name": "uint:2",
             "era": "uint:1",
-            "unknown1": "uint:1",  # always 1 or 0
+            "base_game": "uint:1",
         }
     }
 
@@ -1863,16 +1824,16 @@ class WeaponSpecList(GundamDataFile):
             "unk6a": "uint:1",  # [0, 136, 168, 170]
             "unk6b": "uint:1",  # [0, 1, 2]
             "index2a": "uint:1",  # [1793, 1794, 1795, 1796, 1797, 1798, 1799, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1811, 1817, 1819]
-            "index2b": "uint:1",  # [1793, 1794, 1795, 1796, 1797, 1798, 1799, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1811, 1817, 1819]
             "type": "uint:1",
+            "type2": "uint:1",  # one is probably the icon?
             "effect": "uint:1",
-            "unk9": "uint:2",  # [0, 4, 5]
+            "tension": "uint:2",
             "unk10": "uint:2",  # [15, 16, 26, 30, 31]
-            "unk11": "int:1",  # [1, 2, 3, 4]
-            "unk12": "int:1",  # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]
+            "min_range": "int:1",
+            "max_range": "int:1",
             "accuracy": "uint:1",
             "critical": "uint:1",
-            "icon?": "uint:2",  # [1, 2, 3, 4, 5, 6, 7, 8]
+            "unk11": "uint:2",  # [1, 2, 3, 4, 5, 6, 7, 8]
             "null": "null:2",
         },
         "mapWeapons": {
@@ -1885,10 +1846,10 @@ class WeaponSpecList(GundamDataFile):
             "unk6a": "uint:1",  # [128, 170]
             "unk6b": "uint:1",  # [0, 2]
             "index2a": "uint:1",  # [1793, 1794, 1795, 1796, 1797, 1798, 1799, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1811, 1817, 1819]
-            "index2b": "uint:1",  # [1793, 1794, 1795, 1796, 1797, 1798, 1799, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1811, 1817, 1819]
-            "type": "uint:1",  # [7]
+            "type": "uint:1",
+            "type2": "uint:1",  # one is probably the icon?
             "effect": "uint:1",
-            "unk9": "uint:2",  # [0, 4]
+            "tension": "uint:2",
             "unk10": "uint:2",  # [15, 24, 31]
             "unk11": "int:2",  # [-1, 1812, 1815, 1831]
             "unk12": "int:2",  # [0, 1, 256, 512]
@@ -1932,6 +1893,26 @@ class WeaponSpecList(GundamDataFile):
         buffer.seek(old_position)
 
         return header
+
+    @classmethod
+    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        for table, table_records in records.items():
+            if table not in ["units", "warships"]:
+                continue
+            for r in table_records:
+                del r["type2"]
+
+        return records
+    
+    @classmethod
+    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        for table, table_records in records.items():
+            if table not in ["units", "warships"]:
+                continue
+            for r in table_records:
+                r["type2"] = r["type"]
+
+        return records
 
 
 """ DAT files """
