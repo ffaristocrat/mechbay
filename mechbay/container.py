@@ -8,7 +8,7 @@ from .strings import Localisation
 
 
 class Container:
-    read_list: List[Dict] = []
+    file_list: List[Dict] = []
     parse_list: List[Dict] = []
     localisations: List[Dict] = []
     string_maps: List[Dict] = []
@@ -21,7 +21,7 @@ class Container:
     def read_files(self) -> Dict[str, bytes]:
         # first read in the raw bytes of all the files
         raw_data = {}
-        for file in self.read_list:
+        for file in self.file_list:
             print(f"Reading {file['filename']}")
             with open(
                 os.path.join(self.read_path, file["data_path"], file["filename"]), "rb"
@@ -35,7 +35,7 @@ class Container:
         return raw_data
 
     def write_files(self, raw_data: Dict[str, bytes]):
-        for file in self.read_list:
+        for file in self.file_list:
             print(f"Writing {file['filename']}")
             full_path = os.path.join(
                 self.write_path, file["data_path"], file["filename"]
@@ -72,7 +72,9 @@ class Container:
                     records[sub_table] = table_data
 
             print(f"Composing {file['table']}")
-            raw_data[file["filename"]] = file["parser_class"]().write(records_to_compose)
+            raw_data[file["filename"]] = file["parser_class"]().write(
+                records_to_compose
+            )
 
         return raw_data
 
@@ -80,6 +82,7 @@ class Container:
         # read in localisations
         strings = {}
         for file in self.localisations:
+            print(f"Reading {file['filename']}")
             strings[file["table"]] = file["parser_class"].read_files(
                 os.path.join(self.read_path, file["data_path"]), file["filename"]
             )
@@ -87,6 +90,7 @@ class Container:
 
     def write_localisations(self, localisations: Dict[str, Dict[int, Dict]]):
         for file in self.localisations:
+            print(f"Writing {file['filename']}")
             file["parser_class"].write_files(
                 records=localisations[file["table"]],
                 output_data_path=os.path.join(self.read_path, file["data_path"]),
@@ -136,28 +140,26 @@ class Container:
         return localisations
 
     @staticmethod
-    def map_to_index(value: int, index: List[Dict], index_field) -> Dict:
+    def map_to_index(value: int, index: List[Dict], index_field: str) -> Dict:
         for i in index:
             if value == i[index_field]:
                 return i.copy()
 
-        print(
-            f"WARNING: Index {value} not found in {index_field}"
-        )
+        print(f"WARNING: Index {value} not found in {index_field}")
         return {}
 
     def populate_indexes(self, records: Dict[str, List[Dict]]):
         for index in self.index_maps:
             for r in records[index["table"]]:
                 if (
-                        index.get("missing_value") is not None and
-                        r[index["table_field"]] == index["missing_value"]
+                    index.get("missing_value") is not None
+                    and r[index["table_field"]] == index["missing_value"]
                 ):
                     continue
                 r[index["table_field"]] = self.map_to_index(
                     value=r[index["table_field"]],
                     index=records[index["index"]],
-                    index_field=index.get("index_field", "index")
+                    index_field=index.get("index_field", "index"),
                 )
         return records
 
@@ -169,7 +171,7 @@ class Container:
     def post_processing(
         self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
     ) -> Dict[str, List[Dict]]:
-        
+
         return records
 
     def pre_processing(self, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
@@ -232,7 +234,7 @@ class CharacterSpecList(Container):
 
     """
 
-    read_list = [
+    file_list = [
         {
             "filename": "CharacterSpecList.pkd",
             "data_path": "resident",
@@ -323,8 +325,9 @@ class CharacterSpecList(Container):
     ]
 
 
-class MiscData(Container):
-    read_list = [
+class AbilitySpecList(Container):
+    file_list = [
+        {"filename": "AbilitySpecList.cdb", "data_path": "resident"},
         {
             "filename": "MiscData.pkd",
             "data_path": "resident",
@@ -334,10 +337,15 @@ class MiscData(Container):
                 "GroupSendingMissionList.cdb",
                 "TutorialList.cdb",
             ],
-        }
+        },
     ]
 
     parse_list = [
+        {
+            "filename": "AbilitySpecList.cdb",
+            "table": "AbilitySpecList",
+            "parser_class": parsers.AbilitySpecList,
+        },
         # {
         #     "filename": "DatabaseCaluclation.cdb",
         #     "table": "DatabaseCalculation",
@@ -363,67 +371,17 @@ class MiscData(Container):
     localisations = [
         # Filename, tablename, data path
         {
-            "filename": "MiscData.tbl",
-            "table": "MiscData",
-            "data_path": "language",
-            "parser_class": Localisation,
-        }
-    ]
-
-    string_maps = [
-        {"table": "SeriesList.series", "field": "name", "strings": "MiscData"},
-        {
-            "table": "GroupSendingMissionList.missions",
-            "field": "name",
-            "strings": "MiscData",
-        },
-        {
-            "table": "GroupSendingMissionList.missions",
-            "field": "description",
-            "strings": "MiscData",
-        },
-    ]
-
-    def post_processing(
-        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
-    ) -> Dict[str, List[Dict]]:
-        for record in records["GroupSendingMissionList.missions"]:
-            for recommended in record["recommended"]:
-                recommended["name"] = localisations["MiscData"][recommended["name"]]
-
-        return records
-
-    def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
-        localisations = super().index_strings(data)
-
-        for record in data["GroupSendingMissionList.missions"]:
-            for r in record["recommended"]:
-                index = len(localisations["MiscData"])
-                localisations["MiscData"][index] = r["name"]
-                r["name"] = index
-
-        return localisations
-
-
-class AbilitySpecList(Container):
-    read_list = [{"filename": "AbilitySpecList.cdb", "data_path": "resident"}]
-
-    parse_list = [
-        {
-            "filename": "AbilitySpecList.cdb",
-            "table": "AbilitySpecList",
-            "parser_class": parsers.AbilitySpecList,
-        }
-    ]
-
-    localisations = [
-        # Filename, tablename, data path
-        {
             "filename": "AbilitySpecList.tbl",
             "table": "AbilitySpecList",
             "data_path": "language",
             "parser_class": Localisation,
-        }
+        },
+        {
+            "filename": "MiscData.tbl",
+            "table": "MiscData",
+            "data_path": "language",
+            "parser_class": Localisation,
+        },
     ]
 
     string_maps = [
@@ -451,6 +409,17 @@ class AbilitySpecList(Container):
             "table": "AbilitySpecList.effects",
             "field": "desc",
             "strings": "AbilitySpecList",
+        },
+        {"table": "SeriesList.series", "field": "name", "strings": "MiscData"},
+        {
+            "table": "GroupSendingMissionList.missions",
+            "field": "name",
+            "strings": "MiscData",
+        },
+        {
+            "table": "GroupSendingMissionList.missions",
+            "field": "description",
+            "strings": "MiscData",
         },
     ]
 
@@ -486,9 +455,24 @@ class AbilitySpecList(Container):
 
         return records
 
+    def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
+        localisations = super().index_strings(data)
+
+        for record in data["GroupSendingMissionList.missions"]:
+            for r in record["recommended"]:
+                index = len(localisations["MiscData"])
+                localisations["MiscData"][index] = r["name"]
+                r["name"] = index
+
+        return localisations
+
     def post_processing(
         self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
     ) -> Dict[str, List[Dict]]:
+        for record in records["GroupSendingMissionList.missions"]:
+            for recommended in record["recommended"]:
+                recommended["name"] = localisations["MiscData"][recommended["name"]]
+
         effects = records["AbilitySpecList.effects"]
         # Values between -1000 and 1000 are percents
         # everything else is an absolute value increased by 1000
@@ -519,11 +503,61 @@ class AbilitySpecList(Container):
             for r in records[table]:
                 r["effect"] = effects[r["effect"]]
 
+        table = "GroupSendingMissionList"
+        sub_tables = [
+            (
+                "characterAbilities",
+                "AbilitySpecList.characterAbilities",
+                "characterAbility",
+            ),
+            (
+                "unitModifications",
+                "AbilitySpecList.unitModifications",
+                "unitModification",
+            ),
+            # ("units")
+        ]
+
+        rewards = []
+        print(f"Creating {table}.rewards")
+        for record in records[f"{table}.missions"]:
+            for sub_table, index_table, index in sub_tables:
+                for reward in record[sub_table]:
+                    matched = self.map_to_index(
+                        reward[index], records[index_table], "index"
+                    )
+                    rewards.append(
+                        {
+                            "dispatch_id": record["dispatch_id"],
+                            "name": record["name"]["english"],
+                            "threshold": reward["threshold"],
+                            "quantity": reward["quantity"],
+                            "type": index,
+                            "item": matched["name"]["english"],
+                        }
+                    )
+            if record["cooldowns"] > 0:
+                rewards.append(
+                    {
+                        "dispatch_id": record["dispatch_id"],
+                        "name": record["name"]["english"],
+                        "threshold": record["cooldown_threshold"],
+                        "quantity": record["cooldowns"],
+                        "type": "cooldown",
+                        "item": "Dispatch Cooldown",
+                    }
+                )
+        rewards = sorted(
+            rewards,
+            key=lambda x: (x["dispatch_id"], x["threshold"], x["type"], x["quantity"])
+        )
+        records[f"{table}.rewards"] = rewards
+
         return records
 
 
 class MachineSpecList(Container):
-    read_list = [
+    file_list = [
         {
             "filename": "MachineSpecList.pkd",
             "data_path": "resident",
@@ -672,6 +706,18 @@ class MachineSpecList(Container):
             "index": "Machines.lookup",
             "index_field": "guid",
         },
+        {
+            "table": "PersonalMachineList.units",
+            "table_field": "unit",
+            "index": "Machines.lookup",
+            "index_field": "guid",
+        },
+        {
+            "table": "PersonalMachineList.units",
+            "table_field": "custom",
+            "index": "Machines.lookup",
+            "index_field": "guid",
+        },
     ]
 
     def post_processing(
@@ -681,21 +727,20 @@ class MachineSpecList(Container):
         exploded = []
         for r in records[table]:
             for c in r["children"]:
-                exploded.append({
-                    "index": r["index"],
-                    "guid": r["guid"],
-                    "child": c["guid"],
-                    "level": c["level"],
-                })
+                exploded.append(
+                    {
+                        "index": r["index"],
+                        "unit": r["unit"],
+                        "child": c["guid"],
+                        "level": c["level"],
+                    }
+                )
         records[table] = exploded
 
         records["Machines.lookup"] = []
         for t in ["MachineSpecList.units", "MachineSpecList.warships"]:
-            records["Machines.lookup"].extend([
-                {
-                    "guid": r["guid"],
-                    "name": r["english"],
-                } for r in records[t]
-            ])
+            records["Machines.lookup"].extend(
+                [{"guid": r["guid"], "name": r["name"]["english"]} for r in records[t]]
+            )
 
         return records
