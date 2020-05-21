@@ -142,7 +142,7 @@ class GundamDataFile:
         return header
 
     @classmethod
-    def calculate_header(
+    def make_basic_header(
         cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
     ) -> Dict[str, Dict[str, int]]:
         header = {
@@ -152,12 +152,27 @@ class GundamDataFile:
                 table: cls.definition_size(definition)
                 for table, definition in cls.definitions.items()
             },
+            "block_size": {
+                table: len(byte_string)
+                for table, byte_string in byte_strings.items()
+            },
         }
-        # skip the first table by default
+        return header
+
+    @classmethod
+    def calculate_header(
+        cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
+    ) -> Dict[str, Dict[str, int]]:
+        header = cls.make_basic_header(records, byte_strings)
         tables = list(records.keys())
-        block_start = (len(tables) * cls.record_count_length + len(tables[1:]) * 4)
-        for table in tables[1:]:
-            header["pointers"][table] = block_start + len(byte_strings[table])
+        pointer = (
+            len(tables) * cls.record_count_length + len(tables[1:]) * 4
+        )
+        for i, table in enumerate(tables):
+            # skip the first table by default
+            if i != 0:
+                header["pointers"][table] = pointer
+            pointer += len(byte_strings[table])
 
         return header
 
