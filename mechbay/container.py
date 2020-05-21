@@ -12,6 +12,7 @@ class Container:
     parse_list: List[Dict] = []
     localisations: List[Dict] = []
     string_maps: List[Dict] = []
+    index_maps: List[Dict] = []
 
     def __init__(self, read_data_path: str = "./data", write_data_path: str = "./mods"):
         self.read_path = read_data_path
@@ -60,20 +61,18 @@ class Container:
 
         return data
 
-    def compose_data(self, data: Dict[str, List[Dict]]) -> Dict[str, bytes]:
+    def compose_data(self, records: Dict[str, List[Dict]]) -> Dict[str, bytes]:
         # now compose them with their specific classes
         raw_data = {}
         for file in self.parse_list:
-            records = {}
-            for table, table_data in data.items():
-                if table == file["table"]:
-                    records = table_data
-                    break
-                elif table.startswith(file["table"]):
-                    sub_table = table.rpartition(".")
+            records_to_compose = {}
+            for table, table_data in records.items():
+                if table.startswith(file["table"]):
+                    sub_table = table.rpartition(".")[-1]
                     records[sub_table] = table_data
+
             print(f"Composing {file['table']}")
-            raw_data[file["filename"]] = file["parser_class"]().write(records)
+            raw_data[file["filename"]] = file["parser_class"]().write(records_to_compose)
 
         return raw_data
 
@@ -95,10 +94,10 @@ class Container:
             )
 
     def map_strings(
-        self, localisations: Dict[str, Dict[int, Dict]], data: Dict[str, List[Dict]]
-    ) -> None:
+        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
+    ) -> Dict[str, List[Dict]]:
         for mapping in self.string_maps:
-            for record in data[mapping["table"]]:
+            for record in records[mapping["table"]]:
                 if (
                     mapping.get("missing_value") is not None
                     and record[mapping["field"]] == mapping["missing_value"]
@@ -115,6 +114,7 @@ class Container:
                         f"Missing index {mapping['field']} "
                         f"in {mapping['table']} for {mapping['strings']}"
                     )
+        return records
 
     def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
         localisations = {
@@ -135,30 +135,66 @@ class Container:
 
         return localisations
 
-    def post_processing(
-        self, localisations: Dict[str, Dict[int, Dict]], data: Dict[str, List[Dict]]
-    ) -> Dict[str, List[Dict]]:
-        return data
+    @staticmethod
+    def map_to_index(value: int, index: List[Dict], index_field) -> Dict:
+        for i in index:
+            if value == i[index_field]:
+                return i.copy()
 
-    def pre_processing(self, data: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
-        return data
+        print(
+            f"WARNING: Index {value} not found in {index_field}"
+        )
+        return {}
+
+    def populate_indexes(self, records: Dict[str, List[Dict]]):
+        for index in self.index_maps:
+            for r in records[index["table"]]:
+                if (
+                        index.get("missing_value") is not None and
+                        r[index["table_field"]] == index["missing_value"]
+                ):
+                    continue
+                r[index["table_field"]] = self.map_to_index(
+                    value=r[index["table_field"]],
+                    index=records[index["index"]],
+                    index_field=index.get("index_field", "index")
+                )
+        return records
+
+    @staticmethod
+    def extract_index(record: Dict, record_field: str, index_field: str) -> Dict:
+        record[record_field] = record[record_field][index_field]
+        return record
+
+    def post_processing(
+        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
+    ) -> Dict[str, List[Dict]]:
+        
+        return records
+
+    def pre_processing(self, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        return records
 
     def read(self) -> Dict[str, List[Dict]]:
         # first read in the raw bytes of all the files
         raw_data = self.read_files()
 
         # now parse them with their specific classes
-        data = self.parse_data(raw_data)
+        records = self.parse_data(raw_data)
 
         # read in localisations
         localisations = self.read_localisations()
 
         # map localisation strings onto data
-        self.map_strings(localisations, data)
+        records = self.map_strings(localisations, records)
 
-        data = self.post_processing(localisations, data)
+        # custom post processing
+        records = self.post_processing(localisations, records)
 
-        return data
+        # fill in data from subtables for certain fields
+        records = self.populate_indexes(records)
+
+        return records
 
     def write(self, data: Dict[str, List[Dict]]):
         data = deepcopy(data)
@@ -260,6 +296,11 @@ class CharacterSpecList(Container):
             "strings": "CharacterSpecList",
         },
         {
+            "table": "CharacterSpecList.custom",
+            "field": "name",
+            "strings": "CharacterSpecList",
+        },
+        {
             "table": "MyCharacterConfigurations.outfits",
             "field": "name",
             "strings": "CharacterSpecList",
@@ -344,13 +385,13 @@ class MiscData(Container):
     ]
 
     def post_processing(
-        self, localisations: Dict[str, Dict[int, Dict]], data: Dict[str, List[Dict]]
+        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
     ) -> Dict[str, List[Dict]]:
-        for record in data["GroupSendingMissionList.missions"]:
+        for record in records["GroupSendingMissionList.missions"]:
             for recommended in record["recommended"]:
                 recommended["name"] = localisations["MiscData"][recommended["name"]]
 
-        return data
+        return records
 
     def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
         localisations = super().index_strings(data)
@@ -408,10 +449,77 @@ class AbilitySpecList(Container):
         },
         {
             "table": "AbilitySpecList.effects",
-            "field": "name",
+            "field": "desc",
             "strings": "AbilitySpecList",
         },
     ]
+
+    prefixes = [
+        "unit_",
+        "power_",
+        "char_",
+        "consumption_",
+        "adjust_",
+        "nullify_",
+        "damage_",
+    ]
+
+    def pre_processing(self, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        # return zeroes
+        for r in records["effects"]:
+            for k in list(r.keys()):
+                if r.get(k) is None:
+                    r[k] = 0
+
+        # Values between -1000 and 1000 are percents
+        # everything else is an absolute value increased by 1000
+        for r in records["effects"]:
+            for k, v in r.items():
+                for p in self.prefixes:
+                    if k.startswith(p):
+                        if v > 1:
+                            r[k] = v + 1000
+                        elif v < -1:
+                            r[k] = v - 1000
+                        else:
+                            r[k] = int(v * 100)
+
+        return records
+
+    def post_processing(
+        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
+    ) -> Dict[str, List[Dict]]:
+        effects = records["AbilitySpecList.effects"]
+        # Values between -1000 and 1000 are percents
+        # everything else is an absolute value increased by 1000
+        for r in effects:
+            for k, v in r.items():
+                for p in self.prefixes:
+                    if k.startswith(p):
+                        if v >= 1000:
+                            r[k] = v - 1000
+                        elif v <= -1000:
+                            r[k] = v + 1000
+                        else:
+                            r[k] = v / 100
+
+        # remove zeroes
+        for r in effects:
+            for k in list(r.keys()):
+                if r[k] == 0:
+                    r.pop(k)
+
+        tables = [
+            "AbilitySpecList.unitAbilities",
+            "AbilitySpecList.unitModifications",
+            "AbilitySpecList.characterAbilities",
+            "AbilitySpecList.characterSkills",
+        ]
+        for table in tables:
+            for r in records[table]:
+                r["effect"] = effects[r["effect"]]
+
+        return records
 
 
 class MachineSpecList(Container):
@@ -510,17 +618,84 @@ class MachineSpecList(Container):
             "table": "WeaponSpecList.types",
             "field": "name",
             "strings": "MachineSpecList",
-            "missing_value": -1,
+            "missing_value": 0,
         },
         {
             "table": "WeaponSpecList.effects",
             "field": "name",
             "strings": "MachineSpecList",
+            "missing_value": 0,
         },
         {
             "table": "WeaponSpecList.effects",
             "field": "desc",
             "strings": "MachineSpecList",
         },
-
     ]
+
+    index_maps = [
+        {
+            "table": "WeaponSpecList.weapons",
+            "table_field": "type",
+            "index": "WeaponSpecList.types",
+            "index_field": "index",
+        },
+        {
+            "table": "WeaponSpecList.weapons",
+            "table_field": "effect",
+            "index": "WeaponSpecList.effects",
+            "index_field": "index",
+            "missing_value": 0,
+        },
+        {
+            "table": "WeaponSpecList.mapWeapons",
+            "table_field": "type",
+            "index": "WeaponSpecList.types",
+            "index_field": "index",
+        },
+        {
+            "table": "WeaponSpecList.mapWeapons",
+            "table_field": "effect",
+            "index": "WeaponSpecList.effects",
+            "index_field": "index",
+            "missing_value": 0,
+        },
+        {
+            "table": "MachineConversionList.units",
+            "table_field": "unit",
+            "index": "Machines.lookup",
+            "index_field": "guid",
+        },
+        {
+            "table": "MachineConversionList.units",
+            "table_field": "transform",
+            "index": "Machines.lookup",
+            "index_field": "guid",
+        },
+    ]
+
+    def post_processing(
+        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
+    ) -> Dict[str, List[Dict]]:
+        table = "MachineDevelopmentList.units"
+        exploded = []
+        for r in records[table]:
+            for c in r["children"]:
+                exploded.append({
+                    "index": r["index"],
+                    "guid": r["guid"],
+                    "child": c["guid"],
+                    "level": c["level"],
+                })
+        records[table] = exploded
+
+        records["Machines.lookup"] = []
+        for t in ["MachineSpecList.units", "MachineSpecList.warships"]:
+            records["Machines.lookup"].extend([
+                {
+                    "guid": r["guid"],
+                    "name": r["english"],
+                } for r in records[t]
+            ])
+
+        return records
