@@ -964,7 +964,7 @@ class MachineConversionList(GundamDataFile):
         3: "refit_2",
         4: "refit_3",
         5: "purge",
-        6: "",
+        6: "escape",
         8: "leader",
         16: "transform",
         19: "special",  # only used for
