@@ -549,7 +549,7 @@ class AbilitySpecList(Container):
                 )
         rewards = sorted(
             rewards,
-            key=lambda x: (x["dispatch_id"], x["threshold"], x["type"], x["quantity"])
+            key=lambda x: (x["dispatch_id"], x["threshold"], x["type"], x["quantity"]),
         )
         records[f"{table}.rewards"] = rewards
 
