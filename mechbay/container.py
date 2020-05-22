@@ -718,6 +718,36 @@ class MachineSpecList(Container):
             "index": "Machines.lookup",
             "index_field": "guid",
         },
+        {
+            "table": "MachineDesignList.designs",
+            "table_field": "first",
+            "index": "Machines.lookup",
+            "index_field": "guid",
+        },
+        {
+            "table": "MachineDesignList.designs",
+            "table_field": "second",
+            "index": "Machines.lookup",
+            "index_field": "guid",
+        },
+        {
+            "table": "MachineDesignList.designs",
+            "table_field": "result",
+            "index": "Machines.lookup",
+            "index_field": "guid",
+        },
+        {
+            "table": "MachineDevelopmentList.units",
+            "table_field": "unit",
+            "index": "Machines.lookup",
+            "index_field": "guid",
+        },
+        {
+            "table": "MachineDevelopmentList.units",
+            "table_field": "child",
+            "index": "Machines.lookup",
+            "index_field": "guid",
+        },
     ]
 
     def post_processing(
@@ -744,3 +774,66 @@ class MachineSpecList(Container):
             )
 
         return records
+
+
+class StageList(Container):
+    file_list = [
+        {
+            "filename": "StageList.pkd",
+            "data_path": "resident",
+            "archive": ["StageList.cdb", "QuestList.cdb", "GetUnitList.cdb"],
+        }
+    ]
+
+    parse_list = [
+        {
+            "filename": "StageList.cdb",
+            "table": "StageList",
+            "parser_class": parsers.StageList,
+        },
+        {
+            "filename": "QuestList.cdb",
+            "table": "QuestList",
+            "parser_class": parsers.QuestList,
+        },
+        {
+            "filename": "GetUnitList.cdb",
+            "table": "GetUnitList",
+            "parser_class": parsers.GetUnitList,
+        },
+    ]
+
+    localisations = [
+        {
+            "filename": "StageList.tbl",
+            "table": "StageList",
+            "data_path": "language",
+            "parser_class": Localisation,
+        }
+    ]
+
+    string_maps = [
+        {
+            "table": "StageList.stages",
+            "field": "name",
+            "strings": "StageList",
+        },
+        {
+            "table": "QuestList.quests",
+            "field": "name",
+            "strings": "StageList",
+        },
+        {
+            "table": "QuestList.quests",
+            "field": "desc2",
+            "strings": "StageList",
+        },
+        {
+            "table": "QuestList.quests",
+            "field": "desc",
+            "strings": "StageList",
+        },
+
+    ]
+
+    index_maps = []
