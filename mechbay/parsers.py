@@ -803,7 +803,7 @@ class GetUnitList(GundamDataFile):
     default_filename = "GetUnitList.cdb"
     data_path = "resident"
     signature = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
-    definitions = {"units": {"guid": "guid", "required_xp": "uint:4"}}
+    definitions = {"units": {"get": "guid", "score": "uint:4"}}
 
 
 class GroupSendingMissionList(GundamDataFile):
@@ -1430,24 +1430,24 @@ class QuestList(GundamDataFile):
             "quest_value": "uint:4",
             "stages": "pointer:list:bytes:4",
             "turns": "uint:2",
-            "quest_type": "uint:2",
+            "type": "uint:2",
             "null": "null:8",
             "series": "series",
-            "stage_id": "bytes:4",
-            "component_rewards": "pointer:list:uint:2",
-            "machine_rewards": "pointer:list:guid",
-            "pilot_rewards": "pointer:list:guid",
-            "ability_rewards": "pointer:list:uint:2",
+            "stage": "bytes:4",
+            "unitModifications": "pointer:list:uint:2",
+            "productions": "pointer:list:guid",
+            "characters": "pointer:list:guid",
+            "characterAbilities": "pointer:list:uint:2",
             "prereq_stage_id": "uint:4",
-            "index": "uint:2",
+            "quest": "uint:2",
             "dlc_set": "uint:2",
             "name": "uint:2",
-            "description2": "uint:2",
-            "description": "uint:2",
-            "null2": "null:2",
-            "unknown1": "uint:1",  # TODO: Usually 1, sometimes 2
-            "cooldown_reward": "uint:1",
-            "null3": "null:2",
+            "desc2": "uint:2",
+            "desc": "uint:2",
+            "unk1": "uint:2",
+            "unk2": "uint:1",  # TODO: Usually 1, sometimes 2
+            "cooldowns": "uint:1",
+            "unk3": "uint:2",
         }
     }
 
@@ -1489,9 +1489,9 @@ class QuestList(GundamDataFile):
     def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for record in records["quests"]:
             if record["quest_type"] in [1, 96]:
-                record["stage_id"] = cls.write_series_bytes(record["stage_id"])
+                record["stage"] = cls.write_series_bytes(record["stage"])
             else:
-                record["stage_id"] = cls.write_int(record["stage_id"], 4)
+                record["stage"] = cls.write_int(record["stage"], 4)
 
             if record["quest_type"] in [96]:
                 record["stages"] = [cls.write_series_bytes(s) for s in record["stages"]]
@@ -1514,18 +1514,18 @@ class QuestList(GundamDataFile):
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for record in records["quests"]:
             # Just repeats the series id for some reason
-            if record["quest_type"] in [1, 96]:
-                record["stage_id"] = cls.read_series_bytes(record["stage_id"])
+            if record["type"] in [1, 96]:
+                record["stage"] = cls.read_series_bytes(record["stage"])
             else:
-                record["stage_id"] = cls.read_int(record["stage_id"])
+                record["stage"] = cls.read_int(record["stage"])
 
-            if record["quest_type"] in [96]:
+            if record["type"] in [96]:
                 record["stages"] = [cls.read_series_bytes(s) for s in record["stages"]]
             else:
                 record["stages"] = [cls.read_int(s) for s in record["stages"]]
 
             # instead of a guid it's an ability id
-            if record["quest_type"] in [30]:
+            if record["type"] in [30]:
                 # we need to skip 4 bytes
                 record["guid2"] = [cls.read_int(r[4:8]) for r in record["guid2"]]
             else:
@@ -1600,53 +1600,51 @@ class StageList(GundamDataFile):
     signature = b"\x4C\x47\x54\x53\x00\x00\x0B\x01"
 
     definitions = {
-        "main": {
-            "stage_id": "uint:4",
+        "stages": {
+            "stage": "uint:4",
             "series": "series",
-            "required_stage_id": "uint:4",
-            "reward1": "uint:4",
-            "reward2": "uint:4",
-            "reward3": "uint:4",
-            "reward4": "uint:4",
-            "reward5": "uint:4",
-            "reward6": "uint:4",
+            "required_stage": "uint:4",
+            "capital1": "uint:4",
+            "capital2": "uint:4",
+            "capital3": "uint:4",
+            "capital4": "uint:4",
+            "capital5": "uint:4",
+            "capital6": "uint:4",
             "units_available_count": "uint:4",
             "units_available_pointer": "pointer",
-            "__null": "null:2",
-            "index": "uint:2",
+            "null1": "null:2",
+            "name": "uint:2",
             "bgm": "uint:2",
             "series2": "uint:2",
-            "unknown1": "uint:2",
-            "unknown2": "uint:2",
-            "unknown3": "uint:2",
-            "unknown4": "uint:2",
-            "unknown5": "uint:2",
-            "unknown6": "uint:2",
-            "unknown7": "uint:2",
-            "unknown8": "uint:2",
-            "unknown9": "uint:2",
-            "unknown10": "uint:2",
-            "unknown11": "uint:2",
-            "unknown12": "uint:2",
-            "unknown13": "uint:2",
-            "null": "null:16",
-            "unknown21": "uint:2",
-            "unknown22": "uint:2",
-            "unknown24": "uint:1",
-            "unknown25": "uint:1",
-            "unknown26": "uint:1",
+            "unk1": "uint:2",
+            "unk2": "uint:2",
+            "unk3": "uint:2",
+            "unk4": "uint:2",
+            "unk5": "uint:2",
+            "unk6": "uint:2",
+            "unk7": "uint:2",
+            "unk8": "uint:2",
+            "unk9": "uint:2",
+            "unk10": "uint:2",
+            "unk11": "uint:2",
+            "unk12": "uint:2",
+            "unk13": "uint:2",
+            "null2": "null:16",
+            "unk21": "uint:2",
+            "unk22": "uint:2",
+            "unk24": "uint:1",
             "terrain": "uint:1",
             "series_end": "uint:4",
         }
     }
 
-    available_unit_definition = {"guid": "guid", "available_type": "uint:4"}
+    available_unit_definition = {"guid": "guid", "type": "uint:4"}
 
     def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
         records = super().read(buffer)
 
         terrain = ["space", "air", "land", "surface", "underwater"]
-        for record in records["main"]:
+        for record in records["stages"]:
             record.update(self.bit_smash("terrain", record.pop("terrain"), terrain))
 
             # available units appears to be only for informational purposes in the
