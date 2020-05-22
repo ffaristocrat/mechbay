@@ -1,4 +1,3 @@
-from copy import deepcopy
 from io import BytesIO
 from typing import List, Dict, BinaryIO
 
@@ -958,13 +957,7 @@ class MachineConversionList(GundamDataFile):
     data_path = "resident"
     package = "MachineSpecList.pkd"
     signature = b"\x56\x4E\x43\x4D\x00\x00\x02\x01"
-    definitions = {
-        "units": {
-            "unit": "guid",
-            "transform": "guid",
-            "type": "uint:4",
-        }
-    }
+    definitions = {"units": {"unit": "guid", "transform": "guid", "type": "uint:4"}}
 
     conversion_types = {
         2: "refit_1",
@@ -1079,7 +1072,7 @@ class MachineSpecList(GundamDataFile):
             "dlc_set": "uint:2",
             "name": "uint:2",
             "unk1": "uint:2",  # 0 - 248 (49 distinct)
-            # "unk2": "uint:1",  # 0, 1, 2, 3, 5, 13, 15, 16, 22, 23, 26, 27, 31, 39, 40, 42, 43, 44, 45, 46, 51, 52, 54, 55, 56, 58, 59, 62, 67, 69, 70, 71, 76, 77
+            # "unk2": "uint:1",
             "unk3": "uint:2",  # 0 - 255 (172 distinct)
             # "unk4": "uint:1",  # mostly 0, increments slowly through list to 76
             "unk5": "uint:1",  # increments of 2, 127 distinct
@@ -1089,20 +1082,18 @@ class MachineSpecList(GundamDataFile):
             "sort_s_chinese": "int:2",
             "sort_korean": "int:2",
             "sort_english": "int:2",
-            "unk7": "uint:2",
-            "unk9": "uint:2",
-            "null1": "null:6",
+            "null1": "null:10",
             "cost": "uint:2",
             "energy": "uint:2",
             "attack": "uint:2",
             "defense": "uint:2",
             "mobility": "uint:2",
             "base_exp_level_up": "uint:2",
-            "points": "uint:2",  # increments of 10, to 500
-            "unk10": "uint:1",  # 0 - 255
-            "unk11": "uint:1",  # 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 32
-            "unk12": "uint:1",  # might be binary, 38 distinct
-            "unk13": "uint:1",  # 0, 1, 6, 7, 9, 16, 17, 25, 32, 33, 38, 39, 48, 49, 64, 65, 73
+            "points": "uint:2",
+            "unk10": "uint:1",
+            "unk11": "uint:1",
+            "unk12": "uint:1",
+            "unk13": "uint:1",
             "size": "uint:1",
             "fixed7": "uint:1",
             "ability1": "int:2",
@@ -1117,12 +1108,12 @@ class MachineSpecList(GundamDataFile):
             "unk16": "int:1",
             "weapon_count": "uint:1",
             "map_weapon_count": "uint:1",
-            "unk17": "int:1",  # -1, 0, 1, 2, 3, 4
+            "unk17": "int:1",
             "shadow": "uint:1",
             "unk18": "null:3",
-            "unk20": "uint:1",  # 0, 1, 2, 16, 32, 33, 64, 80, 128, 129, 144, 160
-            "unk21": "uint:1",  # 0, 1, 2, 4, 8, 16, 24
-            "unk22": "uint:1",  # 0, 2, 16, 17, 20, 21, 24, 25
+            "unk20": "uint:1",
+            "unk21": "uint:1",
+            "unk22": "uint:1",
             "null3": "null:1",
         },
         "warships": {
@@ -1133,12 +1124,12 @@ class MachineSpecList(GundamDataFile):
             "index1": "uint:2",
             "dlc_set": "uint:2",
             "name": "uint:2",
-            "unk1": "uint:1",  # 0, 19, 23, 27, 68, 77, 84, 95, 102, 130, 134, 136, 140, 202, 211, 213, 233
-            "unk2": "uint:1",  # 0, 3, 23, 78, 81, 86, 88, 90, 93, 95, 96, 97, 101, 102
-            "unk3": "uint:1",  # 0 - 255, 83 distinct
-            "unk4": "uint:1",  # mostly 0, 77-102, 27 distinct
-            "unk5": "uint:1",  # increments of 2, 82 distinct
-            "unk6": "uint:1",  # 0 - 18,
+            "unk1": "uint:1",
+            "unk2": "uint:1",
+            "unk3": "uint:1",
+            "unk4": "uint:1",
+            "unk5": "uint:1",
+            "unk6": "uint:1",
             "sort_japanese": "uint:2",
             "sort_t_chinese": "int:2",
             "sort_s_chinese": "int:2",
@@ -1151,11 +1142,11 @@ class MachineSpecList(GundamDataFile):
             "defense": "uint:2",
             "mobility": "uint:2",
             "base_exp_level_up": "uint:2",
-            "points": "uint:2",  # increments of 10, to 500
-            "unk9": "uint:1",  # might be binary? 0 - 255, 67 distinct
-            "unk10": "uint:1",  # 18, 19, 22, 23, 24, 25, 26, 27
-            "unk11": "uint:1",  # 0, 3, 4, 24, 27, 28, 32, 35, 36, 219
-            "unk12": "uint:1",  # 0, 1, 6, 7, 8, 38, 48, 64
+            "points": "uint:2",
+            "unk9": "uint:1",
+            "unk10": "uint:1",
+            "unk11": "uint:1",
+            "unk12": "uint:1",
             "size": "uint:1",
             "fixed7": "uint:1",
             "ability1": "int:2",
@@ -1180,6 +1171,28 @@ class MachineSpecList(GundamDataFile):
         },
     }
     size_map = {}
+
+    @classmethod
+    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        flags = {
+            "unk13": ["A", "B", "C", "D", "E", "F", "G", "H"],
+            "unk20": [
+                "gundam",
+                "zaku",
+                "--2",
+                "--3",
+                "tank",
+                "no_defense",
+                "ground",
+                "space",
+            ],
+            "unk21": ["8", "9", "10", "11", "union_flag"],
+            "unk22": ["ride_sfs", "sfs", "18", "commander", "unit"],
+        }
+        for k, v in flags.items():
+            for r in records["units"]:
+                r.update(**cls.bit_smash("flag", r.pop(k), v))
+        return records
 
     @classmethod
     def calculate_header(
@@ -1334,11 +1347,9 @@ class MyCharacterConfigurations(GundamDataFile):
         all_values = []
         unk_len = self.definition_size(self.unknown_definition)
         bgm_bytes = bytes()
-        bgm_bytes_size = self.definition_size(self.definitions["bgm"]) * len(
-            records["bgm"]
-        )
+        bgm_bytes_size = self.definition_size(self.definitions["bgm"]) * len(bgm)
 
-        for r in records["bgm"]:
+        for r in bgm:
             vals = tuple(r["unknown"].values())
             if vals not in all_values:
                 all_values.append(vals)
@@ -1403,9 +1414,7 @@ class PersonalMachineList(GundamDataFile):
     data_path = "resident"
     package = "MachineSpecList.pkd"
     signature = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
-    definitions = {
-        "units": {"unit": "guid", "pilot": "guid", "custom": "guid"}
-    }
+    definitions = {"units": {"unit": "guid", "pilot": "guid", "custom": "guid"}}
 
 
 class QuestList(GundamDataFile):
@@ -1823,7 +1832,7 @@ class WeaponSpecList(GundamDataFile):
             "mp": "uint:2",
             "unk6a": "uint:1",  # [0, 136, 168, 170]
             "unk6b": "uint:1",  # [0, 1, 2]
-            "index2a": "uint:1",  # [1793, 1794, 1795, 1796, 1797, 1798, 1799, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1811, 1817, 1819]
+            "index2a": "uint:1",
             "type": "uint:1",
             "type2": "uint:1",  # one is probably the icon?
             "effect": "uint:1",
@@ -1845,7 +1854,7 @@ class WeaponSpecList(GundamDataFile):
             "mp_cost": "uint:2",
             "unk6a": "uint:1",  # [128, 170]
             "unk6b": "uint:1",  # [0, 2]
-            "index2a": "uint:1",  # [1793, 1794, 1795, 1796, 1797, 1798, 1799, 1800, 1801, 1802, 1803, 1804, 1805, 1806, 1807, 1811, 1817, 1819]
+            "index2a": "uint:1",
             "type": "uint:1",
             "type2": "uint:1",  # one is probably the icon?
             "effect": "uint:1",
@@ -1903,7 +1912,7 @@ class WeaponSpecList(GundamDataFile):
                 del r["type2"]
 
         return records
-    
+
     @classmethod
     def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for table, table_records in records.items():
@@ -1992,12 +2001,14 @@ class Stage(GundamDataFile):
     signature = b"\x49\x53\x4D\x54\x2F\x01\x00\x00"
 
     def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
-        record_count = self.read_header(buffer)
-        records = []
+        header = self.read_header(buffer)
+        records = {
+            "stage": []
+        }
 
         # incomplete mess
 
-        for i in range(record_count):
+        for i in range(header["counts"]["stage"]):
             values = [self.read_int(buffer.read(1)) for _ in range(2)]
             size_x = self.read_int(buffer.read(1))
             size_y = self.read_int(buffer.read(1))
@@ -2013,8 +2024,8 @@ class Stage(GundamDataFile):
                     self.read_int(buffer.read(1), signed=True) for _ in range(36)
                 ],
                 "map_tiles": [
-                    [self.read_int(buffer.read(4)) for x in range(size_x)]
-                    for y in range(size_y)
+                    [self.read_int(buffer.read(4)) for _ in range(size_x)]
+                    for __ in range(size_y)
                 ],
                 "values3": [self.read_int(buffer.read(1)) for _ in range(59)],
                 "bytething": buffer.read(self.read_int(buffer.read(1))),
@@ -2028,7 +2039,7 @@ class Stage(GundamDataFile):
                 "bytething4": buffer.read(self.read_int(buffer.read(1))),
                 "valuesz": [self.read_int(buffer.read(1)) for _ in range(8)],
             }
-            records.append(record)
+            records["stage"].append(record)
 
         return records
 
