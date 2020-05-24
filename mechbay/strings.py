@@ -264,7 +264,7 @@ class StageLocalisation:
 
 class VoiceTable(StringTBL):
     signature = b"\x54\x52\x54\x53\x00\x01\x01\x00"
-    fields = ["voice_id", "unk1", "unk1", "unk1"]
+    fields = ["voice_id", "expression", "unk1", "skip_noise"]
 
     def write(self, records: Dict[str, List[Dict]]) -> bytes:
         for r in records["main"]:
