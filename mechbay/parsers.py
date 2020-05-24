@@ -329,11 +329,14 @@ class CharacterConversionList(GundamDataFile):
     default_filename = "CharacterConversionList.cdb"
     data_path = "resident"
     signature = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
+    constants = {
+        "fixed1": 1,
+    }
     definitions = {
         "characters": {
-            "character_id": "guid",
-            "new_character_id": "guid",
-            "unk1": "uint:4",
+            "character": "guid",
+            "conversion": "guid",
+            "fixed1": "uint:4",
         }
     }
 
@@ -1828,8 +1831,7 @@ class WeaponSpecList(GundamDataFile):
             "power": "uint:2",
             "en": "uint:2",
             "mp": "uint:2",
-            "unk6a": "uint:1",  # [0, 136, 168, 170]
-            "unk6b": "uint:1",  # [0, 1, 2]
+            "terrain": "uint:2",  # [0, 136, 168, 170]
             "index2a": "uint:1",
             "type": "uint:1",
             "type2": "uint:1",  # one is probably the icon?
@@ -1848,10 +1850,9 @@ class WeaponSpecList(GundamDataFile):
             "name": "uint:2",
             "range_grid": "uint:2",
             "power": "uint:2",
-            "en_cost": "uint:2",
-            "mp_cost": "uint:2",
-            "unk6a": "uint:1",  # [128, 170]
-            "unk6b": "uint:1",  # [0, 2]
+            "en": "uint:2",
+            "mp": "uint:2",
+            "terrain": "uint:2",  # [128, 170]
             "index2a": "uint:1",
             "type": "uint:1",
             "type2": "uint:1",  # one is probably the icon?
@@ -1859,9 +1860,10 @@ class WeaponSpecList(GundamDataFile):
             "tension": "uint:2",
             "unk10": "uint:2",  # [15, 24, 31]
             "unk11": "int:2",  # [-1, 1812, 1815, 1831]
-            "unk12": "int:2",  # [0, 1, 256, 512]
-            "unk13a": "int:1",  # [3, 4, 258, 769, 1281, 1537]
-            "unk13b": "int:1",  # [3, 4, 258, 769, 1281, 1537]
+            "unk12a": "int:1",
+            "unk12b": "int:1",
+            "unk13a": "int:1",  # 1-4
+            "unk13b": "int:1",  # 0-6
             "null": "null:2",
         },
         "types": {"name": "uint:2", "index": "uint:2"},
@@ -1903,18 +1905,20 @@ class WeaponSpecList(GundamDataFile):
 
     @classmethod
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        tf = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9",]
         for table, table_records in records.items():
-            if table not in ["units", "warships"]:
+            if table not in ["weapons", "mapWeapons"]:
                 continue
             for r in table_records:
                 del r["type2"]
+                r.update(**cls.bit_smash("terrain", r.pop("terrain"), tf))
 
         return records
 
     @classmethod
     def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for table, table_records in records.items():
-            if table not in ["units", "warships"]:
+            if table not in ["weapons", "mapWeapons"]:
                 continue
             for r in table_records:
                 r["type2"] = r["type"]
