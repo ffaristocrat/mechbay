@@ -1601,6 +1601,10 @@ class StageList(GundamDataFile):
     data_path = "resident"
     package = "StageList.pkd"
     signature = b"\x4C\x47\x54\x53\x00\x00\x0B\x01"
+    constants = {
+        "fixed12830": 12830,
+        "fixed70": 70,
+    }
 
     definitions = {
         "stages": {
@@ -1634,8 +1638,8 @@ class StageList(GundamDataFile):
             "unk13": "uint:2",
             "null2": "null:16",
             "unk21": "uint:2",
-            "unk22": "uint:2",
-            "unk24": "uint:1",
+            "fixed12830": "uint:2",
+            "fixed70": "uint:1",
             "terrain": "uint:1",
             "series_end": "uint:4",
         }
