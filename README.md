@@ -126,8 +126,8 @@ Profile text for each unit, including MS and characters.
 
 * data/resident/CharacterSpecList.pkd/CharacterConversionList.cdb
 
-Seems to change characters from one variant to another.  Not sure how/when/why it's
-triggered.
+Transitions characters to a different one when they hit high tension. Just seems to be
+used for the different portraits of characters with SEED mode.
 
 ##### Cut-Ins
 
@@ -202,7 +202,8 @@ Voiced lines used for movies and cut-scenes.
 
 * data/language/*/CharacterSpecList.tbl
 
-Localized names for characters.
+Localized names for characters in CharacterSpecList.
+Outfit, voice, random names and BGM titles in MyCharacterConfigurations
 
 * data/tmap/stage/scoutMessage/*/ScoutMessageTable.tbl
 
@@ -259,6 +260,8 @@ List of stages with rewards
 
 * data/resident/StageList.pkd/QuestList.cdb
 
+Requirements and rewards for each quest.
+
 * data/resident/StageList.pkd/GetUnitList.cdb
 
 Score requirements for Get Units.
@@ -268,7 +271,12 @@ Score requirements for Get Units.
 Units rewarded for clearing a stage.
 
 * data/language/*/MiscData.tbl
+
+Series names, group dispatch names, descriptions and recommended compositions. 
+
 * data/language/*/StageList.tbl
+
+Stage names and quest names and descriptions.
 
 * data/tmap/bg/map_###.zip
 * data/tmap/bg/map_###.zip/*.dds
@@ -284,7 +292,7 @@ are layered, animated, etc.
 
 Stages are broken up into 3 or 4 sections.
 * 0 - VN scenes before the stage.
-* 1 - VN and battle scripting for the story section.
+* 1 - VN and battle scripting for the mission section.
 * 2 - VN and battle scripting for the sortie section.
 * 3 - Post battle VN executed at the end of the campaign.
 
@@ -326,11 +334,13 @@ Every stage has this broken out as a separate file but it's just imported into s
 Images of thumbnails of the images in data/tmap/bg/map_###.zip.
 
 * data/tmap/stage/###_##1/stage.dat
-* data/tmap/stage/###_##1/stageConditions.dat
 
-Data about what the map tiles are, which background images they use, structure of the map
+Data about different areas in the stage, what the map tiles are, which background images they use,
 and all the units being used in this stage.
 
+* data/tmap/stage/###_##1/stageConditions.dat
+
+Localisations of the objective texts.
 
 #### Battle Environments
 
@@ -358,7 +368,7 @@ Primary data for group dispatches including rewards.
 
 * data/language/*/MiscData.tbl
 
-String values for dispatch missions and their requirements. Shared with
+Localisations for dispatch missions and their requirements. Shared with
 series names.
 
 
