@@ -244,6 +244,10 @@ class CharacterSpecList(Container):
                 "SkillAcquisitionPatternList.cdb",
                 "MyCharacterConfigurations.cdb",
             ],
+        },
+        {
+            "filename": "CharacterConversionList.cdb",
+            "data_path": "resident",
         }
     ]
 
@@ -268,6 +272,11 @@ class CharacterSpecList(Container):
             "table": "MyCharacterConfigurations",
             "parser_class": parsers.MyCharacterConfigurations,
         },
+        {
+            "filename": "CharacterConversionList.cdb",
+            "table": "CharacterConversionList",
+            "parser_class": parsers.CharacterConversionList
+        }
     ]
 
     localisations = [
@@ -323,6 +332,36 @@ class CharacterSpecList(Container):
             "strings": "CharacterSpecList",
         },
     ]
+
+    index_maps = [
+        {
+            "table": "CharacterConversionList.characters",
+            "table_field": "character",
+            "index": "Characters.lookup",
+            "index_field": "guid",
+        },
+        {
+            "table": "CharacterConversionList.characters",
+            "table_field": "conversion",
+            "index": "Characters.lookup",
+            "index_field": "guid",
+        },
+    ]
+
+    def post_processing(
+        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
+    ) -> Dict[str, List[Dict]]:
+        lookup_table = "Characters.lookup"
+        lookup = {}
+        for t in ["characters", "npcs", "custom"]:
+            for r in records[f"CharacterSpecList.{t}"]:
+                try:
+                    lookup[r["guid"]] = r["unique_name"]["english"]
+                except (AttributeError, KeyError, TypeError):
+                    lookup[r["guid"]] = r["name"]["english"]
+        records[lookup_table] = [{"guid": k, "name": v} for k, v in lookup.items()]
+
+        return records
 
 
 class AbilitySpecList(Container):
