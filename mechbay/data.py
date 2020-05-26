@@ -282,8 +282,10 @@ class GundamDataFile:
 
     @staticmethod
     def bit_smash(field: str, value: int, sub_fields: List[str]) -> Dict[str, int]:
+        if field:
+            field += "_"
         smashed = {
-            f"{field}_{sf}": 1 if value and value & (2 ** i) else 0
+            f"{field}{sf}": 1 if value and value & (2 ** i) else 0
             for i, sf in enumerate(sub_fields)
         }
         return smashed
@@ -291,9 +293,11 @@ class GundamDataFile:
     @staticmethod
     def bit_smush(field: str, smashed: Dict[str, int], sub_fields: List[str]) -> int:
         value = 0
+        if field:
+            field += "_"
 
         for i, sf in enumerate(sub_fields):
-            if smashed[f"{field}_{sf}"] == 1:
+            if smashed[f"{field}{sf}"] == 1:
                 value += 2 ** i
 
         return value
