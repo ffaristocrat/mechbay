@@ -39,22 +39,22 @@ class AbilitySpecList(GundamDataFile):
             "fixed1": "uint:2",
             "cost": "uint:2",
             "dlc_set": "uint:2",
-            "unk1": "uint:2",
+            "sort_effect": "uint:2",
             "sort_japanese": "uint:2",
             "sort_t_chinese": "int:2",
             "sort_s_chinese": "int:2",
             "sort_korean": "int:2",
             "sort_english": "int:2",
             "null1": "null:10",
-            "sort6": "uint:2",
-            "unk8": "uint:2",
-            "null2": "null:2",
+            "unlock_order": "uint:2",
+            "flag": "uint:1",
+            "null2": "null:3",
         },
         "characterAbilities": {  # 34 bytes
             "index": "uint:2",
             "name": "uint:2",
             "effect": "uint:2",
-            "unk1": "uint:2",
+            "sort_effect": "uint:2",
             "sort_japanese": "uint:2",
             "sort_t_chinese": "int:2",
             "sort_s_chinese": "int:2",
@@ -135,7 +135,7 @@ class AbilitySpecList(GundamDataFile):
             "damage_taken": "int:2",
             "condition1": "int:2",
             "condition2": "int:2",
-            "condition3": "int:2",
+            "stack": "int:2",
             "flag": "uint:1",
             "null3": "null:1",
             "movement": "int:1",
@@ -169,6 +169,14 @@ class AbilitySpecList(GundamDataFile):
             "null8": "null:1",
             "range": "int:1",
             "type": "int:2",
+            # 0 = passive
+            # 1 = start of turn
+            #    condition3 = stack?
+            # 4 = morale is high
+            # 5 = conditional on stat
+            # 6 = conditional on ability
+            # 9 =
+            
         },
     }
 
@@ -201,8 +209,29 @@ class AbilitySpecList(GundamDataFile):
 
     @classmethod
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        flags = [
+            "0", "1", "2", "3", "4", "5", "6", "7",
+        ]
         for r in records["effects"]:
-            r.update(cls.bit_smash("flag", r.pop("flag"), list(range(8))))
+            r.update(cls.bit_smash("flag", r.pop("flag"), flags))
+
+        flags = [
+            "ms_usable",
+            "ws_usable",
+            "null",
+            "type1", "type2",
+            # 1 = on damage
+            # 2 =
+            # 3 = start of turn
+            "grant_ability",
+            # condition1 + 1000
+            "rarity1",
+            "rarity2",
+        ]
+        for r in records["unitModifications"]:
+            r.update(cls.bit_smash("", r.pop("flag"), flags))
+            r["rarity"] = r.pop("rarity1", 0) + (r.pop("rarity2", 0) * 2)
+            r["type"] = r.pop("type1", 0) + (r.pop("type2", 0) * 2)
 
         return records
 
@@ -2005,47 +2034,66 @@ class SteamDlcGroupList(GundamDataFile):
 class Stage(GundamDataFile):
     default_filename = "Stage.dat"
     signature = b"\x49\x53\x4D\x54\x2F\x01\x00\x00"
+    
+    definitions = {
+        "areas": {
+        
+        },
+    }
 
     def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
         header = self.read_header(buffer)
         records = {
-            "stage": []
+            "areas": []
         }
 
         # incomplete mess
+        # Null byte at the start?
+        print(self.read_int(buffer.read(1)))
 
-        for i in range(header["counts"]["stage"]):
-            values = [self.read_int(buffer.read(1)) for _ in range(2)]
+        for i in range(header["counts"]["areas"]):
+            value = self.read_int(buffer.read(1))
             size_x = self.read_int(buffer.read(1))
             size_y = self.read_int(buffer.read(1))
             print(size_x, size_y)
             record = {
-                # "__order": i,
-                "values": values,
+                "__order": i,
+                "value": value,
                 "size_x": size_x,
                 "size_y": size_y,
                 "minimap": self.read_string_length(buffer),
                 "background": self.read_string_length(buffer),
+                "unk0": self.read_int(buffer.read(4)),
                 "values2": [
-                    self.read_int(buffer.read(1), signed=True) for _ in range(36)
+                    self.read_int(buffer.read(1), signed=True) for _ in range(20)
                 ],
+                "ffbytes": "bytes:12",  # probably a mask?
                 "map_tiles": [
                     [self.read_int(buffer.read(4)) for _ in range(size_x)]
                     for __ in range(size_y)
                 ],
-                "values3": [self.read_int(buffer.read(1)) for _ in range(59)],
-                "bytething": buffer.read(self.read_int(buffer.read(1))),
-                "null": buffer.read(2),
-                "bytething2": buffer.read(self.read_int(buffer.read(1))),
-                "null2": buffer.read(1),
-                "unk": self.read_int(buffer.read(1)),
-                "bytething3": buffer.read(self.read_int(buffer.read(1))),
-                "null3": buffer.read(1),
-                "values4": [self.read_int(buffer.read(1)) for _ in range(4)],
-                "bytething4": buffer.read(self.read_int(buffer.read(1))),
-                "valuesz": [self.read_int(buffer.read(1)) for _ in range(8)],
+                "unk3": self.read_int(buffer.read(1)),
+                "unk4": [
+                    [self.read_int(buffer.read(1)) for __ in range(11)]
+                    for _ in range(3)
+                ],
+                "unk5": buffer.read(3),
+                "bunk7": buffer.read(self.read_int(buffer.read(1))),
+                "unk8": buffer.read(2),
+
+                "unk9": buffer.read(9),
+                "unk10": buffer.read(3),
+                "bunk11": buffer.read(self.read_int(buffer.read(1))),
+                "unk12": buffer.read(1),
+                "unk13": buffer.read(7),
+    
+    
+                "name": self.read_string_length(buffer), # referred to by script
+
             }
-            records["stage"].append(record)
+            records["areas"].append(record)
+            for k, v in record.items():
+                print(k, v)
 
         return records
 
@@ -2053,3 +2101,143 @@ class Stage(GundamDataFile):
 class StageCondition(GundamDataFile):
     default_filename = "StageConditions.dat"
     signature = b"\x43\x53\x4D\x54\x64\x00\x00\x00"
+    record_count_length = 0
+
+    definitions = {
+        "conditions": {
+            "mission_japanese": "string_len_prefix",
+            "mission_tw_t_chinese": "string_len_prefix",
+            "mission_hk_t_chinese": "string_len_prefix",
+            "mission_s_chinese": "string_len_prefix",
+            "mission_korean": "string_len_prefix",
+            "mission_english": "string_len_prefix",
+            "mission_unk1": "bytes:16",
+
+            "mission2_japanese": "string_len_prefix",
+            "mission2_tw_t_chinese": "string_len_prefix",
+            "mission2_hk_t_chinese": "string_len_prefix",
+            "mission2_s_chinese": "string_len_prefix",
+            "mission2_korean": "string_len_prefix",
+            "mission2_english": "string_len_prefix",
+            "mission2_unk1": "bytes:65",
+
+            "mission3_japanese": "string_len_prefix",
+            "mission3_tw_t_chinese": "string_len_prefix",
+            "mission3_hk_t_chinese": "string_len_prefix",
+            "mission3_s_chinese": "string_len_prefix",
+            "mission3_korean": "string_len_prefix",
+            "mission3_english": "string_len_prefix",
+            "mission3_unk1": "bytes:2",
+
+            "mission3b_japanese": "string_len_prefix",
+            "mission3b_tw_t_chinese": "string_len_prefix",
+            "mission3b_hk_t_chinese": "string_len_prefix",
+            "mission3b_s_chinese": "string_len_prefix",
+            "mission3b_korean": "string_len_prefix",
+            "mission3b_english": "string_len_prefix",
+            "mission3b_unk1": "bytes:17",
+
+            "mission4_japanese": "string_len_prefix",
+            "mission4_tw_t_chinese": "string_len_prefix",
+            "mission4_hk_t_chinese": "string_len_prefix",
+            "mission4_s_chinese": "string_len_prefix",
+            "mission4_korean": "string_len_prefix",
+            "mission4_english": "string_len_prefix",
+            "mission4_unk1": "bytes:59",
+
+            "mission5_japanese": "string_len_prefix",
+            "mission5_tw_t_chinese": "string_len_prefix",
+            "mission5_hk_t_chinese": "string_len_prefix",
+            "mission5_s_chinese": "string_len_prefix",
+            "mission5_korean": "string_len_prefix",
+            "mission5_english": "string_len_prefix",
+            "mission5_unk1": "bytes:36",
+    
+            "mission6_japanese": "string_len_prefix",
+            "mission6_tw_t_chinese": "string_len_prefix",
+            "mission6_hk_t_chinese": "string_len_prefix",
+            "mission6_s_chinese": "string_len_prefix",
+            "mission6_korean": "string_len_prefix",
+            "mission6_english": "string_len_prefix",
+            "mission6_unk1": "bytes:16",
+    
+            "mission7_japanese": "string_len_prefix",
+            "mission7_tw_t_chinese": "string_len_prefix",
+            "mission7_hk_t_chinese": "string_len_prefix",
+            "mission7_s_chinese": "string_len_prefix",
+            "mission7_korean": "string_len_prefix",
+            "mission7_english": "string_len_prefix",
+            "mission7_unk1": "bytes:7",
+    
+            "mission8_japanese": "string_len_prefix",
+            "mission8_tw_t_chinese": "string_len_prefix",
+            "mission8_hk_t_chinese": "string_len_prefix",
+            "mission8_s_chinese": "string_len_prefix",
+            "mission8_korean": "string_len_prefix",
+            "mission8_english": "string_len_prefix",
+            "mission8_unk1": "bytes:16",
+    
+            "mission9_japanese": "string_len_prefix",
+            "mission9_tw_t_chinese": "string_len_prefix",
+            "mission9_hk_t_chinese": "string_len_prefix",
+            "mission9_s_chinese": "string_len_prefix",
+            "mission9_korean": "string_len_prefix",
+            "mission9_english": "string_len_prefix",
+            "mission9_unk1": "bytes:65",
+    
+            "mission10_japanese": "string_len_prefix",
+            "mission10_tw_t_chinese": "string_len_prefix",
+            "mission10_hk_t_chinese": "string_len_prefix",
+            "mission10_s_chinese": "string_len_prefix",
+            "mission10_korean": "string_len_prefix",
+            "mission10_english": "string_len_prefix",
+            "mission10_unk1": "bytes:17",
+    
+            "mission11_japanese": "string_len_prefix",
+            "mission11_tw_t_chinese": "string_len_prefix",
+            "mission11_hk_t_chinese": "string_len_prefix",
+            "mission11_s_chinese": "string_len_prefix",
+            "mission11_korean": "string_len_prefix",
+            "mission11_english": "string_len_prefix",
+            "mission11_unk1": "bytes:58",
+    
+            "mission12_japanese": "string_len_prefix",
+            "mission12_tw_t_chinese": "string_len_prefix",
+            "mission12_hk_t_chinese": "string_len_prefix",
+            "mission12_s_chinese": "string_len_prefix",
+            "mission12_korean": "string_len_prefix",
+            "mission12_english": "string_len_prefix",
+            "mission12_unk1": "bytes:16",
+    
+            "mission13_japanese": "string_len_prefix",
+            "mission13_tw_t_chinese": "string_len_prefix",
+            "mission13_hk_t_chinese": "string_len_prefix",
+            "mission13_s_chinese": "string_len_prefix",
+            "mission13_korean": "string_len_prefix",
+            "mission13_english": "string_len_prefix",
+            "mission13_unk1": "bytes:7",
+
+            "mission14_japanese": "string_len_prefix",
+            "mission14_tw_t_chinese": "string_len_prefix",
+            "mission14_hk_t_chinese": "string_len_prefix",
+            "mission14_s_chinese": "string_len_prefix",
+            "mission14_korean": "string_len_prefix",
+            "mission14_english": "string_len_prefix",
+            "mission14_unk1": "bytes:16",
+    
+            "mission15_japanese": "string_len_prefix",
+            "mission15_tw_t_chinese": "string_len_prefix",
+            "mission15_hk_t_chinese": "string_len_prefix",
+            "mission15_s_chinese": "string_len_prefix",
+            "mission15_korean": "string_len_prefix",
+            "mission15_english": "string_len_prefix",
+            "mission15_unk1": "bytes:5",
+        }
+    }
+
+    @classmethod
+    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+        header = super().read_header(buffer)
+        header["counts"]["conditions"] = 1
+        
+        return header
