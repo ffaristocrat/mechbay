@@ -364,237 +364,6 @@ class CharacterSpecList(Container):
         return records
 
 
-class AbilitySpecList(Container):
-    file_list = [
-        {"filename": "AbilitySpecList.cdb", "data_path": "resident"},
-        {
-            "filename": "MiscData.pkd",
-            "data_path": "resident",
-            "archive": [
-                "DatabaseCaluclation.cdb",
-                "SeriesList.cdb",
-                "GroupSendingMissionList.cdb",
-                "TutorialList.cdb",
-            ],
-        },
-    ]
-
-    parse_list = [
-        {
-            "filename": "AbilitySpecList.cdb",
-            "table": "AbilitySpecList",
-            "parser_class": parsers.AbilitySpecList,
-        },
-        # {
-        #     "filename": "DatabaseCaluclation.cdb",
-        #     "table": "DatabaseCalculation",
-        #     "parser_class": parsers.DatabaseCalculation,
-        # },
-        {
-            "filename": "SeriesList.cdb",
-            "table": "SeriesList",
-            "parser_class": parsers.SeriesList,
-        },
-        {
-            "filename": "GroupSendingMissionList.cdb",
-            "table": "GroupSendingMissionList",
-            "parser_class": parsers.GroupSendingMissionList,
-        },
-        {
-            "filename": "TutorialList.cdb",
-            "table": "TutorialList",
-            "parser_class": parsers.TutorialList,
-        },
-    ]
-
-    localisations = [
-        # Filename, tablename, data path
-        {
-            "filename": "AbilitySpecList.tbl",
-            "table": "AbilitySpecList",
-            "data_path": "language",
-            "parser_class": Localisation,
-        },
-        {
-            "filename": "MiscData.tbl",
-            "table": "MiscData",
-            "data_path": "language",
-            "parser_class": Localisation,
-        },
-    ]
-
-    string_maps = [
-        {
-            "table": "AbilitySpecList.unitAbilities",
-            "field": "name",
-            "strings": "AbilitySpecList",
-        },
-        {
-            "table": "AbilitySpecList.unitModifications",
-            "field": "name",
-            "strings": "AbilitySpecList",
-        },
-        {
-            "table": "AbilitySpecList.characterAbilities",
-            "field": "name",
-            "strings": "AbilitySpecList",
-        },
-        {
-            "table": "AbilitySpecList.characterSkills",
-            "field": "name",
-            "strings": "AbilitySpecList",
-        },
-        {
-            "table": "AbilitySpecList.effects",
-            "field": "desc",
-            "strings": "AbilitySpecList",
-        },
-        {"table": "SeriesList.series", "field": "name", "strings": "MiscData"},
-        {
-            "table": "GroupSendingMissionList.missions",
-            "field": "name",
-            "strings": "MiscData",
-        },
-        {
-            "table": "GroupSendingMissionList.missions",
-            "field": "description",
-            "strings": "MiscData",
-        },
-    ]
-
-    prefixes = [
-        "unit_",
-        "power_",
-        "char_",
-        "consumption_",
-        "adjust_",
-        "nullify_",
-        "damage_",
-    ]
-
-    def pre_processing(self, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
-        # return zeroes
-        for r in records["effects"]:
-            for k in list(r.keys()):
-                if r.get(k) is None:
-                    r[k] = 0
-
-        # Values between -1000 and 1000 are percents
-        # everything else is an absolute value increased by 1000
-        for r in records["effects"]:
-            for k, v in r.items():
-                for p in self.prefixes:
-                    if k.startswith(p):
-                        if v > 1:
-                            r[k] = v + 1000
-                        elif v < -1:
-                            r[k] = v - 1000
-                        else:
-                            r[k] = int(v * 100)
-
-        return records
-
-    def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
-        localisations = super().index_strings(data)
-
-        for record in data["GroupSendingMissionList.missions"]:
-            for r in record["recommended"]:
-                index = len(localisations["MiscData"])
-                localisations["MiscData"][index] = r["name"]
-                r["name"] = index
-
-        return localisations
-
-    def post_processing(
-        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
-    ) -> Dict[str, List[Dict]]:
-        for record in records["GroupSendingMissionList.missions"]:
-            for recommended in record["recommended"]:
-                recommended["name"] = localisations["MiscData"][recommended["name"]]
-
-        effects = records["AbilitySpecList.effects"]
-        # Values between -1000 and 1000 are percents
-        # everything else is an absolute value increased by 1000
-        for r in effects:
-            for k, v in r.items():
-                for p in self.prefixes:
-                    if k.startswith(p):
-                        if v >= 1000:
-                            r[k] = v - 1000
-                        elif v <= -1000:
-                            r[k] = v + 1000
-                        else:
-                            r[k] = v / 100
-
-        # remove zeroes
-        for r in effects:
-            for k in list(r.keys()):
-                if r[k] == 0:
-                    r.pop(k)
-
-        tables = [
-            "AbilitySpecList.unitAbilities",
-            "AbilitySpecList.unitModifications",
-            "AbilitySpecList.characterAbilities",
-            "AbilitySpecList.characterSkills",
-        ]
-        for table in tables:
-            for r in records[table]:
-                r["effect"] = effects[r["effect"]]
-
-        table = "GroupSendingMissionList"
-        sub_tables = [
-            (
-                "characterAbilities",
-                "AbilitySpecList.characterAbilities",
-                "characterAbility",
-            ),
-            (
-                "unitModifications",
-                "AbilitySpecList.unitModifications",
-                "unitModification",
-            ),
-            # ("units")
-        ]
-
-        rewards = []
-        print(f"Creating {table}.rewards")
-        for record in records[f"{table}.missions"]:
-            for sub_table, index_table, index in sub_tables:
-                for reward in record[sub_table]:
-                    matched = self.map_to_index(
-                        reward[index], records[index_table], "index"
-                    )
-                    rewards.append(
-                        {
-                            "dispatch_id": record["dispatch_id"],
-                            "name": record["name"]["english"],
-                            "threshold": reward["threshold"],
-                            "quantity": reward["quantity"],
-                            "type": index,
-                            "item": matched["name"]["english"],
-                        }
-                    )
-            if record["cooldowns"] > 0:
-                rewards.append(
-                    {
-                        "dispatch_id": record["dispatch_id"],
-                        "name": record["name"]["english"],
-                        "threshold": record["cooldown_threshold"],
-                        "quantity": record["cooldowns"],
-                        "type": "cooldown",
-                        "item": "Dispatch Cooldown",
-                    }
-                )
-        rewards = sorted(
-            rewards,
-            key=lambda x: (x["dispatch_id"], x["threshold"], x["type"], x["quantity"]),
-        )
-        records[f"{table}.rewards"] = rewards
-
-        return records
-
-
 class MachineSpecList(Container):
     file_list = [
         {
@@ -610,7 +379,19 @@ class MachineSpecList(Container):
                 "MachineDevelopmentList.cdb",
                 "MachineDesignList.cdb",
             ],
-        }
+        },
+        {"filename": "AbilitySpecList.cdb", "data_path": "resident"},
+        {
+            "filename": "MiscData.pkd",
+            "data_path": "resident",
+            "archive": [
+                "DatabaseCaluclation.cdb",
+                "SeriesList.cdb",
+                "GroupSendingMissionList.cdb",
+                "TutorialList.cdb",
+            ],
+        },
+
     ]
 
     parse_list = [
@@ -654,6 +435,31 @@ class MachineSpecList(Container):
             "table": "MachineDesignList",
             "parser_class": parsers.MachineDesignList,
         },
+        {
+            "filename": "AbilitySpecList.cdb",
+            "table": "AbilitySpecList",
+            "parser_class": parsers.AbilitySpecList,
+        },
+        # {
+        #     "filename": "DatabaseCaluclation.cdb",
+        #     "table": "DatabaseCalculation",
+        #     "parser_class": parsers.DatabaseCalculation,
+        # },
+        {
+            "filename": "SeriesList.cdb",
+            "table": "SeriesList",
+            "parser_class": parsers.SeriesList,
+        },
+        {
+            "filename": "GroupSendingMissionList.cdb",
+            "table": "GroupSendingMissionList",
+            "parser_class": parsers.GroupSendingMissionList,
+        },
+        {
+            "filename": "TutorialList.cdb",
+            "table": "TutorialList",
+            "parser_class": parsers.TutorialList,
+        },
     ]
 
     localisations = [
@@ -663,7 +469,20 @@ class MachineSpecList(Container):
             "table": "MachineSpecList",
             "data_path": "language",
             "parser_class": Localisation,
-        }
+        },
+        {
+            "filename": "AbilitySpecList.tbl",
+            "table": "AbilitySpecList",
+            "data_path": "language",
+            "parser_class": Localisation,
+        },
+        {
+            "filename": "MiscData.tbl",
+            "table": "MiscData",
+            "data_path": "language",
+            "parser_class": Localisation,
+        },
+
     ]
 
     string_maps = [
@@ -703,6 +522,43 @@ class MachineSpecList(Container):
             "table": "WeaponSpecList.effects",
             "field": "desc",
             "strings": "MachineSpecList",
+        },
+    
+        {
+            "table": "AbilitySpecList.unitAbilities",
+            "field": "name",
+            "strings": "AbilitySpecList",
+        },
+        {
+            "table": "AbilitySpecList.unitModifications",
+            "field": "name",
+            "strings": "AbilitySpecList",
+        },
+        {
+            "table": "AbilitySpecList.characterAbilities",
+            "field": "name",
+            "strings": "AbilitySpecList",
+        },
+        {
+            "table": "AbilitySpecList.characterSkills",
+            "field": "name",
+            "strings": "AbilitySpecList",
+        },
+        {
+            "table": "AbilitySpecList.effects",
+            "field": "desc",
+            "strings": "AbilitySpecList",
+        },
+        {"table": "SeriesList.series", "field": "name", "strings": "MiscData"},
+        {
+            "table": "GroupSendingMissionList.missions",
+            "field": "name",
+            "strings": "MiscData",
+        },
+        {
+            "table": "GroupSendingMissionList.missions",
+            "field": "description",
+            "strings": "MiscData",
         },
     ]
 
@@ -789,6 +645,50 @@ class MachineSpecList(Container):
         },
     ]
 
+    prefixes = [
+        "unit_",
+        "power_",
+        "char_",
+        "consumption_",
+        "adjust_",
+        "nullify_",
+        "damage_",
+        "bonus_",
+    ]
+
+    def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
+        localisations = super().index_strings(data)
+
+        for record in data["GroupSendingMissionList.missions"]:
+            for r in record["recommended"]:
+                index = len(localisations["MiscData"])
+                localisations["MiscData"][index] = r["name"]
+                r["name"] = index
+
+        return localisations
+
+    def pre_processing(self, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        # return zeroes
+        for r in records["effects"]:
+            for k in list(r.keys()):
+                if r.get(k) is None:
+                    r[k] = 0
+
+        # Values between -1000 and 1000 are percents
+        # everything else is an absolute value increased by 1000
+        for r in records["effects"]:
+            for k, v in r.items():
+                for p in self.prefixes:
+                    if k.startswith(p):
+                        if v > 1:
+                            r[k] = int(v + 1000)
+                        elif v < -1:
+                            r[k] = int(v - 1000)
+                        else:
+                            r[k] = int(v * 100)
+
+        return records
+
     def post_processing(
         self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
     ) -> Dict[str, List[Dict]]:
@@ -811,6 +711,98 @@ class MachineSpecList(Container):
             records["Machines.lookup"].extend(
                 [{"guid": r["guid"], "name": r["name"]["english"]} for r in records[t]]
             )
+
+        for record in records["GroupSendingMissionList.missions"]:
+            for recommended in record["recommended"]:
+                recommended["name"] = localisations["MiscData"][recommended["name"]]
+
+        effects = records["AbilitySpecList.effects"]
+        # Values between -1000 and 1000 are percents
+        # everything else is an absolute value increased by 1000
+        for r in effects:
+            for k, v in r.items():
+                for p in self.prefixes:
+                    if k.startswith(p):
+                        if v >= 1000:
+                            r[k] = int(v - 1000)
+                        elif v <= -1000:
+                            r[k] = int(v + 1000)
+                        else:
+                            r[k] = int(v / 100)
+
+        # remove zeroes
+        for r in effects:
+            for k in list(r.keys()):
+                if r[k] == 0:
+                    r.pop(k)
+
+        tables = [
+            "AbilitySpecList.unitAbilities",
+            "AbilitySpecList.unitModifications",
+            "AbilitySpecList.characterAbilities",
+            "AbilitySpecList.characterSkills",
+        ]
+        for table in tables:
+            for r in records[table]:
+                r["effect"] = effects[r["effect"]]
+
+        table = "GroupSendingMissionList"
+        sub_tables = [
+            (
+                "characterAbilities",
+                "AbilitySpecList.characterAbilities",
+                "characterAbility",
+                "index",
+            ),
+            (
+                "unitModifications",
+                "AbilitySpecList.unitModifications",
+                "unitModification",
+                "index",
+            ),
+            (
+                "units",
+                "MachineSpecList.units",
+                "unit",
+                "guid",
+            ),
+        ]
+
+        rewards = []
+        print(f"Creating {table}.rewards")
+        for record in records[f"{table}.missions"]:
+            for sub_table, index_table, index, index_field in sub_tables:
+                for reward in record[sub_table]:
+                    matched = self.map_to_index(
+                        reward[index], records[index_table], index_field
+                    )
+                    rewards.append(
+                        {
+                            "dispatch_id": record["dispatch_id"],
+                            "name": record["name"]["english"],
+                            "threshold": reward["threshold"],
+                            "quantity": reward["quantity"],
+                            "type": index,
+                            "item": matched["name"]["english"],
+                        }
+                    )
+
+            if record["cooldowns"] > 0:
+                rewards.append(
+                    {
+                        "dispatch_id": record["dispatch_id"],
+                        "name": record["name"]["english"],
+                        "threshold": record["cooldown_threshold"],
+                        "quantity": record["cooldowns"],
+                        "type": "cooldown",
+                        "item": "Dispatch Cooldown",
+                    }
+                )
+        rewards = sorted(
+            rewards,
+            key=lambda x: (x["dispatch_id"], x["threshold"], x["type"], x["quantity"]),
+        )
+        records[f"{table}.rewards"] = rewards
 
         return records
 
