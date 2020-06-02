@@ -22,7 +22,7 @@ CHARACTER_STATS = [
 class AbilitySpecList(GundamDataFile):
     data_path = "resident"
     default_filename = "AbilitySpecList.cdb"
-    signature = b"\x4C\x4C\x42\x41\x01\x00\x0C\x01"
+    signature = b"\x4C\x4C\x42\x41\x00\x00\x0D\x01"
     constants = {"fixed99": 99, "fixed1": 1}
 
     definitions = {
@@ -30,13 +30,18 @@ class AbilitySpecList(GundamDataFile):
             "index": "uint:2",
             "name": "uint:2",
             "effect": "uint:2",
-            "null1": "null:2",
+            "unk1": "uint:2",
+            "unk2": "pointer",
+            "null": "null:4",
         },
-        "unitModifications": {  # 40 bytes
+        "unitModifications": {  # 40 bytes now 60
             "index": "uint:2",
             "name": "int:2",
-            "effect": "uint:2",
-            "fixed1": "uint:2",
+            "effect": "uint:4",
+            "unk1": "pointer",
+            "unk2": "uint:4",
+            "unk3": "pointer",
+            "unk4": "pointer",
             "cost": "uint:2",
             "dlc_set": "uint:2",
             "sort_effect": "uint:2",
@@ -47,8 +52,9 @@ class AbilitySpecList(GundamDataFile):
             "sort_english": "int:2",
             "null1": "null:10",
             "unlock_order": "uint:2",
-            "flag": "uint:1",
-            "null2": "null:3",
+            "flag": "uint:2",
+            "unk5": "uint:2",
+            "unk6": "uint:4",
         },
         "characterAbilities": {  # 34 bytes
             "index": "uint:2",
@@ -136,7 +142,7 @@ class AbilitySpecList(GundamDataFile):
             "condition1": "int:2",
             "condition2": "int:2",
             "stack": "int:2",
-            "flag": "uint:1",
+            "filter": "uint:1",
             "null3": "null:1",
             "movement": "int:1",
             "terrain_space": "int:1",
@@ -197,7 +203,7 @@ class AbilitySpecList(GundamDataFile):
             },
         }
 
-        # seems to be the same value as unit mod count?
+        # seems to be the same value as unit mod count
         cls.read_int(buffer.read(4))
 
         tables = list(cls.definitions.keys())
@@ -209,11 +215,11 @@ class AbilitySpecList(GundamDataFile):
 
     @classmethod
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
-        flags = [
-            "0", "1", "2", "3", "4", "5", "6", "7",
+        filters = [
+            "pilot", "warship", "unit", "weapon", "recovery", "accuracy", "reduce", "other",
         ]
         for r in records["effects"]:
-            r.update(cls.bit_smash("flag", r.pop("flag"), flags))
+            r.update(cls.bit_smash("filter", r.pop("filter"), filters))
 
         flags = [
             "ms_usable",
@@ -374,7 +380,7 @@ class CharacterGrowthList(GundamDataFile):
     default_filename = "CharacterGrowthList.cdb"
     data_path = "resident"
     package = "CharacterSpecList.pkd"
-    signature = b"\x52\x47\x48\x43\x00\x00\x00\x01"
+    signature = b"\x52\x47\x48\x43\x00\x00\x02\x01"
     level_ups = 98  # This is blowing up to 998 for the expansion
     constants = {"fixed332": 332}
     definitions = {
@@ -1072,7 +1078,7 @@ class MachineGrowthList(GundamDataFile):
     default_filename = "MachineGrowthList.cdb"
     data_path = "resident"
     package = "MachineSpecList.pkd"
-    signature = b"\x00\x00\x01\x01\x52\x47\x43\x4D"
+    signature = b"\x00\x00\x02\x01\x52\x47\x43\x4D"
     definitions = {
         "table1": {
             "unk1": "uint:2",
@@ -1476,10 +1482,10 @@ class QuestList(GundamDataFile):
             "name": "uint:2",
             "desc2": "uint:2",
             "desc": "uint:2",
-            "unk1": "uint:2",
-            "unk2": "uint:1",  # TODO: Usually 1, sometimes 2
+            "pre_req_quest": "uint:2",
+            "hidden": "uint:1",  # TODO: 1 if visible from start, 2 if hidden
             "cooldowns": "uint:1",
-            "unk3": "uint:2",
+            "null2": "null:2",
         }
     }
 
@@ -1587,7 +1593,7 @@ class SeriesList(GundamDataFile):
     default_filename = "SeriesList.cdb"
     data_path = "resident"
     package = "MiscData.pkd"
-    signature = b"\x4C\x52\x45\x53\x01\x00\x02\x01"
+    signature = b"\x4C\x52\x45\x53\x02\x00\x02\x01"
     # TODO: identify unknowns
     definitions = {
         "series": {
@@ -1629,9 +1635,12 @@ class StageList(GundamDataFile):
     default_filename = "StageList.cdb"
     data_path = "resident"
     package = "StageList.pkd"
-    signature = b"\x4C\x47\x54\x53\x00\x00\x0B\x01"
+    signature = b"\x4C\x47\x54\x53\x00\x00\x0C\x01"
     constants = {
-        "fixed12830": 12830,
+        "fixed100a": 100,
+        "fixed100b": 100,
+        "fixed30": 30,
+        "fixed50": 50,
         "fixed70": 70,
     }
 
@@ -1646,9 +1655,10 @@ class StageList(GundamDataFile):
             "capital4": "uint:4",
             "capital5": "uint:4",
             "capital6": "uint:4",
+            "capital7": "uint:4",
             "units_available_count": "uint:4",
             "units_available_pointer": "pointer",
-            "null1": "null:2",
+            "dlc_set": "uint:2",
             "name": "uint:2",
             "bgm": "uint:2",
             "series2": "uint:2",
@@ -1666,11 +1676,14 @@ class StageList(GundamDataFile):
             "unk12": "uint:2",
             "unk13": "uint:2",
             "null2": "null:16",
-            "unk21": "uint:2",
-            "fixed12830": "uint:2",
+            "unk14": "uint:2",
+            "fixed100a": "uint:2",
+            "fixed30": "uint:1",
+            "fixed50": "uint:1",
             "fixed70": "uint:1",
+            "fixed100b": "uint:1",
             "terrain": "uint:1",
-            "series_end": "uint:4",
+            "series_end": "uint:1",
         }
     }
 
