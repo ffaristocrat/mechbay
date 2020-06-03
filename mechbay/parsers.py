@@ -143,9 +143,9 @@ class AbilitySpecList(GundamDataFile):
             "received_physical_melee": "int:2",
             "received_beam_ranged": "int:2",
             "received_beam_melee": "int:2",
-            "unk1": "uint:2",
-            "unk2": "uint:2",
-            "unk3": "uint:2",
+            "received_special_ranged": "int:2",
+            "received_special_melee": "int:2",
+            "received_map": "int:2",
             "nullify_physical_ranged": "int:2",
             "nullify_physical_melee": "int:2",
             "nullify_beam_ranged": "int:2",
@@ -197,19 +197,26 @@ class AbilitySpecList(GundamDataFile):
             # 5 = conditional on stat
             # 6 = conditional on ability
             # 9 =
-            
         },
     }
 
     ability_filters = [
-        "pilot", "warship", "unit", "weapon", "recovery", "accuracy", "reduce", "other",
+        "pilot",
+        "warship",
+        "unit",
+        "weapon",
+        "recovery",
+        "accuracy",
+        "reduce",
+        "other",
     ]
 
     mod_flags = [
         "ms_usable",
         "ws_usable",
         "flag_unk",
-        "type1", "type2",
+        "type1",
+        "type2",
         # 1 = on damage
         # 2 =
         # 3 = start of turn
@@ -389,15 +396,9 @@ class CharacterConversionList(GundamDataFile):
     default_filename = "CharacterConversionList.cdb"
     data_path = "resident"
     signature = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
-    constants = {
-        "fixed1": 1,
-    }
+    constants = {"fixed1": 1}
     definitions = {
-        "characters": {
-            "character": "guid",
-            "conversion": "guid",
-            "fixed1": "uint:4",
-        }
+        "characters": {"character": "guid", "conversion": "guid", "fixed1": "uint:4"}
     }
 
 
@@ -1979,7 +1980,7 @@ class WeaponSpecList(GundamDataFile):
 
     @classmethod
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
-        tf = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9",]
+        tf = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
         for table, table_records in records.items():
             if table not in ["weapons", "mapWeapons"]:
                 continue
@@ -2075,18 +2076,12 @@ class SteamDlcGroupList(GundamDataFile):
 class Stage(GundamDataFile):
     default_filename = "Stage.dat"
     signature = b"\x49\x53\x4D\x54\x2F\x01\x00\x00"
-    
-    definitions = {
-        "areas": {
-        
-        },
-    }
+
+    definitions = {"areas": {}}
 
     def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
         header = self.read_header(buffer)
-        records = {
-            "areas": []
-        }
+        records = {"areas": []}
 
         # incomplete mess
         # Null byte at the start?
@@ -2121,16 +2116,12 @@ class Stage(GundamDataFile):
                 "unk5": buffer.read(3),
                 "bunk7": buffer.read(self.read_int(buffer.read(1))),
                 "unk8": buffer.read(2),
-
                 "unk9": buffer.read(9),
                 "unk10": buffer.read(3),
                 "bunk11": buffer.read(self.read_int(buffer.read(1))),
                 "unk12": buffer.read(1),
                 "unk13": buffer.read(7),
-    
-    
-                "name": self.read_string_length(buffer), # referred to by script
-
+                "name": self.read_string_length(buffer),  # referred to by script
             }
             records["areas"].append(record)
             for k, v in record.items():
@@ -2153,7 +2144,6 @@ class StageCondition(GundamDataFile):
             "mission_korean": "string_len_prefix",
             "mission_english": "string_len_prefix",
             "mission_unk1": "bytes:16",
-
             "mission2_japanese": "string_len_prefix",
             "mission2_tw_t_chinese": "string_len_prefix",
             "mission2_hk_t_chinese": "string_len_prefix",
@@ -2161,7 +2151,6 @@ class StageCondition(GundamDataFile):
             "mission2_korean": "string_len_prefix",
             "mission2_english": "string_len_prefix",
             "mission2_unk1": "bytes:65",
-
             "mission3_japanese": "string_len_prefix",
             "mission3_tw_t_chinese": "string_len_prefix",
             "mission3_hk_t_chinese": "string_len_prefix",
@@ -2169,7 +2158,6 @@ class StageCondition(GundamDataFile):
             "mission3_korean": "string_len_prefix",
             "mission3_english": "string_len_prefix",
             "mission3_unk1": "bytes:2",
-
             "mission3b_japanese": "string_len_prefix",
             "mission3b_tw_t_chinese": "string_len_prefix",
             "mission3b_hk_t_chinese": "string_len_prefix",
@@ -2177,7 +2165,6 @@ class StageCondition(GundamDataFile):
             "mission3b_korean": "string_len_prefix",
             "mission3b_english": "string_len_prefix",
             "mission3b_unk1": "bytes:17",
-
             "mission4_japanese": "string_len_prefix",
             "mission4_tw_t_chinese": "string_len_prefix",
             "mission4_hk_t_chinese": "string_len_prefix",
@@ -2185,7 +2172,6 @@ class StageCondition(GundamDataFile):
             "mission4_korean": "string_len_prefix",
             "mission4_english": "string_len_prefix",
             "mission4_unk1": "bytes:59",
-
             "mission5_japanese": "string_len_prefix",
             "mission5_tw_t_chinese": "string_len_prefix",
             "mission5_hk_t_chinese": "string_len_prefix",
@@ -2193,7 +2179,6 @@ class StageCondition(GundamDataFile):
             "mission5_korean": "string_len_prefix",
             "mission5_english": "string_len_prefix",
             "mission5_unk1": "bytes:36",
-    
             "mission6_japanese": "string_len_prefix",
             "mission6_tw_t_chinese": "string_len_prefix",
             "mission6_hk_t_chinese": "string_len_prefix",
@@ -2201,7 +2186,6 @@ class StageCondition(GundamDataFile):
             "mission6_korean": "string_len_prefix",
             "mission6_english": "string_len_prefix",
             "mission6_unk1": "bytes:16",
-    
             "mission7_japanese": "string_len_prefix",
             "mission7_tw_t_chinese": "string_len_prefix",
             "mission7_hk_t_chinese": "string_len_prefix",
@@ -2209,7 +2193,6 @@ class StageCondition(GundamDataFile):
             "mission7_korean": "string_len_prefix",
             "mission7_english": "string_len_prefix",
             "mission7_unk1": "bytes:7",
-    
             "mission8_japanese": "string_len_prefix",
             "mission8_tw_t_chinese": "string_len_prefix",
             "mission8_hk_t_chinese": "string_len_prefix",
@@ -2217,7 +2200,6 @@ class StageCondition(GundamDataFile):
             "mission8_korean": "string_len_prefix",
             "mission8_english": "string_len_prefix",
             "mission8_unk1": "bytes:16",
-    
             "mission9_japanese": "string_len_prefix",
             "mission9_tw_t_chinese": "string_len_prefix",
             "mission9_hk_t_chinese": "string_len_prefix",
@@ -2225,7 +2207,6 @@ class StageCondition(GundamDataFile):
             "mission9_korean": "string_len_prefix",
             "mission9_english": "string_len_prefix",
             "mission9_unk1": "bytes:65",
-    
             "mission10_japanese": "string_len_prefix",
             "mission10_tw_t_chinese": "string_len_prefix",
             "mission10_hk_t_chinese": "string_len_prefix",
@@ -2233,7 +2214,6 @@ class StageCondition(GundamDataFile):
             "mission10_korean": "string_len_prefix",
             "mission10_english": "string_len_prefix",
             "mission10_unk1": "bytes:17",
-    
             "mission11_japanese": "string_len_prefix",
             "mission11_tw_t_chinese": "string_len_prefix",
             "mission11_hk_t_chinese": "string_len_prefix",
@@ -2241,7 +2221,6 @@ class StageCondition(GundamDataFile):
             "mission11_korean": "string_len_prefix",
             "mission11_english": "string_len_prefix",
             "mission11_unk1": "bytes:58",
-    
             "mission12_japanese": "string_len_prefix",
             "mission12_tw_t_chinese": "string_len_prefix",
             "mission12_hk_t_chinese": "string_len_prefix",
@@ -2249,7 +2228,6 @@ class StageCondition(GundamDataFile):
             "mission12_korean": "string_len_prefix",
             "mission12_english": "string_len_prefix",
             "mission12_unk1": "bytes:16",
-    
             "mission13_japanese": "string_len_prefix",
             "mission13_tw_t_chinese": "string_len_prefix",
             "mission13_hk_t_chinese": "string_len_prefix",
@@ -2257,7 +2235,6 @@ class StageCondition(GundamDataFile):
             "mission13_korean": "string_len_prefix",
             "mission13_english": "string_len_prefix",
             "mission13_unk1": "bytes:7",
-
             "mission14_japanese": "string_len_prefix",
             "mission14_tw_t_chinese": "string_len_prefix",
             "mission14_hk_t_chinese": "string_len_prefix",
@@ -2265,7 +2242,6 @@ class StageCondition(GundamDataFile):
             "mission14_korean": "string_len_prefix",
             "mission14_english": "string_len_prefix",
             "mission14_unk1": "bytes:16",
-    
             "mission15_japanese": "string_len_prefix",
             "mission15_tw_t_chinese": "string_len_prefix",
             "mission15_hk_t_chinese": "string_len_prefix",
@@ -2280,5 +2256,5 @@ class StageCondition(GundamDataFile):
     def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
         header = super().read_header(buffer)
         header["counts"]["conditions"] = 1
-        
+
         return header
