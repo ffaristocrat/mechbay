@@ -23,24 +23,28 @@ class AbilitySpecList(GundamDataFile):
     data_path = "resident"
     default_filename = "AbilitySpecList.cdb"
     signature = b"\x4C\x4C\x42\x41\x00\x00\x0D\x01"
-    constants = {"fixed99": 99, "fixed1": 1}
+    constants = {
+        # "fixed99": 99,
+        "fixed1": 1
+    }
 
     definitions = {
-        "unitAbilities": {  # 8 bytes
+        "unitAbilities": {  # 8 bytes now 16
             "index": "uint:2",
             "name": "uint:2",
             "effect": "uint:2",
-            "unk1": "uint:2",
-            "unk2": "pointer",
+            # "unk1": "uint:2",
+            "unk2": "2cfpointer:list:uint:2",
             "null": "null:4",
         },
         "unitModifications": {  # 40 bytes now 60
             "index": "uint:2",
             "name": "int:2",
-            "effect": "uint:4",
-            "unk1": "pointer",
-            "unk2": "uint:4",
-            "unk3": "pointer",
+            "effect": "uint:2",
+            "unk1": "2cfpointer:list:uint:2",
+            # "unk2": "uint:4",
+            # "unk3": "pointer",
+            "unk3": "cfpointer:list:bytes:6",
             "unk4": "pointer",
             "cost": "uint:2",
             "dlc_set": "uint:2",
@@ -52,27 +56,36 @@ class AbilitySpecList(GundamDataFile):
             "sort_english": "int:2",
             "null1": "null:10",
             "unlock_order": "uint:2",
-            "flag": "uint:2",
             "unk5": "uint:2",
-            "unk6": "uint:4",
+            "unk6": "uint:2",
+            "flag": "uint:2",
+            "unk7": "uint:2",
         },
-        "characterAbilities": {  # 34 bytes
+        "characterAbilities": {  # 34 bytes now 40
             "index": "uint:2",
             "name": "uint:2",
             "effect": "uint:2",
+            "unk1": "uint:2",
+            "unk2": "uint:1",
+            "unk3": "uint:1",
+            "unk4": "uint:2",
             "sort_effect": "uint:2",
             "sort_japanese": "uint:2",
             "sort_t_chinese": "int:2",
             "sort_s_chinese": "int:2",
             "sort_korean": "int:2",
             "sort_english": "int:2",
-            "null": "null:10",
+            "unk5": "uint:2",
+            "unk6": "uint:2",
+            "unk7": "uint:2",
+            "unk8": "uint:2",
+            "unk9": "uint:2",
             "cost": "uint:2",
             "rarity": "uint:1",
-            "fixed99": "uint:1",
-            "unk7": "uint:2",
+            "unk10": "uint:1",
+            "unk11": "uint:2",
         },
-        "characterSkills": {
+        "characterSkills": {  # 14 bytes still
             "index": "uint:2",
             "name": "uint:2",
             "effect": "uint:2",
@@ -125,12 +138,14 @@ class AbilitySpecList(GundamDataFile):
             "adjust_en": "int:2",
             "bonus_xp": "int:2",
             "bonus_score": "int:2",
-            "high_price": "int:2",
+            "sell_price": "int:2",
             "received_physical_ranged": "int:2",
             "received_physical_melee": "int:2",
             "received_beam_ranged": "int:2",
             "received_beam_melee": "int:2",
-            "null1": "null:6",
+            "unk1": "uint:2",
+            "unk2": "uint:2",
+            "unk3": "uint:2",
             "nullify_physical_ranged": "int:2",
             "nullify_physical_melee": "int:2",
             "nullify_beam_ranged": "int:2",
@@ -141,7 +156,7 @@ class AbilitySpecList(GundamDataFile):
             "damage_taken": "int:2",
             "condition1": "int:2",
             "condition2": "int:2",
-            "stack": "int:2",
+            "condition3": "int:2",
             "filter": "uint:1",
             "null3": "null:1",
             "movement": "int:1",
@@ -186,6 +201,24 @@ class AbilitySpecList(GundamDataFile):
         },
     }
 
+    ability_filters = [
+        "pilot", "warship", "unit", "weapon", "recovery", "accuracy", "reduce", "other",
+    ]
+
+    mod_flags = [
+        "ms_usable",
+        "ws_usable",
+        "flag_unk",
+        "type1", "type2",
+        # 1 = on damage
+        # 2 =
+        # 3 = start of turn
+        "grant_ability",
+        # condition1 + 1000
+        "rarity1",
+        "rarity2",
+    ]
+
     @classmethod
     def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
         signature = buffer.read(len(cls.signature))
@@ -215,27 +248,11 @@ class AbilitySpecList(GundamDataFile):
 
     @classmethod
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
-        filters = [
-            "pilot", "warship", "unit", "weapon", "recovery", "accuracy", "reduce", "other",
-        ]
         for r in records["effects"]:
-            r.update(cls.bit_smash("filter", r.pop("filter"), filters))
+            r.update(cls.bit_smash("filter", r.pop("filter"), cls.ability_filters))
 
-        flags = [
-            "ms_usable",
-            "ws_usable",
-            "null",
-            "type1", "type2",
-            # 1 = on damage
-            # 2 =
-            # 3 = start of turn
-            "grant_ability",
-            # condition1 + 1000
-            "rarity1",
-            "rarity2",
-        ]
         for r in records["unitModifications"]:
-            r.update(cls.bit_smash("", r.pop("flag"), flags))
+            r.update(cls.bit_smash("", r.pop("flag"), cls.mod_flags))
             r["rarity"] = r.pop("rarity1", 0) + (r.pop("rarity2", 0) * 2)
             r["type"] = r.pop("type1", 0) + (r.pop("type2", 0) * 2)
 
@@ -244,7 +261,15 @@ class AbilitySpecList(GundamDataFile):
     @classmethod
     def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for r in records["effects"]:
-            r["flag"] = cls.bit_smush("flag", r, list(range(8)))
+            r["filter"] = cls.bit_smush("filter", r, cls.ability_filters)
+
+        for r in records["unitModifications"]:
+            r["rarity1"] = r["rarity"] % 2
+            r["rarity2"] = r["rarity"] // 2
+            r["type1"] = r["type"] % 2
+            r["type2"] = r["type"] // 2
+
+            r["flag"] = cls.bit_smush("", r, cls.mod_flags)
 
         return records
 
@@ -828,7 +853,10 @@ class DatabaseCalculation(GundamDataFile):
     default_filename = "DatabaseCalcuclation.cdb"
     data_path = "resident"
     package = "MiscData.pkd"
-    signature = b"\x43\x4C\x41\x43\x00\x00\x06\x01"
+    signature = b"\x43\x4C\x41\x43\x00\x00\x0A\x01"
+
+    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+        return {}
 
 
 class GalleryMovieList(GundamDataFile):
@@ -1526,12 +1554,12 @@ class QuestList(GundamDataFile):
     @classmethod
     def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for record in records["quests"]:
-            if record["quest_type"] in [1, 96]:
+            if record["quest_type"] in [1, 96, 103]:
                 record["stage"] = cls.write_series_bytes(record["stage"])
             else:
                 record["stage"] = cls.write_int(record["stage"], 4)
 
-            if record["quest_type"] in [96]:
+            if record["quest_type"] in [96, 103]:
                 record["stages"] = [cls.write_series_bytes(s) for s in record["stages"]]
             else:
                 record["stages"] = [cls.write_int(s, 4) for s in record["stages"]]
@@ -1552,12 +1580,12 @@ class QuestList(GundamDataFile):
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         for record in records["quests"]:
             # Just repeats the series id for some reason
-            if record["type"] in [1, 96]:
+            if record["type"] in [1, 96, 103]:
                 record["stage"] = cls.read_series_bytes(record["stage"])
             else:
                 record["stage"] = cls.read_int(record["stage"])
 
-            if record["type"] in [96]:
+            if record["type"] in [96, 103]:
                 record["stages"] = [cls.read_series_bytes(s) for s in record["stages"]]
             else:
                 record["stages"] = [cls.read_int(s) for s in record["stages"]]
