@@ -15,7 +15,7 @@ def main():
     container = class_map[args.container](args.path, args.output)
     data = container.read()
     file = f"container_{args.container}.json"
-    json.dump(data, open(op.join(args.output, file), "wt"))
+    json.dump(data, open(op.join(args.output, file), "wt"), indent=4)
 
 
 if __name__ == "__main__":
