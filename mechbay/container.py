@@ -652,18 +652,7 @@ class AbilitySpecList(Container):
         "damage_",
         "bonus_",
     ]
-    
-    def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
-        localisations = super().index_strings(data)
-        
-        for record in data["GroupSendingMissionList.missions"]:
-            for r in record["recommended"]:
-                index = len(localisations["MiscData"])
-                localisations["MiscData"][index] = r["name"]
-                r["name"] = index
-        
-        return localisations
-    
+
     def pre_processing(self, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
         # return zeroes
         for r in records["effects"]:
