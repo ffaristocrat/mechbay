@@ -44,7 +44,7 @@ class AbilitySpecList(GundamDataFile):
             "unk1": "2cfpointer:list:uint:2",
             # "unk2": "uint:4",
             # "unk3": "pointer",
-            "unk3": "cfpointer:list:bytes:6",
+            "unk3": "cfpointer:list:int:6",
             "unk4": "pointer",
             "cost": "uint:2",
             "dlc_set": "uint:2",
