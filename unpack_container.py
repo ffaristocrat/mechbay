@@ -14,7 +14,7 @@ def main():
 
     container = class_map[args.container](args.path, args.output)
     data = container.read()
-    file = f"container_{container}.json"
+    file = f"container_{args.container}.json"
     json.dump(data, open(op.join(args.output, file), "wt"))
 
 
