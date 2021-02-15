@@ -6,6 +6,10 @@ from typing import List, Dict, ByteString, BinaryIO, Union, Any, Tuple, Optional
 
 
 class GundamDataFile:
+    """ Basic class for handling GGCR files.
+        Class is meant to be overridden with specifics for each file.
+    """
+
     signature: ByteString = None
     data_path: str = None
     package: str = None
