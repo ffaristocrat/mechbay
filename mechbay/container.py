@@ -950,3 +950,12 @@ def create_rewards(records: Dict):
     records[f"{table}.rewards"] = rewards
     
     return records
+
+
+class_map = {
+    "CharacterSpecList": CharacterSpecList,
+    "MachineSpecList": MachineSpecList,
+    "AbilitySpecList": AbilitySpecList,
+    "MiscData": MiscData,
+    "StageList": StageList,
+}
