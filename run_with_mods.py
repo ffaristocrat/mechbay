@@ -5,7 +5,7 @@ from glob import glob
 from typing import List
 
 
-def mod_merge(game_path: str, mod_path: str):
+def mod_merge(game_path: str, mod_path: str, exe: str = "togg.exe"):
     print(game_path, mod_path)
 
     # first get all files in mod
@@ -22,7 +22,7 @@ def mod_merge(game_path: str, mod_path: str):
     # launch ggcr
     current_directory = os.getcwd()
     os.chdir(os.path.join(game_path, ".."))
-    command = "togg.exe"
+    command = exe
     subprocess.run(command)
     os.chdir(current_directory)
 
@@ -82,7 +82,7 @@ def clean_up(game_path: str, mod_files: List[str]):
 
 def main():
     parser = argparse.ArgumentParser(description="Run with mods")
-    parser.add_argument("game", type=str, help="Game directory with ggcr.exe")
+    parser.add_argument("game", type=str, help="Game directory with executable")
     parser.add_argument("mods", type=str, help="Mods directory")
     args = parser.parse_args()
     mod_merge(args.game, args.mods)
