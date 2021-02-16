@@ -94,12 +94,12 @@ class AbilitySpecList(GundamDataFile):
             # 1 = 1 Character in area   001
             # 2 = All units in area     010
             # 3 = All units on map      011
-            # 5 = 1 warship unit        101
+            # 5 = see condition1        101
             "valid_targets": "uint:1",
             # 0 = All
             # 1 = Own forces
-            # 1 = Own/Guest forces
-            # 2 = Own forces (Group Only)
+            # 4 = Own/Guest forces
+            # 7 = Own forces (Group Only)
             "length": "uint:1",
             # 0 = Immediate
             # 1 = Lasts for 1 turn
