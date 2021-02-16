@@ -2037,19 +2037,21 @@ class MovieList(GundamDataFile):
 
 
 class PowerUpList(GundamDataFile):
+    """ Character skills that can be collected upon defeat or units that can be captured """
+
     default_filename = "powerUpList.dat"
     data_path = "tmap/resident"
     signature = b"\x44\x4C\x55\x50"
 
     definition = {
         "stage_id": "uint:4",
-        "part": "uint:1",
-        "guid": "string_len_prefix",
+        "difficulty": "uint:1",
+        "pilot": "string_len_prefix",
         "null1": "null:4",
-        "effect_name": "string_len_prefix",
+        "unit_name": "string_len_prefix",
         "null2": "null:25",
-        "unk1": "uint:2",
-        "unk2": "uint:2",
+        "skill": "uint:2",
+        "inferno_skill": "uint:2",
     }
 
 
