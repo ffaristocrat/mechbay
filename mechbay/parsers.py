@@ -1254,7 +1254,7 @@ class MachineSpecList(GundamDataFile):
                 "space",
             ],
             "unk21": ["8", "9", "10", "11", "union_flag"],
-            "unk22": ["ride_sfs", "sfs", "18", "commander", "unit"],
+            "unk22": ["ride_sfs", "sfs", "produce", "commander", "unit"],
         }
         for k, v in flags.items():
             for r in records["units"]:
@@ -1623,7 +1623,6 @@ class SeriesList(GundamDataFile):
     data_path = "resident"
     package = "MiscData.pkd"
     signature = b"\x4C\x52\x45\x53\x02\x00\x02\x01"
-    # TODO: identify unknowns
     definitions = {
         "series": {
             "series_logo_l": "series",
@@ -1673,6 +1672,7 @@ class StageList(GundamDataFile):
         "fixed70": 70,
     }
 
+    # TODO: identify unknowns
     definitions = {
         "stages": {
             "stage": "uint:4",
@@ -1773,6 +1773,7 @@ class SpecProfileList(GundamDataFile):
     signature = b"\x4C\x50\x50\x53\x00\x00\x03\x01"
     constants = {"fixed1": 1}
 
+    # TODO: identify unknowns
     definitions = {
         "units": {
             "guid": "guid",
@@ -1863,6 +1864,7 @@ class TutorialList(GundamDataFile):
     package = "MiscData.pkd"
     signature = b"\x4F\x54\x55\x54\x00\x00\x01\x01"
 
+    # TODO: identify unknowns
     # Uses messagestrings.tbl
     definitions = {
         "main": {
@@ -1898,6 +1900,7 @@ class WeaponSpecList(GundamDataFile):
         terrain effect
     """
 
+    # TODO: identify unknowns
     definitions = {
         "weapons": {
             "guid": "guid",
@@ -2018,6 +2021,8 @@ class EffectList(GundamDataFile):
 class MapWeaponList(GundamDataFile):
     default_filename = "mapWeaponList.dat"
     signature = b"\x57\x4D\x4D\x54"
+
+    # TODO: identify unknowns
     definitions = {
         "mapWeapons": {
             "unit_id": "string_len_prefix",
@@ -2043,15 +2048,73 @@ class PowerUpList(GundamDataFile):
     data_path = "tmap/resident"
     signature = b"\x44\x4C\x55\x50"
 
-    definition = {
-        "stage_id": "uint:4",
-        "difficulty": "uint:1",
-        "pilot": "string_len_prefix",
-        "null1": "null:4",
-        "unit_name": "string_len_prefix",
-        "null2": "null:25",
-        "skill": "uint:2",
-        "inferno_skill": "uint:2",
+    definitions = {
+        "skills": {
+            "stage_id": "uint:4",
+            "difficulty": "uint:1",
+            "pilot": "string_len_prefix",
+            "null1": "null:4",
+            "unit_name": "string_len_prefix",
+            "null2": "null:25",
+            "skill": "uint:2",
+            "skill2": "uint:2",
+        }
+    }
+
+
+class PowerUpListEx(GundamDataFile):
+    """ Character skills that can be collected upon defeat or units that can be captured """
+
+    default_filename = "powerUpListEx.dat"
+    data_path = "tmap/resident"
+    signature = b"\x44\x4C\x55\x50"
+
+    # TODO: identify unknowns
+    definitions = {
+        "skills": {
+            "stage_id": "uint:4",
+            "difficulty": "uint:1",
+            "pilot": "string_len_prefix",
+            "null1": "bytes:4",
+            "unit_name": "string_len_prefix",
+            "null2": "bytes:48",
+            "unk1": "uint:2",
+            "unk2": "uint:1",
+            "unk3": "uint:1",
+            "unk4": "uint:2",
+            "unk5": "uint:2",
+            "unk6": "uint:1",
+            "null3": "bytes:17",
+            "skill": "uint:4",
+            "unk7": "uint:2",
+            "unk8": "uint:2",
+            "unk9": "uint:2",
+            "unk10": "uint:2",
+            "null6": "bytes:6",
+        }
+    }
+
+
+class PowerUpStageEx(GundamDataFile):
+    default_filename = "powerUpStageEx.dat"
+    data_path = "tmap/resident"
+    signature = b"\x44\x4C\x55\x50"
+
+    # TODO: identify unknowns
+    definitions = {
+        "stage": {
+            "stage_id": "uint:4",
+            "unk1": "unit:4",
+            "unk2": "unit:4",
+            "unk3": "unit:4",
+            "unk4": "unit:4",
+            "unk5": "unit:4",
+            "unk6": "unit:4",
+            "unk7": "unit:4",
+            "unk8": "unit:4",
+            "unk9": "unit:4",
+            "unk10": "unit:4",
+        }
     }
 
 
@@ -2060,6 +2123,8 @@ class ScoutMessageId(GundamDataFile):
     data_path = "tmap/resident"
     signature = b"\x4D\x53\x4D\x54"
     record_count_length = 2
+
+    # TODO: identify unknowns
     definitions = {
         "main": {
             "string": "string_len_prefix",
@@ -2081,6 +2146,7 @@ class Stage(GundamDataFile):
 
     definitions = {"areas": {}}
 
+    # TODO: parsing format still in progress
     def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
         header = self.read_header(buffer)
         records = {"areas": []}
@@ -2137,6 +2203,7 @@ class StageCondition(GundamDataFile):
     signature = b"\x43\x53\x4D\x54\x64\x00\x00\x00"
     record_count_length = 0
 
+    # TODO: identify unknowns
     definitions = {
         "conditions": {
             "mission_japanese": "string_len_prefix",

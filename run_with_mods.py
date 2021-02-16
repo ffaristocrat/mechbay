@@ -10,5 +10,5 @@ def main():
     mod_merge(args.game, args.mods)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
