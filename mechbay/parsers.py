@@ -1266,8 +1266,8 @@ class MachineSpecList(GundamDataFile):
         cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
     ) -> Dict[str, Dict[str, int]]:
         header = cls.make_basic_header(records, byte_strings)
-        header["counts"]["unk1"] = 457
-        header["counts"]["unk1"] = 54
+        header["counts"]["unk1"] = 461
+        header["counts"]["unk2"] = 54
 
         header["pointers"]["warships"] = 32 + header["block_size"]["units"]
         header["pointers"]["file_size"] = (
@@ -1289,7 +1289,7 @@ class MachineSpecList(GundamDataFile):
             "pointers": {},
             "unknown": {},
         }
-        header["unknown"]["a"] = cls.read_int(buffer.read(4))  # unknown = 457
+        header["unknown"]["a"] = cls.read_int(buffer.read(4))  # unknown = 461
         header["unknown"]["b"] = cls.read_int(buffer.read(4))  # unknown = 54
 
         header["pointers"]["warships"] = cls.read_int(buffer.read(4))
@@ -1607,13 +1607,25 @@ class RangeDataList(GundamDataFile):
     signature = b"\x4C\x47\x4E\x52\x01\x00\x00\x01"
 
     # TODO: identify mask
-    definitions = {"ranges": {"values": "pointer2c:list:uint:2", "mask": "uint:2"}}
+    definitions = {
+        "ranges": {"values": "pointer2c:list:bytes:2", "mask": "uint:2"},
+        "other": {"unk1": "uint:1"},
+    }
+    other_def = {"unk1": "uint:1"}
 
     @classmethod
     def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+        cls.definitions.pop("other", None)
         header = super().read_header(buffer)
+        cls.definitions["other"] = cls.other_def
+
         header["counts"]["other"] = cls.read_int(buffer.read(4))
         header["pointers"]["ranges"] = buffer.tell()
+
+        other_size = cls.definition_size(cls.other_def)
+        buffer.seek(-header["counts"]["other"] * other_size, 2)
+        header["pointers"]["other"] = buffer.tell()
+        buffer.seek(header["pointers"]["ranges"])
 
         return header
 
@@ -2150,16 +2162,14 @@ class Stage(GundamDataFile):
     def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
         header = self.read_header(buffer)
         records = {"areas": []}
-
-        # incomplete mess
-        # Null byte at the start?
-        print(self.read_int(buffer.read(1)))
+        self.read_int(buffer.read(1))
 
         for i in range(header["counts"]["areas"]):
             value = self.read_int(buffer.read(1))
             size_x = self.read_int(buffer.read(1))
             size_y = self.read_int(buffer.read(1))
-            print(size_x, size_y)
+            # print("value", value)
+            # print("size", size_x, size_y)
             record = {
                 "__order": i,
                 "value": value,
@@ -2171,29 +2181,28 @@ class Stage(GundamDataFile):
                 "values2": [
                     self.read_int(buffer.read(1), signed=True) for _ in range(20)
                 ],
-                "ffbytes": "bytes:12",  # probably a mask?
+                "ffbytes": buffer.read(12),  # probably a mask?
                 "map_tiles": [
                     [self.read_int(buffer.read(4)) for _ in range(size_x)]
                     for __ in range(size_y)
                 ],
-                "unk3": self.read_int(buffer.read(1)),
-                "unk4": [
+                "unk1": self.read_int(buffer.read(1)),
+                "unk5": [
                     [self.read_int(buffer.read(1)) for __ in range(11)]
                     for _ in range(3)
                 ],
-                "unk5": buffer.read(3),
-                "bunk7": buffer.read(self.read_int(buffer.read(1))),
-                "unk8": buffer.read(2),
-                "unk9": buffer.read(9),
-                "unk10": buffer.read(3),
-                "bunk11": buffer.read(self.read_int(buffer.read(1))),
-                "unk12": buffer.read(1),
-                "unk13": buffer.read(7),
-                "name": self.read_string_length(buffer),  # referred to by script
+                "unk4": [
+                    self.read_int(buffer.read(1)) for __ in range(85)
+                ],
             }
-            records["areas"].append(record)
+            tiles = set()
+            for row in record["map_tiles"]:
+                tiles |= set(row)
             for k, v in record.items():
                 print(k, v)
+            print("unique tiles", tiles)
+
+            records["areas"].append(record)
 
         return records
 
