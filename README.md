@@ -1,6 +1,9 @@
 # New Open Source Report: Mech Bay
 Utilities for reading and writing data files for SD GUNDAM G GENERATION CROSS RAYS.
 
+This is currently a mess. The expansion pack radically changed the layout of some files (primarily characters)
+and wrecked a lot of the progress I had made. I haven't had the time/energy to update things.
+
 ## General Thoughts
 
 GGCR uses CriWare for managing its assets and data pipeline. It appears the game is
