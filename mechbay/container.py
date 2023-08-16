@@ -1,24 +1,23 @@
 import os
 from copy import deepcopy
 from io import BytesIO
-from typing import Dict, List
 import mechbay.parsers as parsers
 from .pkd import PKDArchive
 from .strings import Localisation
 
 
 class Container:
-    file_list: List[Dict] = []
-    parse_list: List[Dict] = []
-    localisations: List[Dict] = []
-    string_maps: List[Dict] = []
-    index_maps: List[Dict] = []
+    file_list: list[dict] = []
+    parse_list: list[dict] = []
+    localisations: list[dict] = []
+    string_maps: list[dict] = []
+    index_maps: list[dict] = []
 
     def __init__(self, read_data_path: str = "./data", write_data_path: str = "./mods"):
         self.read_path = read_data_path
         self.write_path = write_data_path
 
-    def read_files(self) -> Dict[str, bytes]:
+    def read_files(self) -> dict[str, bytes]:
         # first read in the raw bytes of all the files
         raw_data = {}
         for file in self.file_list:
@@ -34,7 +33,7 @@ class Container:
 
         return raw_data
 
-    def write_files(self, raw_data: Dict[str, bytes]):
+    def write_files(self, raw_data: dict[str, bytes]):
         for file in self.file_list:
             print(f"Writing {file['filename']}")
             full_path = os.path.join(
@@ -48,7 +47,7 @@ class Container:
                 else:
                     f.write(raw_data[file["filename"]])
 
-    def parse_data(self, raw_data: Dict[str, bytes]) -> Dict[str, List[Dict]]:
+    def parse_data(self, raw_data: dict[str, bytes]) -> dict[str, list[dict]]:
         data = {}
         for file in self.parse_list:
             print(f"Parsing {file['table']}")
@@ -61,7 +60,7 @@ class Container:
 
         return data
 
-    def compose_data(self, records: Dict[str, List[Dict]]) -> Dict[str, bytes]:
+    def compose_data(self, records: dict[str, list[dict]]) -> dict[str, bytes]:
         # now compose them with their specific classes
         raw_data = {}
         for file in self.parse_list:
@@ -78,7 +77,7 @@ class Container:
 
         return raw_data
 
-    def read_localisations(self) -> Dict[str, Dict[int, Dict]]:
+    def read_localisations(self) -> dict[str, dict[int, dict]]:
         # read in localisations
         strings = {}
         for file in self.localisations:
@@ -88,7 +87,7 @@ class Container:
             )
         return strings
 
-    def write_localisations(self, localisations: Dict[str, Dict[int, Dict]]):
+    def write_localisations(self, localisations: dict[str, dict[int, dict]]):
         for file in self.localisations:
             print(f"Writing {file['filename']}")
             file["parser_class"].write_files(
@@ -98,8 +97,8 @@ class Container:
             )
 
     def map_strings(
-        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
-    ) -> Dict[str, List[Dict]]:
+        self, localisations: dict[str, dict[int, dict]], records: dict[str, list[dict]]
+    ) -> dict[str, list[dict]]:
         for mapping in self.string_maps:
             for record in records[mapping["table"]]:
                 if (
@@ -120,7 +119,7 @@ class Container:
                     )
         return records
 
-    def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
+    def index_strings(self, data: dict[str, list[dict]]) -> dict[str, dict[int, dict]]:
         localisations = {
             localisation["table"]: {} for localisation in self.localisations
         }
@@ -140,7 +139,7 @@ class Container:
         return localisations
 
     @staticmethod
-    def map_to_index(value: int, index: List[Dict], index_field: str) -> Dict:
+    def map_to_index(value: int, index: list[dict], index_field: str) -> dict:
         for i in index:
             if value == i[index_field]:
                 return i.copy()
@@ -148,7 +147,7 @@ class Container:
         print(f"WARNING: Index {value} not found in {index_field}")
         return {}
 
-    def populate_indexes(self, records: Dict[str, List[Dict]]):
+    def populate_indexes(self, records: dict[str, list[dict]]):
         for index in self.index_maps:
             for r in records[index["table"]]:
                 if (
@@ -164,20 +163,20 @@ class Container:
         return records
 
     @staticmethod
-    def extract_index(record: Dict, record_field: str, index_field: str) -> Dict:
+    def extract_index(record: dict, record_field: str, index_field: str) -> dict:
         record[record_field] = record[record_field][index_field]
         return record
 
     def post_processing(
-        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
-    ) -> Dict[str, List[Dict]]:
+        self, localisations: dict[str, dict[int, dict]], records: dict[str, list[dict]]
+    ) -> dict[str, list[dict]]:
 
         return records
 
-    def pre_processing(self, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def pre_processing(self, records: dict[str, list[dict]]) -> dict[str, list[dict]]:
         return records
 
-    def read(self) -> Dict[str, List[Dict]]:
+    def read(self) -> dict[str, list[dict]]:
         # first read in the raw bytes of all the files
         raw_data = self.read_files()
 
@@ -198,7 +197,7 @@ class Container:
 
         return records
 
-    def write(self, data: Dict[str, List[Dict]]):
+    def write(self, data: dict[str, list[dict]]):
         data = deepcopy(data)
 
         data = self.pre_processing(data)
@@ -349,8 +348,8 @@ class CharacterSpecList(Container):
     ]
 
     def post_processing(
-        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
-    ) -> Dict[str, List[Dict]]:
+        self, localisations: dict[str, dict[int, dict]], records: dict[str, list[dict]]
+    ) -> dict[str, list[dict]]:
         lookup_table = "Characters.lookup"
         lookup = {}
         for t in ["characters", "npcs", "custom"]:
@@ -561,8 +560,8 @@ class MachineSpecList(Container):
     ]
 
     def post_processing(
-        self, localisations: Dict[str, Dict[int, Dict]], records: Dict[str, List[Dict]]
-    ) -> Dict[str, List[Dict]]:
+        self, localisations: dict[str, dict[int, dict]], records: dict[str, list[dict]]
+    ) -> dict[str, list[dict]]:
         table = "MachineDevelopmentList.units"
         exploded = []
         for r in records[table]:
@@ -653,7 +652,7 @@ class AbilitySpecList(Container):
         "bonus_",
     ]
 
-    def pre_processing(self, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def pre_processing(self, records: dict[str, list[dict]]) -> dict[str, list[dict]]:
         # return zeroes
         for r in records["effects"]:
             for k in list(r.keys()):
@@ -676,9 +675,9 @@ class AbilitySpecList(Container):
         return records
     
     def post_processing(
-            self, localisations: Dict[str, Dict[int, Dict]],
-            records: Dict[str, List[Dict]]
-    ) -> Dict[str, List[Dict]]:
+            self, localisations: dict[str, dict[int, dict]],
+            records: dict[str, list[dict]]
+    ) -> dict[str, list[dict]]:
    
         effects = records["AbilitySpecList.effects"]
         # Values between -1000 and 1000 are percents
@@ -779,7 +778,7 @@ class MiscData(Container):
         "bonus_",
     ]
     
-    def index_strings(self, data: Dict[str, List[Dict]]) -> Dict[str, Dict[int, Dict]]:
+    def index_strings(self, data: dict[str, list[dict]]) -> dict[str, dict[int, dict]]:
         localisations = super().index_strings(data)
         
         for record in data["GroupSendingMissionList.missions"]:
@@ -791,9 +790,9 @@ class MiscData(Container):
         return localisations
     
     def post_processing(
-            self, localisations: Dict[str, Dict[int, Dict]],
-            records: Dict[str, List[Dict]]
-    ) -> Dict[str, List[Dict]]:
+            self, localisations: dict[str, dict[int, dict]],
+            records: dict[str, list[dict]]
+    ) -> dict[str, list[dict]]:
         
         for record in records["GroupSendingMissionList.missions"]:
             for recommended in record["recommended"]:
@@ -865,7 +864,7 @@ class StageList(Container):
     index_maps = []
 
 
-def apply_effects(records: Dict) -> Dict:
+def apply_effects(records: dict) -> dict:
     tables = [
         "AbilitySpecList.unitAbilities",
         "AbilitySpecList.unitModifications",
@@ -879,7 +878,7 @@ def apply_effects(records: Dict) -> Dict:
     return records
 
 
-def create_rewards(records: Dict):
+def create_rewards(records: dict):
     table = "GroupSendingMissionList"
     sub_tables = [
         (

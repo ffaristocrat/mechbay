@@ -6,8 +6,8 @@ from mechbay import PKDArchive
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Unpack all PKD files")
-    parser.add_argument("pkd", type=str, help="Files to unpack")
+    parser = argparse.ArgumentParser(description="Unpack & Pack PKD archives")
+    parser.add_argument("pkd", type=str, help="PKD archive name")
     parser.add_argument(
         "--path", type=str, help="Root directory to search from", default="."
     )
