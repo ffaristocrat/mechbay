@@ -6,8 +6,8 @@ from typing import List, Dict, ByteString, BinaryIO, Union, Any, Tuple, Optional
 
 
 class GundamDataFile:
-    """ Basic class for handling GGCR files.
-        Class is meant to be overridden with specifics for each file.
+    """Basic class for handling GGCR files.
+    Class is meant to be overridden with specifics for each file.
     """
 
     signature: ByteString = None
@@ -289,7 +289,7 @@ class GundamDataFile:
         if field:
             field += "_"
         smashed = {
-            f"{field}{sf}": 1 if value and value & (2 ** i) else 0
+            f"{field}{sf}": 1 if value and value & (2**i) else 0
             for i, sf in enumerate(sub_fields)
         }
         return smashed
@@ -302,7 +302,7 @@ class GundamDataFile:
 
         for i, sf in enumerate(sub_fields):
             if smashed[f"{field}{sf}"] == 1:
-                value += 2 ** i
+                value += 2**i
 
         return value
 
@@ -446,7 +446,7 @@ class GundamDataFile:
     @staticmethod
     @lru_cache
     def parse_field_type(
-        field_type: str
+        field_type: str,
     ) -> Tuple[str, Optional[int], bool, Optional[str]]:
         ft = field_type.split(":")
 

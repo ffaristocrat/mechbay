@@ -132,18 +132,20 @@ class Localisation:
     def write_bytes(cls, records: Dict[int, Dict[str, str]]) -> Dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
-            localisation = {"strings": [
-                {"string": records[i].get(language, ""), "index": 0}
-                for i in range(len(records))
-            ]}
+            localisation = {
+                "strings": [
+                    {"string": records[i].get(language, ""), "index": 0}
+                    for i in range(len(records))
+                ]
+            }
             data[language] = StringTBL().write(localisation)
 
         return data
 
 
 class LocalisationIndexed(Localisation):
-    """ The stage versions have meaningful indexes
-        And not all localisations have the strings present
+    """The stage versions have meaningful indexes
+    And not all localisations have the strings present
     """
 
     @classmethod
@@ -165,11 +167,13 @@ class LocalisationIndexed(Localisation):
     def write_bytes(cls, records: Dict[int, Dict[str, str]]) -> Dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
-            localisation = {"strings": [
-                {"string": record[language], "index": index}
-                for index, record in records.items()
-                if record.get(language) is not None
-            ]}
+            localisation = {
+                "strings": [
+                    {"string": record[language], "index": index}
+                    for index, record in records.items()
+                    if record.get(language) is not None
+                ]
+            }
             data[language] = StringTBL().write(localisation)
 
         return data

@@ -48,40 +48,40 @@ class PkdFile:
 
     def close(self):
         pass
-    
+
     def getinfo(self, name: str):
         pass
-    
+
     def infolist(self) -> List:
         pass
 
     def namelist(self) -> List[str]:
         pass
-    
+
     def open(self, name: str, mode="r"):
         pass
-    
+
     def extract(self, member, path=None):
         pass
-    
+
     def extractall(self, path=None, members=None):
         pass
-    
+
     def printdir(self):
         pass
-    
+
     def read(self):
         pass
-    
+
     def testpkd(self):
         pass
-    
+
     def write(self, filename, arcname=None):
         pass
-    
+
     def writestr(self, zinfo_or_arcname, data):
         pass
-    
+
     @property
     def filename(self):
         return
@@ -151,9 +151,7 @@ class PKDArchive(GundamDataFile):
         assert signature == cls.signature
 
         header = {
-            "counts": {
-                "main": cls.read_int(buffer.read(cls.record_count_length))
-            },
+            "counts": {"main": cls.read_int(buffer.read(cls.record_count_length))},
             "pointers": {},
         }
         # Maybe number of bits for long? Always seems to 0x40000000
@@ -167,9 +165,7 @@ class PKDArchive(GundamDataFile):
     def read(self, buffer: BinaryIO) -> Dict[str, bytes]:
         header = self.read_header(buffer)
         files = self.read_records(
-            self.definitions["main"],
-            buffer,
-            header["counts"]["main"]
+            self.definitions["main"], buffer, header["counts"]["main"]
         )
 
         for file in files:

@@ -170,7 +170,6 @@ class Container:
     def post_processing(
         self, localisations: dict[str, dict[int, dict]], records: dict[str, list[dict]]
     ) -> dict[str, list[dict]]:
-
         return records
 
     def pre_processing(self, records: dict[str, list[dict]]) -> dict[str, list[dict]]:
@@ -217,19 +216,19 @@ class Container:
 
 class CharacterSpecList(Container):
     """
-        Character data is composed of
-            data/resident/CharacterSpecList.pkd
-                CharacterSpecList.cdb - Stats of all characters
-                CharacterGrowthList.cdb - Stat growth profiles
-                SkillAcquisitionPatternList.cdb - Skill gain profiles
-                MyCharacterConfigurations.cdb - Custom character configs
+    Character data is composed of
+        data/resident/CharacterSpecList.pkd
+            CharacterSpecList.cdb - Stats of all characters
+            CharacterGrowthList.cdb - Stat growth profiles
+            SkillAcquisitionPatternList.cdb - Skill gain profiles
+            MyCharacterConfigurations.cdb - Custom character configs
 
-            data/language/**/CharacterSpecList.tbl - localisation
+        data/language/**/CharacterSpecList.tbl - localisation
 
-            data/sound/voice/BTL/idset.tbl
-            data/sound/voice/BTL/voice_table.tbl
-            data/sound/voice/BTL/{guid}/*.HCA - audio lines for battle
-            data/sound/voice/BTL/text/**/text.tbl - localised translations
+        data/sound/voice/BTL/idset.tbl
+        data/sound/voice/BTL/voice_table.tbl
+        data/sound/voice/BTL/{guid}/*.HCA - audio lines for battle
+        data/sound/voice/BTL/text/**/text.tbl - localised translations
 
     """
 
@@ -247,7 +246,7 @@ class CharacterSpecList(Container):
         {
             "filename": "CharacterConversionList.cdb",
             "data_path": "resident",
-        }
+        },
     ]
 
     parse_list = [
@@ -274,8 +273,8 @@ class CharacterSpecList(Container):
         {
             "filename": "CharacterConversionList.cdb",
             "table": "CharacterConversionList",
-            "parser_class": parsers.CharacterConversionList
-        }
+            "parser_class": parsers.CharacterConversionList,
+        },
     ]
 
     localisations = [
@@ -379,7 +378,6 @@ class MachineSpecList(Container):
                 "MachineDesignList.cdb",
             ],
         },
-
     ]
 
     parse_list = [
@@ -433,7 +431,6 @@ class MachineSpecList(Container):
             "data_path": "language",
             "parser_class": Localisation,
         },
-
     ]
 
     string_maps = [
@@ -589,16 +586,15 @@ class AbilitySpecList(Container):
     file_list = [
         {"filename": "AbilitySpecList.cdb", "data_path": "resident"},
     ]
-    
+
     parse_list = [
         {
             "filename": "AbilitySpecList.cdb",
             "table": "AbilitySpecList",
             "parser_class": parsers.AbilitySpecList,
         },
-
     ]
-    
+
     localisations = [
         # Filename, tablename, data path
         {
@@ -607,9 +603,8 @@ class AbilitySpecList(Container):
             "data_path": "language",
             "parser_class": Localisation,
         },
-    
     ]
-    
+
     string_maps = [
         {
             "table": "AbilitySpecList.unitAbilities",
@@ -637,10 +632,9 @@ class AbilitySpecList(Container):
             "strings": "AbilitySpecList",
         },
     ]
-    
-    index_maps = [
-    ]
-    
+
+    index_maps = []
+
     prefixes = [
         "unit_",
         "power_",
@@ -658,7 +652,7 @@ class AbilitySpecList(Container):
             for k in list(r.keys()):
                 if r.get(k) is None:
                     r[k] = 0
-        
+
         # Values between -1000 and 1000 are percents
         # everything else is an absolute value increased by 1000
         for r in records["effects"]:
@@ -671,14 +665,12 @@ class AbilitySpecList(Container):
                             r[k] = int(v - 1000)
                         else:
                             r[k] = int(v * 100)
-        
+
         return records
-    
+
     def post_processing(
-            self, localisations: dict[str, dict[int, dict]],
-            records: dict[str, list[dict]]
+        self, localisations: dict[str, dict[int, dict]], records: dict[str, list[dict]]
     ) -> dict[str, list[dict]]:
-   
         effects = records["AbilitySpecList.effects"]
         # Values between -1000 and 1000 are percents
         # everything else is an absolute value increased by 1000
@@ -692,13 +684,13 @@ class AbilitySpecList(Container):
                             r[k] = int(v + 1000)
                         else:
                             r[k] = int(v / 100)
-        
+
         # remove zeroes
         for r in effects:
             for k in list(r.keys()):
                 if r[k] == 0:
                     r.pop(k)
-        
+
         return records
 
 
@@ -714,9 +706,8 @@ class MiscData(Container):
                 "TutorialList.cdb",
             ],
         },
-    
     ]
-    
+
     parse_list = [
         {
             "filename": "DatabaseCaluclation.cdb",
@@ -739,7 +730,7 @@ class MiscData(Container):
             "parser_class": parsers.TutorialList,
         },
     ]
-    
+
     localisations = [
         {
             "filename": "MiscData.tbl",
@@ -747,9 +738,8 @@ class MiscData(Container):
             "data_path": "language",
             "parser_class": Localisation,
         },
-    
     ]
-    
+
     string_maps = [
         {"table": "SeriesList.series", "field": "name", "strings": "MiscData"},
         {
@@ -763,10 +753,9 @@ class MiscData(Container):
             "strings": "MiscData",
         },
     ]
-    
-    index_maps = [
-    ]
-    
+
+    index_maps = []
+
     prefixes = [
         "unit_",
         "power_",
@@ -777,27 +766,25 @@ class MiscData(Container):
         "damage_",
         "bonus_",
     ]
-    
+
     def index_strings(self, data: dict[str, list[dict]]) -> dict[str, dict[int, dict]]:
         localisations = super().index_strings(data)
-        
+
         for record in data["GroupSendingMissionList.missions"]:
             for r in record["recommended"]:
                 index = len(localisations["MiscData"])
                 localisations["MiscData"][index] = r["name"]
                 r["name"] = index
-        
+
         return localisations
-    
+
     def post_processing(
-            self, localisations: dict[str, dict[int, dict]],
-            records: dict[str, list[dict]]
+        self, localisations: dict[str, dict[int, dict]], records: dict[str, list[dict]]
     ) -> dict[str, list[dict]]:
-        
         for record in records["GroupSendingMissionList.missions"]:
             for recommended in record["recommended"]:
                 recommended["name"] = localisations["MiscData"][recommended["name"]]
-        
+
         return records
 
 
@@ -858,7 +845,6 @@ class StageList(Container):
             "field": "desc",
             "strings": "StageList",
         },
-
     ]
 
     index_maps = []
@@ -874,7 +860,7 @@ def apply_effects(records: dict) -> dict:
     for table in tables:
         for r in records[table]:
             r["effect"] = records["AbilitySpecList.effects"][r["effect"]]
-            
+
     return records
 
 
@@ -900,7 +886,7 @@ def create_rewards(records: dict):
             "guid",
         ),
     ]
-    
+
     rewards = []
     print(f"Creating {table}.rewards")
     for record in records[f"{table}.missions"]:
@@ -919,7 +905,7 @@ def create_rewards(records: dict):
                         "item": matched["name"]["english"],
                     }
                 )
-        
+
         if record["cooldowns"] > 0:
             rewards.append(
                 {
@@ -936,7 +922,7 @@ def create_rewards(records: dict):
         key=lambda x: (x["dispatch_id"], x["threshold"], x["type"], x["quantity"]),
     )
     records[f"{table}.rewards"] = rewards
-    
+
     return records
 
 

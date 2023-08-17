@@ -1,7 +1,6 @@
 import os
 import subprocess
 from glob import glob
-from typing import List
 
 
 def mod_merge(game_path: str, mod_path: str, exe: str = "togg.exe"):
@@ -28,7 +27,7 @@ def mod_merge(game_path: str, mod_path: str, exe: str = "togg.exe"):
     clean_up(game_path, mod_files)
 
 
-def make_links(game_path: str, mod_path: str, mod_files: List[str]):
+def make_links(game_path: str, mod_path: str, mod_files: list[str]):
     for file in mod_files:
         game_file = os.path.join(game_path, file)
         mod_file = os.path.join(mod_path, file)
@@ -46,10 +45,8 @@ def make_links(game_path: str, mod_path: str, mod_files: List[str]):
         os.symlink(os.path.abspath(mod_file), game_file)
 
 
-def make_directories(game_path: str, mod_path: str, mod_glob: List[str]):
-    directories = {
-        os.path.split(f)[0].replace(mod_path + os.sep, "") for f in mod_glob
-    }
+def make_directories(game_path: str, mod_path: str, mod_glob: list[str]):
+    directories = {os.path.split(f)[0].replace(mod_path + os.sep, "") for f in mod_glob}
     for directory in directories:
         if directory == mod_path:
             continue
@@ -60,8 +57,7 @@ def make_directories(game_path: str, mod_path: str, mod_glob: List[str]):
             os.makedirs(game_dir, exist_ok=True)
 
 
-def clean_up(game_path: str, mod_files: List[str]):
-
+def clean_up(game_path: str, mod_files: list[str]):
     # clean up all the symlinks
     for file in mod_files:
         game_file = os.path.join(game_path, file)
@@ -77,4 +73,3 @@ def clean_up(game_path: str, mod_files: List[str]):
         if os.path.isfile(renamed_file) and not os.path.isfile(game_file):
             print(f"Renaming {renamed_file} back to {game_file}")
             os.rename(renamed_file, game_file)
-

@@ -6,10 +6,15 @@ from mechbay import PKDArchive
 def main():
     parser = argparse.ArgumentParser(description="Pack all PKD files")
     parser.add_argument(
-        "pkd", type=str, help="PKD output",
+        "pkd",
+        type=str,
+        help="PKD output",
     )
     parser.add_argument(
-        "files", type=str, help="Files to pack", nargs="+",
+        "files",
+        type=str,
+        help="Files to pack",
+        nargs="+",
     )
 
     args = parser.parse_args()

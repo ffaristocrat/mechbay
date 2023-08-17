@@ -7,7 +7,9 @@ from mechbay.container import class_map
 
 def main():
     parser = argparse.ArgumentParser(description="Unpack container")
-    parser.add_argument("container", type=str, help="Container", choices=class_map.keys())
+    parser.add_argument(
+        "container", type=str, help="Container", choices=class_map.keys()
+    )
     parser.add_argument("--path", type=str, help="Root data directory", default=".")
     parser.add_argument("--output", type=str, help="Output directory", default=".")
     args = parser.parse_args()

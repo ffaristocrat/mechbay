@@ -792,7 +792,6 @@ class CharacterSpecList(GundamDataFile):
 
     @classmethod
     def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
-
         people = ["characters", "custom", "npcs"]
         for p in people:
             for r in records[p]:
@@ -2054,7 +2053,7 @@ class MovieList(GundamDataFile):
 
 
 class PowerUpList(GundamDataFile):
-    """ Character skills that can be collected upon defeat or units that can be captured """
+    """Character skills that can be collected upon defeat or units that can be captured"""
 
     default_filename = "powerUpList.dat"
     data_path = "tmap/resident"
@@ -2075,7 +2074,7 @@ class PowerUpList(GundamDataFile):
 
 
 class PowerUpListEx(GundamDataFile):
-    """ Character skills that can be collected upon defeat or units that can be captured """
+    """Character skills that can be collected upon defeat or units that can be captured"""
 
     default_filename = "powerUpListEx.dat"
     data_path = "tmap/resident"
@@ -2191,9 +2190,7 @@ class Stage(GundamDataFile):
                     [self.read_int(buffer.read(1)) for __ in range(11)]
                     for _ in range(3)
                 ],
-                "unk4": [
-                    self.read_int(buffer.read(1)) for __ in range(85)
-                ],
+                "unk4": [self.read_int(buffer.read(1)) for __ in range(85)],
             }
             tiles = set()
             for row in record["map_tiles"]:
