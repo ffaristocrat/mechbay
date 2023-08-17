@@ -1,7 +1,7 @@
 from io import BytesIO
-from typing import List, Dict, BinaryIO
+from typing import BinaryIO
 
-from .data import GundamDataFile
+from .data import GundamDataFile, Records, Header
 from .strings import StringTBL
 
 CHARACTER_STATS = [
@@ -227,7 +227,7 @@ class AbilitySpecList(GundamDataFile):
     ]
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         signature = buffer.read(len(cls.signature))
         assert signature == cls.signature
 
@@ -254,7 +254,7 @@ class AbilitySpecList(GundamDataFile):
         return header
 
     @classmethod
-    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def post_processing(cls, records: Records) -> Records:
         for r in records["effects"]:
             r.update(cls.bit_smash("filter", r.pop("filter"), cls.ability_filters))
 
@@ -266,7 +266,7 @@ class AbilitySpecList(GundamDataFile):
         return records
 
     @classmethod
-    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def pre_processing(cls, records: Records) -> Records:
         for r in records["effects"]:
             r["filter"] = cls.bit_smush("filter", r, cls.ability_filters)
 
@@ -304,7 +304,7 @@ class BattleBgList(GundamDataFile):
         }
     }
 
-    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+    def write(self, records: Records) -> bytes:
         fields = ["bgm1", "bgm2", "bgm3"]
         main_table = "bgm"
 
@@ -527,7 +527,7 @@ class CharacterGrowthList(GundamDataFile):
     }
 
     @classmethod
-    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def pre_processing(cls, records: Records) -> Records:
         # make a unique list of stat increases
         # replace their entries with the index to those increases
 
@@ -548,8 +548,8 @@ class CharacterGrowthList(GundamDataFile):
 
     @classmethod
     def calculate_header(
-        cls, records: Dict[str, List[Dict]], byte_blocks: Dict[str, bytes]
-    ) -> Dict[str, Dict[str, int]]:
+        cls, records: Records, byte_blocks: dict[str, bytes]
+    ) -> Header:
         header = {
             "counts": {
                 "profiles": len(records["profiles"]),
@@ -560,7 +560,7 @@ class CharacterGrowthList(GundamDataFile):
         return header
 
     @classmethod
-    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def post_processing(cls, records: Records) -> Records:
         for r in records["profiles"]:
             for k, v in r.items():
                 if k.startswith("level"):
@@ -700,7 +700,7 @@ class CharacterSpecList(GundamDataFile):
     }
 
     @classmethod
-    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def pre_processing(cls, records: Records) -> Records:
         personalities = []
         for r in records["characters"]:
             personality = (
@@ -722,7 +722,7 @@ class CharacterSpecList(GundamDataFile):
 
         return records
 
-    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+    def write(self, records: Records) -> bytes:
         records = self.pre_processing(records)
 
         byte_blocks = {}
@@ -753,7 +753,7 @@ class CharacterSpecList(GundamDataFile):
         return string_bytes
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         signature = buffer.read(len(cls.signature))
         assert signature == cls.signature
 
@@ -791,7 +791,7 @@ class CharacterSpecList(GundamDataFile):
         return header
 
     @classmethod
-    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def post_processing(cls, records: Records) -> Records:
         people = ["characters", "custom", "npcs"]
         for p in people:
             for r in records[p]:
@@ -835,7 +835,7 @@ class CutIn(GundamDataFile):
         }
     }
 
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> Records:
         records = super().read(buffer)
 
         # There's then a normal string table attached to the end
@@ -855,7 +855,7 @@ class DatabaseCalculation(GundamDataFile):
     package = "MiscData.pkd"
     signature = b"\x43\x4C\x41\x43\x00\x00\x0A\x01"
 
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> Records:
         return {}
 
 
@@ -940,7 +940,7 @@ class GroupSendingMissionList(GundamDataFile):
     }
 
     @classmethod
-    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def post_processing(cls, records: Records) -> Records:
         terrain = ["atmospheric", "ground", "underwater"]
 
         for i, record in enumerate(records["missions"]):
@@ -996,7 +996,7 @@ class IdSet(GundamDataFile):
     }
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         signature = buffer.read(len(cls.signature))
         assert signature == cls.signature
 
@@ -1012,7 +1012,7 @@ class IdSet(GundamDataFile):
 
         return header
 
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> Records:
         records = super().read(buffer)
 
         return records
@@ -1068,7 +1068,7 @@ class MachineDevelopmentList(GundamDataFile):
     child_definition = {"guid": "guid", "level": "uint:4"}
 
     @classmethod
-    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def pre_processing(cls, records: Records) -> Records:
         child_size = cls.definition_size(cls.definitions["children"])
         pointer = 12 + len(records["units"]) * child_size
         records["children"] = []
@@ -1080,7 +1080,7 @@ class MachineDevelopmentList(GundamDataFile):
 
         return records
 
-    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+    def write(self, records: Records) -> bytes:
         byte_string = super().write(records)
         for record in records["units"]:
             for child in record["children"]:
@@ -1088,7 +1088,7 @@ class MachineDevelopmentList(GundamDataFile):
 
         return byte_string
 
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> Records:
         records = super().read(buffer)
 
         for record in records["units"]:
@@ -1239,7 +1239,7 @@ class MachineSpecList(GundamDataFile):
     size_map = {}
 
     @classmethod
-    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def post_processing(cls, records: Records) -> Records:
         flags = {
             "unk13": ["A", "B", "C", "D", "E", "F", "G", "H"],
             "unk20": [
@@ -1262,9 +1262,9 @@ class MachineSpecList(GundamDataFile):
 
     @classmethod
     def calculate_header(
-        cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
-    ) -> Dict[str, Dict[str, int]]:
-        header = cls.make_basic_header(records, byte_strings)
+        cls, records: Records, byte_blocks: dict[str, bytes]
+    ) -> Header:
+        header = cls.make_basic_header(records, byte_blocks)
         header["counts"]["unk1"] = 461
         header["counts"]["unk2"] = 54
 
@@ -1276,7 +1276,7 @@ class MachineSpecList(GundamDataFile):
         return header
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         signature = buffer.read(len(cls.signature))
         assert signature == cls.signature
 
@@ -1315,7 +1315,7 @@ class MapTypes(GundamDataFile):
         }
     }
 
-    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+    def write(self, records: Records) -> bytes:
         header = self.calculate_header(records, {})
         header_bytes = self.write_header(header)
 
@@ -1390,9 +1390,9 @@ class MyCharacterConfigurations(GundamDataFile):
 
     @classmethod
     def calculate_header(
-        cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
-    ) -> Dict[str, Dict[str, int]]:
-        header = cls.make_basic_header(records, byte_strings)
+        cls, records: Records, byte_blocks: dict[str, bytes]
+    ) -> Header:
+        header = cls.make_basic_header(records, byte_blocks)
         header["pointers"]["outfits"] = 0
         header["pointers"]["voices"] = 40 + header["block_size"]["outfits"]
         header["pointers"]["names"] = (
@@ -1404,7 +1404,7 @@ class MyCharacterConfigurations(GundamDataFile):
 
         return header
 
-    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+    def write(self, records: Records) -> bytes:
         self.apply_constants(records)
 
         bgm = records.pop("bgm")
@@ -1440,7 +1440,7 @@ class MyCharacterConfigurations(GundamDataFile):
         return string_bytes
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         signature = buffer.read(len(cls.signature))
         assert signature == cls.signature
 
@@ -1465,7 +1465,7 @@ class MyCharacterConfigurations(GundamDataFile):
 
         return header
 
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> Records:
         records = super().read(buffer)
 
         for r in records["bgm"]:
@@ -1552,7 +1552,7 @@ class QuestList(GundamDataFile):
     }
 
     @classmethod
-    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def pre_processing(cls, records: Records) -> Records:
         for record in records["quests"]:
             if record["quest_type"] in [1, 96, 103]:
                 record["stage"] = cls.write_series_bytes(record["stage"])
@@ -1577,7 +1577,7 @@ class QuestList(GundamDataFile):
         return records
 
     @classmethod
-    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def post_processing(cls, records: Records) -> Records:
         for record in records["quests"]:
             # Just repeats the series id for some reason
             if record["type"] in [1, 96, 103]:
@@ -1613,7 +1613,7 @@ class RangeDataList(GundamDataFile):
     other_def = {"unk1": "uint:1"}
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         cls.definitions.pop("other", None)
         header = super().read_header(buffer)
         cls.definitions["other"] = cls.other_def
@@ -1729,7 +1729,7 @@ class StageList(GundamDataFile):
 
     available_unit_definition = {"guid": "guid", "type": "uint:4"}
 
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> Records:
         records = super().read(buffer)
 
         terrain = ["space", "air", "land", "surface", "underwater"]
@@ -1826,15 +1826,15 @@ class SpecProfileList(GundamDataFile):
 
     @classmethod
     def calculate_header(
-        cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
-    ) -> Dict[str, Dict[str, int]]:
-        header = cls.make_basic_header(records, byte_strings)
+        cls, records: Records, byte_blocks: dict[str, bytes]
+    ) -> Header:
+        header = cls.make_basic_header(records, byte_blocks)
         # no pointer list
 
         return header
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         signature = buffer.read(len(cls.signature))
         assert signature == cls.signature
 
@@ -1960,7 +1960,7 @@ class WeaponSpecList(GundamDataFile):
     }
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         signature = buffer.read(len(cls.signature))
         assert signature == cls.signature
 
@@ -1993,7 +1993,7 @@ class WeaponSpecList(GundamDataFile):
         return header
 
     @classmethod
-    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def post_processing(cls, records: Records) -> Records:
         tf = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
         for table, table_records in records.items():
             if table not in ["weapons", "mapWeapons"]:
@@ -2005,7 +2005,7 @@ class WeaponSpecList(GundamDataFile):
         return records
 
     @classmethod
-    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def pre_processing(cls, records: Records) -> Records:
         for table, table_records in records.items():
             if table not in ["weapons", "mapWeapons"]:
                 continue
@@ -2158,7 +2158,7 @@ class Stage(GundamDataFile):
     definitions = {"areas": {}}
 
     # TODO: parsing format still in progress
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> Records:
         header = self.read_header(buffer)
         records = {"areas": []}
         self.read_int(buffer.read(1))
@@ -2328,7 +2328,7 @@ class StageCondition(GundamDataFile):
     }
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         header = super().read_header(buffer)
         header["counts"]["conditions"] = 1
 

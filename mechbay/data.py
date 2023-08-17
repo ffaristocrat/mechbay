@@ -2,7 +2,11 @@ import json
 import os
 from copy import deepcopy
 from functools import lru_cache
-from typing import List, Dict, ByteString, BinaryIO, Union, Any, Tuple, Optional
+from typing import ByteString, BinaryIO, Any, Optional, Literal
+
+
+Records = dict[str, list[dict]]
+Header = dict[str, dict[str, int]]
 
 
 class GundamDataFile:
@@ -15,8 +19,8 @@ class GundamDataFile:
     package: str = None
     default_filename: str = None
     record_count_length: int = 4
-    definitions: Dict[str, Dict[str, Dict]] = {}
-    constants: Dict = None
+    definitions: dict[str, dict[str, dict]] = {}
+    constants: dict = None
 
     def __init__(self, base_path: str = "."):
         self.base_path = base_path
@@ -26,13 +30,13 @@ class GundamDataFile:
 
     @staticmethod
     def read_int(
-        byte_string: bytes, byteorder: str = "little", signed: bool = False
+        byte_string: bytes, byteorder: Literal["big", "little"] = "little", signed: bool = False
     ) -> int:
         return int.from_bytes(byte_string, byteorder=byteorder, signed=signed)
 
     @staticmethod
     def write_int(
-        value: int, length: int, byteorder: str = "little", signed: bool = False
+        value: int, length: int, byteorder: Literal["big", "little"] = "little", signed: bool = False
     ) -> bytes:
         return value.to_bytes(length, byteorder=byteorder, signed=signed)
 
@@ -53,7 +57,7 @@ class GundamDataFile:
         return string_bytes
 
     @staticmethod
-    def read_guid_bytes(byte_string: bytes) -> Union[str, bytes, None]:
+    def read_guid_bytes(byte_string: bytes) -> [str, bytes, None]:
         if byte_string == b"\x00\x00\x00\x00\x00\x00\x00\x00":
             return None
 
@@ -122,7 +126,7 @@ class GundamDataFile:
         return byte_string
 
     @classmethod
-    def read_header(cls, buffer: BinaryIO) -> Dict[str, Dict[str, int]]:
+    def read_header(cls, buffer: BinaryIO) -> Header:
         signature = buffer.read(len(cls.signature))
         assert signature == cls.signature
 
@@ -147,8 +151,8 @@ class GundamDataFile:
 
     @classmethod
     def make_basic_header(
-        cls, records: Dict[str, List[Dict]], byte_blocks: Dict[str, bytes]
-    ) -> Dict[str, Dict[str, int]]:
+        cls, records: Records, byte_blocks: dict[str, bytes]
+    ) -> Header:
         header = {
             "counts": {table: len(data) for table, data in records.items()},
             "pointers": {},
@@ -164,21 +168,21 @@ class GundamDataFile:
 
     @classmethod
     def calculate_header(
-        cls, records: Dict[str, List[Dict]], byte_strings: Dict[str, bytes]
-    ) -> Dict[str, Dict[str, int]]:
-        header = cls.make_basic_header(records, byte_strings)
+        cls, records: Records, byte_blocks: dict[str, bytes]
+    ) -> Header:
+        header = cls.make_basic_header(records, byte_blocks)
         tables = list(records.keys())
         pointer = len(tables) * cls.record_count_length + len(tables[1:]) * 4
         for i, table in enumerate(tables):
             # skip the first table by default
             if i != 0:
                 header["pointers"][table] = pointer
-            pointer += len(byte_strings[table])
+            pointer += len(byte_blocks[table])
 
         return header
 
     @classmethod
-    def write_header(cls, header: Dict[str, Dict[str, int]]) -> bytes:
+    def write_header(cls, header: Header) -> bytes:
         string_bytes = bytes()
         string_bytes += cls.signature
         for table, record_count in header["counts"].items():
@@ -189,7 +193,7 @@ class GundamDataFile:
 
         return string_bytes
 
-    def dump(self, data_filename: str = None, json_filename: str = None):
+    def dump(self, data_filename: str = None, json_filename: str = None) -> None:
         data_filename = data_filename or self.default_file_path()
         json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")
         data = {
@@ -199,7 +203,9 @@ class GundamDataFile:
         os.makedirs(os.path.split(json_filename)[0], exist_ok=True)
         json.dump(data, open(json_filename, "wt"), indent=4)
 
-    def load(self, json_filename: str = None, data_filename: str = None):
+        return
+
+    def load(self, json_filename: str = None, data_filename: str = None) -> None:
         data_filename = data_filename or self.default_file_path()
         json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")
         records = json.load(open(json_filename, "rt"))[
@@ -207,13 +213,15 @@ class GundamDataFile:
         ]
         self.write_file(records, data_filename)
 
-    def read_file(self, filename: str = None) -> Dict[str, List[Dict]]:
+        return
+
+    def read_file(self, filename: str = None) -> Records:
         filename = filename or self.default_file_path()
         with open(filename, "rb") as buffer:
             records = self.read(buffer)
         return records
 
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> Records:
         records = {}
         header = self.read_header(buffer)
         for table_name, definition in self.definitions.items():
@@ -231,21 +239,21 @@ class GundamDataFile:
         return records
 
     @classmethod
-    def post_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def post_processing(cls, records: Records) -> Records:
         return records
 
     @classmethod
-    def pre_processing(cls, records: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+    def pre_processing(cls, records: Records) -> Records:
         return records
 
-    def write_file(self, records: Dict[str, List[Dict]], filename: str):
+    def write_file(self, records: Records, filename: str):
         filename = filename or self.default_file_path()
         os.makedirs(os.path.split(filename)[0], exist_ok=True)
         with open(filename, "wb") as buffer:
             buffer.write(self.write(records))
 
     @classmethod
-    def write_blocks(cls, records: Dict[str, List[Dict]]) -> Dict[str, bytes]:
+    def write_blocks(cls, records: Records) -> dict[str, bytes]:
         byte_blocks = {}
         for table, data in records.items():
             byte_blocks[table] = cls.write_records(cls.definitions[table], data)
@@ -253,7 +261,7 @@ class GundamDataFile:
 
     @classmethod
     def combine_blocks(
-        cls, byte_blocks: Dict[str, bytes], header: bytes = None
+        cls, byte_blocks: dict[str, bytes], header: bytes = None
     ) -> bytes:
         byte_string = bytes()
         if header is not None:
@@ -262,7 +270,7 @@ class GundamDataFile:
             byte_string += block
         return byte_string
 
-    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+    def write(self, records: Records) -> bytes:
         records = deepcopy(records)
         self.apply_constants(records)
         records = self.pre_processing(records)
@@ -277,7 +285,7 @@ class GundamDataFile:
         return byte_string
 
     @classmethod
-    def definition_size(cls, definition: Dict) -> int:
+    def definition_size(cls, definition: dict) -> int:
         size = 0
         for field_type in definition.values():
             _, byte_count, _, _ = cls.parse_field_type(field_type)
@@ -285,7 +293,7 @@ class GundamDataFile:
         return size
 
     @staticmethod
-    def bit_smash(field: str, value: int, sub_fields: List[str]) -> Dict[str, int]:
+    def bit_smash(field: str, value: int, sub_fields: list[str]) -> dict[str, int]:
         if field:
             field += "_"
         smashed = {
@@ -295,7 +303,7 @@ class GundamDataFile:
         return smashed
 
     @staticmethod
-    def bit_smush(field: str, smashed: Dict[str, int], sub_fields: List[str]) -> int:
+    def bit_smush(field: str, smashed: dict[str, int], sub_fields: list[str]) -> int:
         value = 0
         if field:
             field += "_"
@@ -311,7 +319,7 @@ class GundamDataFile:
         return len(cls.signature) + cls.record_count_length
 
     @classmethod
-    def apply_constants(cls, records: Union[List[Dict], Dict[str, List[Dict]]]) -> None:
+    def apply_constants(cls, records: [list[dict], Records]) -> None:
         if isinstance(records, dict):
             for record_set in records.values():
                 cls._apply_constants(record_set)
@@ -319,7 +327,7 @@ class GundamDataFile:
             cls._apply_constants(records)
 
     @classmethod
-    def _apply_constants(cls, records: List[Dict]) -> None:
+    def _apply_constants(cls, records: list[dict]) -> None:
         if not cls.constants:
             return
 
@@ -332,7 +340,7 @@ class GundamDataFile:
 
     @classmethod
     def remove_constants(
-        cls, records: Union[List[Dict], Dict[str, List[Dict]]]
+        cls, records: [list[dict], Records]
     ) -> None:
         if isinstance(records, dict):
             for record_set in records.values():
@@ -341,7 +349,7 @@ class GundamDataFile:
             cls._remove_constants(records)
 
     @classmethod
-    def _remove_constants(cls, records: List[Dict]) -> None:
+    def _remove_constants(cls, records: list[dict]) -> None:
         if not cls.constants:
             return
 
@@ -353,7 +361,7 @@ class GundamDataFile:
                     r.pop(c, None)
 
     @classmethod
-    def write_records(cls, definition: Dict, records: List[Dict]) -> bytes:
+    def write_records(cls, definition: dict, records: list[dict]) -> bytes:
         cls.apply_constants(records)
 
         main_block_size = len(records) * cls.definition_size(definition)
@@ -391,8 +399,8 @@ class GundamDataFile:
 
     @classmethod
     def read_records(
-        cls, definition: Dict, buffer: BinaryIO, record_count: int
-    ) -> List[Dict]:
+        cls, definition: dict, buffer: BinaryIO, record_count: int
+    ) -> list[dict]:
         records = []
 
         for i in range(record_count):
@@ -402,7 +410,7 @@ class GundamDataFile:
         return records
 
     @classmethod
-    def read_record(cls, definition: Dict, buffer: BinaryIO) -> Dict[str, Any]:
+    def read_record(cls, definition: dict, buffer: BinaryIO) -> dict[str]:
         location = buffer.tell()
         record = {}
         for field, field_type in definition.items():
@@ -415,7 +423,7 @@ class GundamDataFile:
         return record
 
     @classmethod
-    def write_record(cls, definition: Dict, record: Dict) -> bytes:
+    def write_record(cls, definition: dict, record: dict[str]) -> bytes:
         byte_string = bytes()
         for field, field_type in definition.items():
             base_type, byte_count, is_list, _ = cls.parse_field_type(field_type)
@@ -447,7 +455,7 @@ class GundamDataFile:
     @lru_cache
     def parse_field_type(
         field_type: str,
-    ) -> Tuple[str, Optional[int], bool, Optional[str]]:
+    ) -> tuple[str, Optional[int], bool, Optional[str]]:
         ft = field_type.split(":")
 
         base_type = ft.pop(0)
@@ -478,7 +486,7 @@ class GundamDataFile:
     @classmethod
     def read_field(
         cls, field_type: str, buffer: BinaryIO, location: int = None
-    ) -> Union[List, Dict, int, str, bytes]:
+    ) -> [list, dict, int, str, bytes]:
         value = None
         base_type, byte_count, is_list, child_type = cls.parse_field_type(field_type)
 
@@ -541,7 +549,7 @@ class GundamDataFile:
         return value
 
     @classmethod
-    def write_field(cls, field_type: str, value: Union[int, str, bytes]) -> bytes:
+    def write_field(cls, field_type: str, value: [int, str, bytes]) -> bytes:
         byte_string = bytes()
         base_type, byte_count, is_list, child_type = cls.parse_field_type(field_type)
 
