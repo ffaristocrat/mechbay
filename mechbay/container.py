@@ -1,6 +1,7 @@
 import os
 from copy import deepcopy
 from io import BytesIO
+
 import mechbay.parsers as parsers
 from .pkd import PKDArchive
 from .strings import Localisation

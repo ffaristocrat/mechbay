@@ -1,14 +1,14 @@
 import os
 from io import BytesIO
 from pathlib import Path
-from typing import List, Dict, BinaryIO
+from typing import BinaryIO
 
 from .data import GundamDataFile
 
 LANGUAGES = ["english", "japanese", "korean", "schinese", "tchinese/hk", "tchinese/tw"]
 
 
-def write_byte_dict(data: Dict[str, bytes], base_path: str):
+def write_byte_dict(data: dict[str, bytes], base_path: str):
     for file_path, byte_string in data.items():
         full_path = Path(os.path.join(base_path, file_path))
         full_path.mkdir(parents=True, exist_ok=True)
@@ -16,7 +16,7 @@ def write_byte_dict(data: Dict[str, bytes], base_path: str):
             f.write(byte_string)
 
 
-def read_byte_dict(file_list: List[str], base_path: str) -> Dict[str, bytes]:
+def read_byte_dict(file_list: list[str], base_path: str) -> dict[str, bytes]:
     data = {}
     for file_path in file_list:
         full_path = Path(os.path.join(base_path, file_path))
@@ -34,7 +34,7 @@ class StringTBL(GundamDataFile):
 
     definitions = {"strings": {"index": "uint:4", "string": "uint:4"}}
 
-    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+    def write(self, records: dict[str, list[dict]]) -> bytes:
         pad_length = 16
         string_bytes = bytes()
         string_bytes += self.signature
@@ -61,7 +61,7 @@ class StringTBL(GundamDataFile):
 
         return string_bytes
 
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> dict[str, list[dict]]:
         records = super().read(buffer)
 
         for record in records["strings"]:
@@ -75,7 +75,7 @@ class Localisation:
     @classmethod
     def read_files(
         cls, input_data_path: str, filename: str
-    ) -> Dict[int, Dict[str, str]]:
+    ) -> dict[int, dict[str, str]]:
         data = {}
         for language in LANGUAGES:
             full_path = os.path.join(input_data_path, language, filename)
@@ -91,7 +91,7 @@ class Localisation:
         return records
 
     @classmethod
-    def read_bytes(cls, data: Dict[str, bytes]) -> Dict[int, Dict[str, str]]:
+    def read_bytes(cls, data: dict[str, bytes]) -> dict[int, dict[str, str]]:
         records = []
         for language, byte_string in data.items():
             if not byte_string:
@@ -118,7 +118,7 @@ class Localisation:
 
     @classmethod
     def write_files(
-        cls, records: Dict[int, Dict[str, str]], output_data_path: str, filename: str
+        cls, records: dict[int, dict[str, str]], output_data_path: str, filename: str
     ):
         data = cls.write_bytes(records)
 
@@ -129,7 +129,7 @@ class Localisation:
                 f.write(byte_string)
 
     @classmethod
-    def write_bytes(cls, records: Dict[int, Dict[str, str]]) -> Dict[str, bytes]:
+    def write_bytes(cls, records: dict[int, dict[str, str]]) -> dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
             localisation = {
@@ -149,7 +149,7 @@ class LocalisationIndexed(Localisation):
     """
 
     @classmethod
-    def read_bytes(cls, data: Dict[str, bytes]) -> Dict[int, Dict[str, str]]:
+    def read_bytes(cls, data: dict[str, bytes]) -> dict[int, dict[str, str]]:
         records = {}
         for language, byte_string in data.items():
             if not byte_string:
@@ -164,7 +164,7 @@ class LocalisationIndexed(Localisation):
         return records
 
     @classmethod
-    def write_bytes(cls, records: Dict[int, Dict[str, str]]) -> Dict[str, bytes]:
+    def write_bytes(cls, records: dict[int, dict[str, str]]) -> dict[str, bytes]:
         data = {}
         for language in LANGUAGES:
             localisation = {
@@ -204,7 +204,7 @@ class StageLocalisation:
     }
 
     @classmethod
-    def read_files(cls, input_data_path: str, stage_id: int) -> Dict[int, Dict]:
+    def read_files(cls, input_data_path: str, stage_id: int) -> dict[int, dict]:
         parts = {}
         campaign = str(stage_id).zfill(5)[0:3]
         stage = str(stage_id).zfill(5)[3:5]
@@ -237,7 +237,7 @@ class StageLocalisation:
 
     @classmethod
     def write_files(
-        cls, records: Dict[int, Dict], output_data_path: str, stage_id: int
+        cls, records: dict[int, dict], output_data_path: str, stage_id: int
     ):
         campaign = str(stage_id).zfill(5)[0:3]
         stage = str(stage_id).zfill(5)[3:5]
@@ -270,14 +270,14 @@ class VoiceTable(StringTBL):
     signature = b"\x54\x52\x54\x53\x00\x01\x01\x00"
     fields = ["voice_id", "expression", "unk1", "skip_noise"]
 
-    def write(self, records: Dict[str, List[Dict]]) -> bytes:
+    def write(self, records: dict[str, list[dict]]) -> bytes:
         for r in records["main"]:
             r["string"] = ",".join([str(r[f]) for f in self.fields])
         byte_string = super().write(records)
 
         return byte_string
 
-    def read(self, buffer: BinaryIO) -> Dict[str, List[Dict]]:
+    def read(self, buffer: BinaryIO) -> dict[str, list[dict]]:
         records = super().read(buffer)
 
         for record in records["main"]:

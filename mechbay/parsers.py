@@ -22,7 +22,7 @@ CHARACTER_STATS = [
 class AbilitySpecList(GundamDataFile):
     data_path = "resident"
     default_filename = "AbilitySpecList.cdb"
-    signature = b"\x4C\x4C\x42\x41\x00\x00\x0D\x01"
+    signature = b"\x4c\x4c\x42\x41\x00\x00\x0d\x01"
     constants = {
         # "fixed99": 99,
         "fixed1": 1
@@ -284,7 +284,7 @@ class AbilitySpecList(GundamDataFile):
 class ActAbilityEffectList(GundamDataFile):
     data_path = "tmap/resident"
     default_filename = "ActAbilityEffectList.cdb"
-    signature = b"\x4C\x45\x41\x41\x00\x00\x01\x01"
+    signature = b"\x4c\x45\x41\x41\x00\x00\x01\x01"
     definitions = {
         "units": {"guid": "guid", "unknown1": "uint:4", "unknown2": "uint:4"}
     }
@@ -356,7 +356,7 @@ class BTLIdSet(GundamDataFile):
 class BTLVoiceTable(GundamDataFile):
     default_filename = "voice_table.tbl"
     data_path = "sound/voice/BTL"
-    signature = b"\x54\x4F\x56\x42\x00\x04\x02\x00"
+    signature = b"\x54\x4f\x56\x42\x00\x04\x02\x00"
 
     definitions = {"voices": {"guint": "uint:4"}}
 
@@ -365,7 +365,7 @@ class CellAttributeList(GundamDataFile):
     default_filename = "CellAttributeList.cdb"
     data_path = "resident"
     package = "CellAttributeList.pkd"
-    signature = b"\x4C\x54\x41\x43\x00\x00\x03\x01"
+    signature = b"\x4c\x54\x41\x43\x00\x00\x03\x01"
     definitions = {
         "cells": {
             "name": "pointer:string_null_term",
@@ -395,7 +395,7 @@ class CellAttributeList(GundamDataFile):
 class CharacterConversionList(GundamDataFile):
     default_filename = "CharacterConversionList.cdb"
     data_path = "resident"
-    signature = b"\x4C\x56\x43\x43\x00\x00\x00\x01"
+    signature = b"\x4c\x56\x43\x43\x00\x00\x00\x01"
     constants = {"fixed1": 1}
     definitions = {
         "characters": {"character": "guid", "conversion": "guid", "fixed1": "uint:4"}
@@ -573,7 +573,7 @@ class CharacterSpecList(GundamDataFile):
     default_filename = "CharacterSpecList.cdb"
     data_path = "resident"
     package = "CharacterSpecList.pkd"
-    signature = b"\x4C\x53\x48\x43\x00\x00\x07\x02"
+    signature = b"\x4c\x53\x48\x43\x00\x00\x07\x02"
     definitions = {
         "characters": {
             "guid": "guid",
@@ -803,7 +803,7 @@ class CharacterSpecList(GundamDataFile):
 class CockpitBgTable(GundamDataFile):
     default_filename = "cockpit_bg_table.atp"
     data_path = "battle/table"
-    signature = b"\xC2\x3E\x10\x0A"
+    signature = b"\xc2\x3e\x10\x0a"
     record_count_length = 0
 
 
@@ -853,7 +853,7 @@ class DatabaseCalculation(GundamDataFile):
     default_filename = "DatabaseCalcuclation.cdb"
     data_path = "resident"
     package = "MiscData.pkd"
-    signature = b"\x43\x4C\x41\x43\x00\x00\x0A\x01"
+    signature = b"\x43\x4c\x41\x43\x00\x00\x0a\x01"
 
     def read(self, buffer: BinaryIO) -> Records:
         return {}
@@ -862,13 +862,13 @@ class DatabaseCalculation(GundamDataFile):
 class GalleryMovieList(GundamDataFile):
     default_filename = "GalleryMovieList.cdb"
     data_path = "resident"
-    signature = b"\x4C\x56\x4D\x47\x00\x00\x00\x01"
+    signature = b"\x4c\x56\x4d\x47\x00\x00\x00\x01"
 
 
 class GetUnitList(GundamDataFile):
     default_filename = "GetUnitList.cdb"
     data_path = "resident"
-    signature = b"\x00\x00\x00\x01\x4C\x54\x55\x47"
+    signature = b"\x00\x00\x00\x01\x4c\x54\x55\x47"
     definitions = {"units": {"get": "guid", "score": "uint:4"}}
 
 
@@ -876,7 +876,7 @@ class GroupSendingMissionList(GundamDataFile):
     default_filename = "GroupSendingMissionList.cdb"
     data_path = "resident"
     package = "MiscData.pkd"
-    signature = b"\x4C\x53\x50\x47\x00\x00\x07\x01"
+    signature = b"\x4c\x53\x50\x47\x00\x00\x07\x01"
 
     definitions = {
         "missions": {
@@ -1022,7 +1022,7 @@ class MachineConversionList(GundamDataFile):
     default_filename = "MachineConversionList.cdb"
     data_path = "resident"
     package = "MachineSpecList.pkd"
-    signature = b"\x56\x4E\x43\x4D\x00\x00\x02\x01"
+    signature = b"\x56\x4e\x43\x4d\x00\x00\x02\x01"
     definitions = {"units": {"unit": "guid", "transform": "guid", "type": "uint:4"}}
 
     conversion_types = {
@@ -1041,7 +1041,7 @@ class MachineDesignList(GundamDataFile):
     default_filename = "MachineDesignList.cdb"
     data_path = "resident"
     package = "MachineSpecList.pkd"
-    signature = b"\x49\x53\x44\x4D\x00\x00\x02\x01"
+    signature = b"\x49\x53\x44\x4d\x00\x00\x02\x01"
     definitions = {
         "designs": {
             "first": "guid",
@@ -1056,7 +1056,7 @@ class MachineDevelopmentList(GundamDataFile):
     default_filename = "MachineDevelopmentList.cdb"
     data_path = "resident"
     package = "MachineSpecList.pkd"
-    signature = b"\x56\x45\x44\x4D\x00\x00\x02\x01"
+    signature = b"\x56\x45\x44\x4d\x00\x00\x02\x01"
     definitions = {
         "units": {
             "unit": "guid",
@@ -1106,7 +1106,7 @@ class MachineGrowthList(GundamDataFile):
     default_filename = "MachineGrowthList.cdb"
     data_path = "resident"
     package = "MachineSpecList.pkd"
-    signature = b"\x00\x00\x02\x01\x52\x47\x43\x4D"
+    signature = b"\x00\x00\x02\x01\x52\x47\x43\x4d"
     definitions = {
         "table1": {
             "unk1": "uint:2",
@@ -1125,7 +1125,7 @@ class MachineSpecList(GundamDataFile):
     default_filename = "MachineSpecList.cdb"
     data_path = "resident"
     package = "MachineSpecList.pkd"
-    signature = b"\x4C\x53\x43\x4D\x03\x00\x05\x02"
+    signature = b"\x4c\x53\x43\x4d\x03\x00\x05\x02"
     constants = {"fixed7": 7, "wsfixed100": 100, "wsfixed80": 80, "wsfixed70": 70}
 
     definitions = {
@@ -1301,7 +1301,7 @@ class MachineSpecList(GundamDataFile):
 class MapTypes(GundamDataFile):
     default_filename = "MapTypes.cdb"
     data_path = "tmap/resident"
-    signature = b"\x02\x00\x05\x01\x50\x59\x54\x4D"
+    signature = b"\x02\x00\x05\x01\x50\x59\x54\x4d"
     definitions = {
         "types": {
             "unk1": "uint:1",
@@ -1353,7 +1353,7 @@ class MyCharacterConfigurations(GundamDataFile):
     default_filename = "MyCharacterConfigurations.cdb"
     data_path = "resident"
     package = "CharacterSpecList.pkd"
-    signature = b"\x43\x48\x43\x4D\x01\x00\x02\x01"
+    signature = b"\x43\x48\x43\x4d\x01\x00\x02\x01"
     constants = {"fixed71": 71}
 
     definitions = {
@@ -1479,7 +1479,7 @@ class PersonalMachineList(GundamDataFile):
     default_filename = "PersonalMachineList.cdb"
     data_path = "resident"
     package = "MachineSpecList.pkd"
-    signature = b"\x4C\x43\x4D\x50\x00\x00\x00\x01"
+    signature = b"\x4c\x43\x4d\x50\x00\x00\x00\x01"
     definitions = {"units": {"unit": "guid", "pilot": "guid", "custom": "guid"}}
 
 
@@ -1487,7 +1487,7 @@ class QuestList(GundamDataFile):
     default_filename = "QuestList.cdb"
     data_path = "resident"
     package = "StageList.pkd"
-    signature = b"\x4C\x54\x45\x51\x00\x00\x02\x01"
+    signature = b"\x4c\x54\x45\x51\x00\x00\x02\x01"
     definitions = {
         "quests": {
             "guid1": "pointer:list:guid",
@@ -1603,7 +1603,7 @@ class QuestList(GundamDataFile):
 class RangeDataList(GundamDataFile):
     default_filename = "RangeDataList.cdb"
     data_path = "resident"
-    signature = b"\x4C\x47\x4E\x52\x01\x00\x00\x01"
+    signature = b"\x4c\x47\x4e\x52\x01\x00\x00\x01"
 
     # TODO: identify mask
     definitions = {
@@ -1633,7 +1633,7 @@ class SeriesList(GundamDataFile):
     default_filename = "SeriesList.cdb"
     data_path = "resident"
     package = "MiscData.pkd"
-    signature = b"\x4C\x52\x45\x53\x02\x00\x02\x01"
+    signature = b"\x4c\x52\x45\x53\x02\x00\x02\x01"
     definitions = {
         "series": {
             "series_logo_l": "series",
@@ -1652,7 +1652,7 @@ class SeriesList(GundamDataFile):
 class SeriesProfileList(GundamDataFile):
     default_filename = "SeriesProfileList.cdb"
     data_path = "resident"
-    signature = b"\x4C\x50\x52\x53\x00\x00\x01\x01"
+    signature = b"\x4c\x50\x52\x53\x00\x00\x01\x01"
     definitions = {
         "main": {
             "gallery": "series",
@@ -1674,7 +1674,7 @@ class StageList(GundamDataFile):
     default_filename = "StageList.cdb"
     data_path = "resident"
     package = "StageList.pkd"
-    signature = b"\x4C\x47\x54\x53\x00\x00\x0C\x01"
+    signature = b"\x4c\x47\x54\x53\x00\x00\x0c\x01"
     constants = {
         "fixed100a": 100,
         "fixed100b": 100,
@@ -1752,7 +1752,7 @@ class StageList(GundamDataFile):
 class SkillAcquisitionPatternList(GundamDataFile):
     default_filename = "SkillAcquisitionPatternList.cdb"
     data_path = "resident"
-    signature = b"\x4C\x51\x41\x53\x00\x00\x00\x01"
+    signature = b"\x4c\x51\x41\x53\x00\x00\x00\x01"
 
     definitions = {
         "main": {
@@ -1781,7 +1781,7 @@ class SkillAcquisitionPatternList(GundamDataFile):
 class SpecProfileList(GundamDataFile):
     default_filename = "SpecProfileList.cdb"
     data_path = "resident"
-    signature = b"\x4C\x50\x50\x53\x00\x00\x03\x01"
+    signature = b"\x4c\x50\x50\x53\x00\x00\x03\x01"
     constants = {"fixed1": 1}
 
     # TODO: identify unknowns
@@ -1873,7 +1873,7 @@ class TutorialList(GundamDataFile):
     default_filename = "TutorialList.cdb"
     data_path = "resident"
     package = "MiscData.pkd"
-    signature = b"\x4F\x54\x55\x54\x00\x00\x01\x01"
+    signature = b"\x4f\x54\x55\x54\x00\x00\x01\x01"
 
     # TODO: identify unknowns
     # Uses messagestrings.tbl
@@ -1892,7 +1892,7 @@ class WeaponSpecList(GundamDataFile):
     default_filename = "WeaponSpecList.cdb"
     data_path = "resident"
     package = "MachineSpecList.pkd"
-    signature = b"\x4C\x53\x50\x57\x00\x00\x00\x01"
+    signature = b"\x4c\x53\x50\x57\x00\x00\x00\x01"
 
     """
         name
@@ -2025,13 +2025,13 @@ class DlcList(GundamDataFile):
 
 class EffectList(GundamDataFile):
     default_filename = "effectList.dat"
-    signature = b"\x4C\x45\x4D\x54"
+    signature = b"\x4c\x45\x4d\x54"
     definitions = {"main": {"effect_id": "uint:4", "effect_name": "string_len_prefix"}}
 
 
 class MapWeaponList(GundamDataFile):
     default_filename = "mapWeaponList.dat"
-    signature = b"\x57\x4D\x4D\x54"
+    signature = b"\x57\x4d\x4d\x54"
 
     # TODO: identify unknowns
     definitions = {
@@ -2048,7 +2048,7 @@ class MapWeaponList(GundamDataFile):
 
 class MovieList(GundamDataFile):
     default_filename = "movieList.dat"
-    signature = b"\x4C\x4D\x4D\x54"
+    signature = b"\x4c\x4d\x4d\x54"
     record_count_length = 2
 
 
@@ -2057,7 +2057,7 @@ class PowerUpList(GundamDataFile):
 
     default_filename = "powerUpList.dat"
     data_path = "tmap/resident"
-    signature = b"\x44\x4C\x55\x50"
+    signature = b"\x44\x4c\x55\x50"
 
     definitions = {
         "skills": {
@@ -2078,7 +2078,7 @@ class PowerUpListEx(GundamDataFile):
 
     default_filename = "powerUpListEx.dat"
     data_path = "tmap/resident"
-    signature = b"\x44\x4C\x55\x50"
+    signature = b"\x44\x4c\x55\x50"
 
     # TODO: identify unknowns
     definitions = {
@@ -2109,7 +2109,7 @@ class PowerUpListEx(GundamDataFile):
 class PowerUpStageEx(GundamDataFile):
     default_filename = "powerUpStageEx.dat"
     data_path = "tmap/resident"
-    signature = b"\x44\x4C\x55\x50"
+    signature = b"\x44\x4c\x55\x50"
 
     # TODO: identify unknowns
     definitions = {
@@ -2132,7 +2132,7 @@ class PowerUpStageEx(GundamDataFile):
 class ScoutMessageId(GundamDataFile):
     default_filename = "scoutMessageid.dat"
     data_path = "tmap/resident"
-    signature = b"\x4D\x53\x4D\x54"
+    signature = b"\x4d\x53\x4d\x54"
     record_count_length = 2
 
     # TODO: identify unknowns
@@ -2153,7 +2153,7 @@ class SteamDlcGroupList(GundamDataFile):
 
 class Stage(GundamDataFile):
     default_filename = "Stage.dat"
-    signature = b"\x49\x53\x4D\x54\x2F\x01\x00\x00"
+    signature = b"\x49\x53\x4d\x54\x2f\x01\x00\x00"
 
     definitions = {"areas": {}}
 
@@ -2206,7 +2206,7 @@ class Stage(GundamDataFile):
 
 class StageCondition(GundamDataFile):
     default_filename = "StageConditions.dat"
-    signature = b"\x43\x53\x4D\x54\x64\x00\x00\x00"
+    signature = b"\x43\x53\x4d\x54\x64\x00\x00\x00"
     record_count_length = 0
 
     # TODO: identify unknowns

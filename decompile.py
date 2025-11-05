@@ -20,7 +20,7 @@ def main():
         "--decompile",
         type=str,
         help="Decompiler jar",
-        default="./third_party/unluac/unluac.jar",
+        default="./third_party/unluac/unluac_2015_06_13.jar",
     )
 
     args = parser.parse_args()

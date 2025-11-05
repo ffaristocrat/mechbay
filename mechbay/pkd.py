@@ -38,7 +38,7 @@ class PkdInfo(NamedTuple):
 
 
 class PkdFile:
-    __header = b"\x20\x44\x4B\x50\x00\x01\x03\x00"
+    __header = b"\x20\x44\x4b\x50\x00\x01\x03\x00"
 
     def __init__(self, file, mode: str = "x"):
         self._file = file
@@ -92,7 +92,7 @@ class PkdFile:
 
 
 class PKDArchive(GundamDataFile):
-    signature = b"\x20\x44\x4B\x50\x00\x01\x03\x00"
+    signature = b"\x20\x44\x4b\x50\x00\x01\x03\x00"
     definitions = {
         "main": {
             "file_pointer": "uint:4",

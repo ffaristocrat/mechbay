@@ -30,13 +30,18 @@ class GundamDataFile:
 
     @staticmethod
     def read_int(
-        byte_string: bytes, byteorder: Literal["big", "little"] = "little", signed: bool = False
+        byte_string: bytes,
+        byteorder: Literal["big", "little"] = "little",
+        signed: bool = False,
     ) -> int:
         return int.from_bytes(byte_string, byteorder=byteorder, signed=signed)
 
     @staticmethod
     def write_int(
-        value: int, length: int, byteorder: Literal["big", "little"] = "little", signed: bool = False
+        value: int,
+        length: int,
+        byteorder: Literal["big", "little"] = "little",
+        signed: bool = False,
     ) -> bytes:
         return value.to_bytes(length, byteorder=byteorder, signed=signed)
 
@@ -57,7 +62,7 @@ class GundamDataFile:
         return string_bytes
 
     @staticmethod
-    def read_guid_bytes(byte_string: bytes) -> [str, bytes, None]:
+    def read_guid_bytes(byte_string: bytes) -> None | bytes | str:
         if byte_string == b"\x00\x00\x00\x00\x00\x00\x00\x00":
             return None
 
@@ -197,8 +202,9 @@ class GundamDataFile:
         data_filename = data_filename or self.default_file_path()
         json_filename = json_filename or (data_filename.rpartition(".")[0] + ".json")
         data = {
-            self.default_filename
-            or os.path.split(data_filename)[1]: self.read_file(data_filename)
+            self.default_filename or os.path.split(data_filename)[1]: self.read_file(
+                data_filename
+            )
         }
         os.makedirs(os.path.split(json_filename)[0], exist_ok=True)
         json.dump(data, open(json_filename, "wt"), indent=4)
@@ -319,7 +325,7 @@ class GundamDataFile:
         return len(cls.signature) + cls.record_count_length
 
     @classmethod
-    def apply_constants(cls, records: [list[dict], Records]) -> None:
+    def apply_constants(cls, records: list[dict] | Records) -> None:
         if isinstance(records, dict):
             for record_set in records.values():
                 cls._apply_constants(record_set)
@@ -339,9 +345,7 @@ class GundamDataFile:
                     r[c] = v
 
     @classmethod
-    def remove_constants(
-        cls, records: [list[dict], Records]
-    ) -> None:
+    def remove_constants(cls, records: list[dict] | Records) -> None:
         if isinstance(records, dict):
             for record_set in records.values():
                 cls._remove_constants(record_set)
@@ -410,7 +414,7 @@ class GundamDataFile:
         return records
 
     @classmethod
-    def read_record(cls, definition: dict, buffer: BinaryIO) -> dict[str]:
+    def read_record(cls, definition: dict, buffer: BinaryIO) -> dict[str, Any]:
         location = buffer.tell()
         record = {}
         for field, field_type in definition.items():
@@ -423,7 +427,7 @@ class GundamDataFile:
         return record
 
     @classmethod
-    def write_record(cls, definition: dict, record: dict[str]) -> bytes:
+    def write_record(cls, definition: dict, record: dict[str, Any]) -> bytes:
         byte_string = bytes()
         for field, field_type in definition.items():
             base_type, byte_count, is_list, _ = cls.parse_field_type(field_type)
@@ -486,7 +490,7 @@ class GundamDataFile:
     @classmethod
     def read_field(
         cls, field_type: str, buffer: BinaryIO, location: int = None
-    ) -> [list, dict, int, str, bytes]:
+    ) -> list | dict | int | str | bytes:
         value = None
         base_type, byte_count, is_list, child_type = cls.parse_field_type(field_type)
 
@@ -549,7 +553,7 @@ class GundamDataFile:
         return value
 
     @classmethod
-    def write_field(cls, field_type: str, value: [int, str, bytes]) -> bytes:
+    def write_field(cls, field_type: str, value: int | str | bytes) -> bytes:
         byte_string = bytes()
         base_type, byte_count, is_list, child_type = cls.parse_field_type(field_type)
 
