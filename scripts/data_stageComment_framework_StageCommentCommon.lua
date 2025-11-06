@@ -1,0 +1,6 @@
+AmuroId = "G0010C00101"
+se_online = "sa00090.hca"
+waitTime0 = "0.4"
+waitTime1 = "1"
+waitTime2 = "1.5"
+waitTime3 = "2.0"
