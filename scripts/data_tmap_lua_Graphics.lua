@@ -1,675 +1,471 @@
-local L1_1
-L0_0 = {}
-SSA = L0_0
-L0_0 = SSA
-function L1_1(A0_2, ...)
-  local L2_4, L3_5, L4_6
-  L1_3 = false
-  L2_4 = select
-  L3_5 = "#"
-  L4_6 = ...
-  L2_4 = L2_4(L3_5, L4_6, ...)
-  if L2_4 >= 1 then
-    L2_4 = select
-    L3_5 = 1
-    L4_6 = ...
-    L2_4 = L2_4(L3_5, L4_6, ...)
-    L1_3 = L2_4
+SSA = {}
+
+function SSA.CreateSSA(ssaId, ...)
+  local arg1 = false -- 'not ready'
+  if select("#", ...) >= 1 then
+    arg1 = select(1, ...)
   end
-  L2_4 = true
-  L3_5 = select
-  L4_6 = "#"
-  L3_5 = L3_5(L4_6, ...)
-  if L3_5 >= 2 then
-    L3_5 = select
-    L4_6 = 2
-    L3_5 = L3_5(L4_6, ...)
-    L2_4 = L3_5
+  
+  local arg2 = true -- 'can skip'
+  if select("#", ...) >= 2 then
+    arg2 = select(2, ...)
   end
-  L3_5 = System
-  L3_5 = L3_5.CreateSSA
-  L4_6 = A0_2
-  L3_5 = L3_5(L4_6, L1_3, L2_4)
-  while true do
-    L4_6 = System
-    L4_6 = L4_6.IsReadySSA
-    L4_6 = L4_6(L3_5)
-    if not L4_6 then
-      L4_6 = coroutine
-      L4_6 = L4_6.yield
-      L4_6(0)
-    end
+  
+  local ssaHandle = System.CreateSSA(ssaId, arg1, arg2)
+  
+  while not System.IsReadySSA(ssaHandle) do
+    coroutine.yield(0)
   end
-  L4_6 = select
-  L4_6 = L4_6("#", ...)
-  if L4_6 >= 3 then
-    L4_6 = select
-    L4_6 = L4_6(3, ...)
-    SSA.SetSSAIndex(L3_5, L4_6)
+  
+  if select("#", ...) >= 3 then
+    SSA.SetSSAIndex(ssaHandle, select(3, ...))
   end
-  return L3_5
+  
+  return ssaHandle
 end
-L0_0.CreateSSA = L1_1
-L0_0 = SSA
-function L1_1(A0_7, A1_8, ...)
-  local L3_10, L4_11, L5_12, L6_13
-  L2_9 = false
-  L3_10 = select
-  L4_11 = "#"
-  L6_13 = ...
-  L3_10 = L3_10(L4_11, L5_12, L6_13, ...)
-  if L3_10 >= 1 then
-    L3_10 = select
-    L4_11 = 1
-    L6_13 = ...
-    L3_10 = L3_10(L4_11, L5_12, L6_13, ...)
-    L2_9 = L3_10
+
+function SSA.CreateSSAonUnit(ssaId, unitId, ...)
+  local arg1 = false -- 'not ready'
+  if select("#", ...) >= 1 then
+    arg1 = select(1, ...)
   end
-  L3_10 = true
-  L4_11 = select
-  L5_12 = "#"
-  L6_13 = ...
-  L4_11 = L4_11(L5_12, L6_13, ...)
-  if L4_11 >= 2 then
-    L4_11 = select
-    L5_12 = 2
-    L6_13 = ...
-    L4_11 = L4_11(L5_12, L6_13, ...)
-    L3_10 = L4_11
+  
+  local arg2 = true -- 'can skip'
+  if select("#", ...) >= 2 then
+    arg2 = select(2, ...)
   end
-  L4_11 = System
-  L4_11 = L4_11.GetUnit
-  L5_12 = A1_8
-  L4_11 = L4_11(L5_12)
-  L5_12 = System
-  L5_12 = L5_12.CreateSSAonUnit
-  L6_13 = A0_7
-  L5_12 = L5_12(L6_13, L4_11, L2_9, L3_10)
-  while true do
-    L6_13 = System
-    L6_13 = L6_13.IsReadySSA
-    L6_13 = L6_13(L5_12)
-    if not L6_13 then
-      L6_13 = coroutine
-      L6_13 = L6_13.yield
-      L6_13(0)
-    end
+  
+  local unit = System.GetUnit(unitId)
+  local ssaHandle = System.CreateSSAonUnit(ssaId, unit, arg1, arg2)
+  
+  while not System.IsReadySSA(ssaHandle) do
+    coroutine.yield(0)
   end
-  L6_13 = select
-  L6_13 = L6_13("#", ...)
-  if L6_13 >= 3 then
-    L6_13 = select
-    L6_13 = L6_13(3, ...)
-    SSA.SetSSAIndex(L5_12, L6_13)
+  
+  if select("#", ...) >= 3 then
+    SSA.SetSSAIndex(ssaHandle, select(3, ...))
   end
-  return L5_12
+  
+  return ssaHandle
 end
-L0_0.CreateSSAonUnit = L1_1
-L0_0 = SSA
-function L1_1(A0_14)
-  return (System.CreateSSA(A0_14, true, true))
+
+function SSA.CreateSSANotReady(ssaId)
+  return System.CreateSSA(ssaId, true, true)
 end
-L0_0.CreateSSANotReady = L1_1
-L0_0 = SSA
-function L1_1(A0_15, A1_16)
-  local L2_17
-  L2_17 = System
-  L2_17 = L2_17.GetUnit
-  L2_17 = L2_17(A1_16)
-  return (System.CreateSSAonUnit(A0_15, L2_17, true, true))
+
+function SSA.CreateSSAonUnitNotReady(ssaId, unitId)
+  local unit = System.GetUnit(unitId)
+  return System.CreateSSAonUnit(ssaId, unit, true, true)
 end
-L0_0.CreateSSAonUnitNotReady = L1_1
-L0_0 = SSA
-function L1_1(A0_18, A1_19)
-  System.LoopSSA(A0_18, A1_19)
+
+function SSA.Loop(ssaHandle, loop)
+  System.LoopSSA(ssaHandle, loop)
 end
-L0_0.Loop = L1_1
-L0_0 = SSA
-function L1_1(A0_20, A1_21)
-  System.ScaleSSA(A0_20, A1_21)
+
+function SSA.Scale(ssaHandle, scale)
+  System.ScaleSSA(ssaHandle, scale)
 end
-L0_0.Scale = L1_1
-L0_0 = SSA
-function L1_1(A0_22, A1_23, A2_24)
-  System.PositionSSA(A0_22, A1_23, A2_24)
+
+function SSA.Position(ssaHandle, x, y)
+  System.PositionSSA(ssaHandle, x, y)
 end
-L0_0.Position = L1_1
-L0_0 = SSA
-function L1_1(A0_25, A1_26, A2_27)
-  System.PositionSSA(A0_25, (A1_26 + 0.5) * Grid.Size(), (A2_27 + 0.5) * Grid.Size())
+
+function SSA.CellPosition(ssaHandle, cellX, cellY)
+  System.PositionSSA(ssaHandle, (cellX + 0.5) * Grid.Size(), (cellY + 0.5) * Grid.Size())
 end
-L0_0.CellPosition = L1_1
-L0_0 = SSA
-function L1_1(A0_28, A1_29)
-  System.AngleSSA(A0_28, A1_29)
+
+function SSA.Angle(ssaHandle, angle)
+  System.AngleSSA(ssaHandle, angle)
 end
-L0_0.Angle = L1_1
-L0_0 = SSA
-function L1_1(A0_30, A1_31)
-  System.VisibleSSA(A0_30, A1_31)
+
+function SSA.Visible(ssaHandle, visible)
+  System.VisibleSSA(ssaHandle, visible)
 end
-L0_0.Visible = L1_1
-L0_0 = SSA
-function L1_1(A0_32, A1_33)
-  System.CanSkipSSA(A0_32, A1_33)
+
+function SSA.CanSkip(ssaHandle, canSkip)
+  System.CanSkipSSA(ssaHandle, canSkip)
 end
-L0_0.CanSkip = L1_1
-L0_0 = SSA
-function L1_1(A0_34)
-  return System.IsPlayingSSA(A0_34)
+
+function SSA.IsPlaying(ssaHandle)
+  return System.IsPlayingSSA(ssaHandle)
 end
-L0_0.IsPlaying = L1_1
-L0_0 = SSA
-function L1_1(A0_35)
-  return System.CurrentTimeSSA(A0_35)
+
+function SSA.CurrentTime(ssaHandle)
+  return System.CurrentTimeSSA(ssaHandle)
 end
-L0_0.CurrentTime = L1_1
-L0_0 = SSA
-function L1_1(A0_36, A1_37, A2_38, A3_39)
-  System.MoveSSA(A0_36, A1_37, A2_38, A3_39)
+
+function SSA.Move(ssaHandle, x, y, duration)
+  System.MoveSSA(ssaHandle, x, y, duration)
 end
-L0_0.Move = L1_1
-L0_0 = SSA
-function L1_1(A0_40)
-  System.StopSSA(A0_40)
+
+function SSA.Stop(ssaHandle)
+  System.StopSSA(ssaHandle)
 end
-L0_0.Stop = L1_1
-L0_0 = SSA
-function L1_1(A0_41, A1_42)
-  System.PauseSSA(A0_41, A1_42)
+
+function SSA.Pause(ssaHandle, pause)
+  System.PauseSSA(ssaHandle, pause)
 end
-L0_0.Pause = L1_1
-L0_0 = SSA
-function L1_1(A0_43, A1_44)
-  System.PrioritySSA(A0_43, A1_44)
+
+function SSA.Priority(ssaHandle, priority)
+  System.PrioritySSA(ssaHandle, priority)
 end
-L0_0.Priority = L1_1
-L0_0 = SSA
-function L1_1(A0_45, A1_46)
-  System.SetSSAIndex(A0_45, A1_46)
+
+function SSA.SetSSAIndex(ssaHandle, index)
+  System.SetSSAIndex(ssaHandle, index)
 end
-L0_0.SetSSAIndex = L1_1
-L0_0 = SSA
-function L1_1(A0_47, A1_48)
-  local L2_49
-  L2_49 = System
-  L2_49 = L2_49.GetUnit
-  L2_49 = L2_49(A1_48)
-  System.KomaPrioritySSA(A0_47, L2_49)
+
+function SSA.KomaPriority(ssaHandle, unitId)
+  local unit = System.GetUnit(unitId)
+  System.KomaPrioritySSA(ssaHandle, unit)
 end
-L0_0.KomaPriority = L1_1
-L0_0 = SSA
-function L1_1(A0_50)
-  while not System.RemoveLoopPoint(A0_50) do
+
+function SSA.RemoveLoopPoint(ssaHandle)
+  while not System.RemoveLoopPoint(ssaHandle) do
     Utility.BreakScript()
   end
 end
-L0_0.RemoveLoopPoint = L1_1
-L0_0 = SSA
-function L1_1(A0_51, A1_52)
-  System.FlipVerticalSSA(A0_51, A1_52)
+
+function SSA.FlipVertical(ssaHandle, flip)
+  System.FlipVerticalSSA(ssaHandle, flip)
 end
-L0_0.FlipVertical = L1_1
-L0_0 = SSA
-function L1_1(A0_53, A1_54)
-  System.FlipHorizontalSSA(A0_53, A1_54)
+
+function SSA.FlipHorizontal(ssaHandle, flip)
+  System.FlipHorizontalSSA(ssaHandle, flip)
 end
-L0_0.FlipHorizontal = L1_1
-L0_0 = SSA
-function L1_1(A0_55, A1_56, A2_57, A3_58, A4_59)
-  System.SetColorSSA(A0_55, A1_56, A2_57, A3_58, A4_59)
+
+function SSA.SetColor(ssaHandle, r, g, b, a)
+  System.SetColorSSA(ssaHandle, r, g, b, a)
 end
-L0_0.SetColor = L1_1
-L0_0 = SSA
-function L1_1(A0_60, A1_61, A2_62, A3_63, A4_64)
-  local L5_65
-  L5_65 = System
-  L5_65 = L5_65.GetUnit
-  L5_65 = L5_65(A1_61)
-  return System.MultiEffectAroundUnit(A0_60, L5_65, A2_62, A3_63, A4_64)
+
+function SSA.MultiEffectAroundUnit(effectId, unitId, range, interval, duration)
+  local unit = System.GetUnit(unitId)
+  return System.MultiEffectAroundUnit(effectId, unit, range, interval, duration)
 end
-L0_0.MultiEffectAroundUnit = L1_1
-L0_0 = SSA
-function L1_1(A0_66, A1_67, A2_68, A3_69)
-  local L4_70, L5_71
-  L4_70 = System
-  L4_70 = L4_70.GetUnit
-  L5_71 = A0_66
-  L4_70 = L4_70(L5_71)
-  L5_71 = System
-  L5_71 = L5_71.CreateMapWeaponEffect
-  L5_71 = L5_71(L4_70, A1_67, A2_68, A3_69)
-  while not System.IsReadySSA(L5_71) do
+
+function SSA.CreateMapWeaponEffect(unitId, weaponId, x, y)
+  local unit = System.GetUnit(unitId)
+  local ssaHandle = System.CreateMapWeaponEffect(unit, weaponId, x, y)
+  while not System.IsReadySSA(ssaHandle) do
     coroutine.yield(0)
   end
-  return L5_71
+  return ssaHandle
 end
-L0_0.CreateMapWeaponEffect = L1_1
-L0_0 = SSA
-function L1_1(A0_72)
-  return System.GetDisappearTime(A0_72)
+
+function SSA.GetDisappearTime(ssaHandle)
+  return System.GetDisappearTime(ssaHandle)
 end
-L0_0.GetDisappearTime = L1_1
-L0_0 = SSA
-function L1_1()
+
+function SSA.GetMoveRangeWithMapWeapon()
   return System.GetMoveRangeWithMapWeapon()
 end
-L0_0.GetMoveRangeWithMapWeapon = L1_1
-L0_0 = SSA
-function L1_1(A0_73, A1_74)
-  local L2_75
-  L2_75 = System
-  L2_75 = L2_75.GetUnit
-  L2_75 = L2_75(A0_73)
-  return System.MoveUnitWithMapWeapon(L2_75, A1_74)
+
+function SSA.MoveUnitWithMapWeapon(unitId, ssaHandle)
+  local unit = System.GetUnit(unitId)
+  return System.MoveUnitWithMapWeapon(unit, ssaHandle)
 end
-L0_0.MoveUnitWithMapWeapon = L1_1
-L0_0 = SSA
-function L1_1(A0_76)
-  local L1_77
-  L1_77 = System
-  L1_77 = L1_77.GetUnit
-  L1_77 = L1_77(A0_76)
-  return System.GetKomaAnimeMapEffect(L1_77)
+
+function SSA.GetKomaAnimeMapEffect(unitId)
+  local unit = System.GetUnit(unitId)
+  return System.GetKomaAnimeMapEffect(unit)
 end
-L0_0.GetKomaAnimeMapEffect = L1_1
-L0_0 = SSA
-function L1_1(A0_78)
-  local L1_79
-  L1_79 = System
-  L1_79 = L1_79.GetUnit
-  L1_79 = L1_79(A0_78)
-  return System.IsHaroMapWeapon(L1_79)
+
+function SSA.IsHaroMapWeapon(unitId)
+  local unit = System.GetUnit(unitId)
+  return System.IsHaroMapWeapon(unit)
 end
-L0_0.IsHaroMapWeapon = L1_1
-L0_0 = SSA
-function L1_1(A0_80, A1_81)
-  local L2_82
-  L2_82 = System
-  L2_82 = L2_82.GetUnit
-  L2_82 = L2_82(A1_81)
-  System.SetTerrainOffsetSSA(A0_80, L2_82)
+
+function SSA.SetTerrainOffset(ssaHandle, unitId)
+  local unit = System.GetUnit(unitId)
+  System.SetTerrainOffsetSSA(ssaHandle, unit)
 end
-L0_0.SetTerrainOffset = L1_1
-L0_0 = SSA
-function L1_1(A0_83)
-  local L1_84
-  L1_84 = System
-  L1_84 = L1_84.GetUnit
-  L1_84 = L1_84(A0_83)
-  return System.IsUnitCenterEffect(L1_84)
+
+function SSA.IsUnitCenterEffect(unitId)
+  local unit = System.GetUnit(unitId)
+  return System.IsUnitCenterEffect(unit)
 end
-L0_0.IsUnitCenterEffect = L1_1
-L0_0 = SSA
-function L1_1(A0_85, A1_86)
-  local L2_87
-  L2_87 = System
-  L2_87 = L2_87.GetUnit
-  L2_87 = L2_87(A0_85)
-  return System.PlaySpecialMapWeaponVoice(L2_87, A1_86)
+
+function SSA.PlaySpecialMapWeaponVoice(unitId, ssaHandle)
+  local unit = System.GetUnit(unitId)
+  return System.PlaySpecialMapWeaponVoice(unit, ssaHandle)
 end
-L0_0.PlaySpecialMapWeaponVoice = L1_1
-L0_0 = SSA
-function L1_1(A0_88, A1_89, A2_90)
-  local L3_91, L4_92
-  L3_91 = 0
-  while A1_89 > L3_91 do
-    L4_92 = L3_91 / A1_89
-    if not A2_90 then
-      L4_92 = 1 - L4_92
+
+function SSA.Fade(ssaHandle, duration, fadeIn)
+  local elapsed = 0
+  while duration > elapsed do
+    local alpha = elapsed / duration
+    if not fadeIn then
+      alpha = 1 - alpha
     end
-    SSA.SetColor(A0_88, 1, 1, 1, L4_92)
-    L3_91 = L3_91 + Utility.GetElapsedTime()
+    SSA.SetColor(ssaHandle, 1, 1, 1, alpha)
+    elapsed = elapsed + Utility.GetElapsedTime()
     Utility.BreakScript()
   end
+  -- Ensure final state
+  SSA.SetColor(ssaHandle, 1, 1, 1, fadeIn and 1 or 0)
 end
-L0_0.Fade = L1_1
-L0_0 = {}
-MapSSA = L0_0
-L0_0 = MapSSA
-function L1_1(A0_93, A1_94, A2_95)
-  System.PositionMapSSA(A0_93, A1_94, A2_95)
+
+---
+-- MapSSA
+---
+
+MapSSA = {}
+
+function MapSSA.Position(ssaId, x, y)
+  System.PositionMapSSA(ssaId, x, y)
 end
-L0_0.Position = L1_1
-L0_0 = MapSSA
-function L1_1(A0_96, A1_97)
-  System.VisibleMapSSA(A0_96, A1_97)
+
+function MapSSA.Visible(ssaId, visible)
+  System.VisibleMapSSA(ssaId, visible)
 end
-L0_0.Visible = L1_1
-L0_0 = {}
-EventGraphics = L0_0
-L0_0 = EventGraphics
-function L1_1(A0_98, A1_99)
-  local L2_100
-  L2_100 = System
-  L2_100 = L2_100.CreateGraphic
-  L2_100 = L2_100(A0_98, A1_99)
-  while not EventGraphics.IsReady(L2_100) do
+
+---
+-- EventGraphics
+---
+
+EventGraphics = {}
+
+function EventGraphics.Create(graphicId, priority)
+  local graphicHandle = System.CreateGraphic(graphicId, priority)
+  while not EventGraphics.IsReady(graphicHandle) do
     Utility.BreakScript()
   end
-  return L2_100
+  return graphicHandle
 end
-L0_0.Create = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_101, ...)
-  local L2_103
-  L1_102 = EventGraphics
-  L1_102 = L1_102.DefaultFadeTime
-  L2_103 = select
-  L2_103 = L2_103("#", ...)
-  if L2_103 >= 1 then
-    L2_103 = select
-    L2_103 = L2_103(1, ...)
-    L1_102 = L2_103
+
+function EventGraphics.FadeIn(graphicHandle, ...)
+  local fadeTime = EventGraphics.DefaultFadeTime
+  if select("#", ...) >= 1 then
+    fadeTime = select(1, ...)
   end
-  L2_103 = System
-  L2_103 = L2_103.FadeGraphic
-  L2_103(A0_101, L1_102, true)
-  L2_103 = true
+  
+  System.FadeGraphic(graphicHandle, fadeTime, true)
+  
+  local wait = true
   if select("#", ...) >= 2 then
-    L2_103 = select(2, ...)
+    wait = select(2, ...)
   end
-  if L2_103 then
-    while not System.IsCompletedFadeGraphic(A0_101) do
+  
+  if wait then
+    while not System.IsCompletedFadeGraphic(graphicHandle) do
       coroutine.yield(0)
     end
   end
 end
-L0_0.FadeIn = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_104, ...)
-  local L2_106
-  L1_105 = EventGraphics
-  L1_105 = L1_105.DefaultFadeTime
-  L2_106 = select
-  L2_106 = L2_106("#", ...)
-  if L2_106 >= 1 then
-    L2_106 = select
-    L2_106 = L2_106(1, ...)
-    L1_105 = L2_106
+
+function EventGraphics.FadeOut(graphicHandle, ...)
+  local fadeTime = EventGraphics.DefaultFadeTime
+  if select("#", ...) >= 1 then
+    fadeTime = select(1, ...)
   end
-  L2_106 = System
-  L2_106 = L2_106.FadeGraphic
-  L2_106(A0_104, L1_105, false)
-  L2_106 = true
+  
+  System.FadeGraphic(graphicHandle, fadeTime, false)
+  
+  local wait = true
   if select("#", ...) >= 2 then
-    L2_106 = select(2, ...)
+    wait = select(2, ...)
   end
-  if L2_106 then
-    while not System.IsCompletedFadeGraphic(A0_104) do
+  
+  if wait then
+    while not System.IsCompletedFadeGraphic(graphicHandle) do
       coroutine.yield(0)
     end
   end
 end
-L0_0.FadeOut = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_107)
-  return System.IsReadyGraphic(A0_107)
+
+function EventGraphics.IsReady(graphicHandle)
+  return System.IsReadyGraphic(graphicHandle)
 end
-L0_0.IsReady = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_108)
-  return System.IsCompletedFadeGraphic(A0_108)
+
+function EventGraphics.IsCompletedFade(graphicHandle)
+  return System.IsCompletedFadeGraphic(graphicHandle)
 end
-L0_0.IsCompletedFade = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_109, A1_110, A2_111, A3_112)
-  return System.SetGraphicColor(A0_109, A1_110, A2_111, A3_112)
+
+function EventGraphics.SetColor(graphicHandle, r, g, b)
+  return System.SetGraphicColor(graphicHandle, r, g, b)
 end
-L0_0.SetColor = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_113, A1_114)
-  return System.SetGraphicMaxAlpha(A0_113, A1_114)
+
+function EventGraphics.SetMaxAlpha(graphicHandle, alpha)
+  return System.SetGraphicMaxAlpha(graphicHandle, alpha)
 end
-L0_0.SetMaxAlpha = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_115, A1_116, A2_117, A3_118)
-  local L4_119
-  L4_119 = System
-  L4_119 = L4_119.FadeScreen
-  L4_119 = L4_119(0, true, A0_115, A1_116, A2_117, A3_118)
-  while not System.IsCompletedFadeGraphic(L4_119) do
+
+function EventGraphics.FadeInScreen(duration, r, g, b)
+  local fadeHandle = System.FadeScreen(0, true, duration, r, g, b)
+  while not System.IsCompletedFadeGraphic(fadeHandle) do
     coroutine.yield(0)
   end
-  return L4_119
+  return fadeHandle
 end
-L0_0.FadeInScreen = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_120, A1_121)
-  System.FadeScreen(A0_120, false, A1_121, 0, 0, 0)
-  while not System.IsCompletedFadeGraphic(A0_120) do
+
+function EventGraphics.FadeOutScreen(fadeHandle, duration)
+  System.FadeScreen(fadeHandle, false, duration, 0, 0, 0)
+  while not System.IsCompletedFadeGraphic(fadeHandle) do
     coroutine.yield(0)
   end
 end
-L0_0.FadeOutScreen = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_122)
-  local L1_123
-  L1_123 = System
-  L1_123 = L1_123.FadeStartEventScreen
-  L1_123 = L1_123(true, A0_122)
-  while not System.IsCompletedFadeGraphic(L1_123) do
+
+function EventGraphics.FadeInStartEventScreen(duration)
+  local fadeHandle = System.FadeStartEventScreen(true, duration)
+  while not System.IsCompletedFadeGraphic(fadeHandle) do
     coroutine.yield(0)
   end
 end
-L0_0.FadeInStartEventScreen = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_124)
-  local L1_125
-  L1_125 = System
-  L1_125 = L1_125.FadeStartEventScreen
-  L1_125 = L1_125(false, A0_124)
-  Utility.WaitProcedure(L1_125)
+
+function EventGraphics.FadeOutStartEventScreen(duration)
+  local proc = System.FadeStartEventScreen(false, duration)
+  Utility.WaitProcedure(proc)
 end
-L0_0.FadeOutStartEventScreen = L1_1
-L0_0 = EventGraphics
-function L1_1()
-  local L0_126
-  L0_126 = System
-  L0_126 = L0_126.FadeTelopScreen
-  L0_126 = L0_126(true)
-  while not System.IsCompletedFadeGraphic(L0_126) do
+
+function EventGraphics.FadeInTelopScreen()
+  local fadeHandle = System.FadeTelopScreen(true)
+  while not System.IsCompletedFadeGraphic(fadeHandle) do
     coroutine.yield(0)
   end
 end
-L0_0.FadeInTelopScreen = L1_1
-L0_0 = EventGraphics
-function L1_1()
-  local L0_127
-  L0_127 = System
-  L0_127 = L0_127.FadeTelopScreen
-  L0_127 = L0_127(false)
-  while not System.IsCompletedFadeGraphic(L0_127) do
+
+function EventGraphics.FadeOutTelopScreen()
+  local fadeHandle = System.FadeTelopScreen(false)
+  while not System.IsCompletedFadeGraphic(fadeHandle) do
     coroutine.yield(0)
   end
 end
-L0_0.FadeOutTelopScreen = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_128)
-  System.ShakeGraphic(A0_128, true)
+
+function EventGraphics.StartShake(graphicHandle)
+  System.ShakeGraphic(graphicHandle, true)
 end
-L0_0.StartShake = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_129)
-  System.ShakeGraphic(A0_129, false)
+
+function EventGraphics.StopShake(graphicHandle)
+  System.ShakeGraphic(graphicHandle, false)
 end
-L0_0.StopShake = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_130, A1_131, A2_132, A3_133, ...)
-  local L5_135, L6_136, L7_137, L8_138, L9_139
-  L4_134 = 1
-  L9_139 = ...
-  if L5_135 >= 1 then
-    L9_139 = ...
-    L4_134 = L5_135
+
+function EventGraphics.Move(graphicHandle, x, y, duration, ...)
+  local loopCount = 1
+  if select("#", ...) >= 1 then
+    loopCount = select(1, ...) -- Decompiler likely confused this
   end
-  for L8_138 = 1, L4_134 do
-    L9_139 = System
-    L9_139 = L9_139.MoveGraphic
-    L9_139 = L9_139(A0_130, A1_131, A2_132, A3_133)
-    Utility.WaitProcedure(L9_139)
+  
+  for i = 1, loopCount do
+    local proc = System.MoveGraphic(graphicHandle, x, y, duration)
+    Utility.WaitProcedure(proc)
     Utility.Wait(0.1)
   end
 end
-L0_0.Move = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_140, A1_141)
-  System.SetGraphicRender3d(A0_140, A1_141)
+
+function EventGraphics.SetRender3d(graphicHandle, render3d)
+  System.SetGraphicRender3d(graphicHandle, render3d)
 end
-L0_0.SetRender3d = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_142, A1_143, A2_144, ...)
-  local L5_146, L6_147, L7_148
-  L4_145 = System
-  L4_145 = L4_145.StartSlideShow
-  L5_146 = A0_142
-  L6_147 = A1_143
-  L7_148 = A2_144
-  L4_145(L5_146, L6_147, L7_148, ...)
+
+function EventGraphics.StartSlideShow(arg1, arg2, arg3, ...)
+  System.StartSlideShow(arg1, arg2, arg3, ...)
 end
-L0_0.StartSlideShow = L1_1
-L0_0 = EventGraphics
-function L1_1()
-  local L0_149
-  L0_149 = System
-  L0_149 = L0_149.EndSlideShow
-  L0_149 = L0_149()
-  Utility.WaitProcedure(L0_149)
+
+function EventGraphics.EndSlideShow()
+  local proc = System.EndSlideShow()
+  Utility.WaitProcedure(proc)
 end
-L0_0.EndSlideShow = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_150)
-  System.FadeNowLoading(A0_150)
-  if not A0_150 then
+
+function EventGraphics.FadeNowLoading(fadeIn)
+  System.FadeNowLoading(fadeIn)
+  if not fadeIn then
     while not System.IsIdleNowLoading() do
       coroutine.yield(0)
     end
   end
 end
-L0_0.FadeNowLoading = L1_1
-L0_0 = {}
-Movie = L0_0
-L0_0 = Movie
-function L1_1(A0_151, A1_152)
-  return System.CreateMovie(A0_151, A1_152)
+
+---
+-- Movie
+---
+
+Movie = {}
+
+function Movie.Create(movieId, movieType)
+  return System.CreateMovie(movieId, movieType)
 end
-L0_0.Create = L1_1
-L0_0 = Movie
-function L1_1()
+
+function Movie.IsReady()
   return System.IsReadyMovie()
 end
-L0_0.IsReady = L1_1
-L0_0 = Movie
-function L1_1()
+
+function Movie.IsPlaying()
   return System.IsPlayingMovie()
 end
-L0_0.IsPlaying = L1_1
-L0_0 = Movie
-function L1_1(A0_153, A1_154, A2_155)
-  System.SetMovieFadeColor(A0_153, A1_154, A2_155)
+
+function Movie.SetFadeColor(r, g, b)
+  System.SetMovieFadeColor(r, g, b)
 end
-L0_0.SetFadeColor = L1_1
-L0_0 = Movie
-function L1_1(A0_156, A1_157)
-  return System.AddProfileMovie(A0_156, A1_157)
+
+function Movie.AddProfile(movieId, galleryId)
+  return System.AddProfileMovie(movieId, galleryId)
 end
-L0_0.AddProfile = L1_1
-L0_0 = {}
-Camera = L0_0
-L0_0 = Camera
-function L1_1(A0_158, ...)
-  local L2_160
-  L1_159 = 3 - A0_158
-  L1_159 = L1_159 * 0.25
-  L1_159 = 1 + L1_159
-  L2_160 = System
-  L2_160 = L2_160.CameraZoom
-  L2_160 = L2_160(L1_159, ...)
-  Utility.WaitProcedure(L2_160)
+
+---
+-- Camera
+---
+
+Camera = {}
+
+function Camera.CameraLv(level, ...)
+  local zoom = 1 + (3 - level) * 0.25
+  local proc = System.CameraZoom(zoom, ...)
+  Utility.WaitProcedure(proc)
 end
-L0_0.CameraLv = L1_1
-L0_0 = Camera
-function L1_1()
-  local L0_161, L1_162
-  L0_161 = System
-  L0_161 = L0_161.GetCameraZoom
-  L0_161 = L0_161()
-  L0_161 = L0_161 + 0.25
-  L1_162 = System
-  L1_162 = L1_162.CameraZoom
-  L1_162 = L1_162(L0_161)
-  Utility.WaitProcedure(L1_162)
+
+function Camera.ZoomIn()
+  local currentZoom = System.GetCameraZoom()
+  local newZoom = currentZoom + 0.25
+  local proc = System.CameraZoom(newZoom)
+  Utility.WaitProcedure(proc)
 end
-L0_0.ZoomIn = L1_1
-L0_0 = Camera
-function L1_1()
-  local L0_163, L1_164
-  L0_163 = System
-  L0_163 = L0_163.GetCameraZoom
-  L0_163 = L0_163()
-  L0_163 = L0_163 - 0.25
-  L1_164 = System
-  L1_164 = L1_164.CameraZoom
-  L1_164 = L1_164(L0_163)
-  Utility.WaitProcedure(L1_164)
+
+function Camera.ZoomOut()
+  local currentZoom = System.GetCameraZoom()
+  local newZoom = currentZoom - 0.25
+  local proc = System.CameraZoom(newZoom)
+  Utility.WaitProcedure(proc)
 end
-L0_0.ZoomOut = L1_1
-L0_0 = Camera
-function L1_1()
-  local L0_165
-  L0_165 = System
-  L0_165 = L0_165.CameraZoom
-  L0_165 = L0_165(1)
-  Utility.WaitProcedure(L0_165)
+
+function Camera.ZoomClear()
+  local proc = System.CameraZoom(1)
+  Utility.WaitProcedure(proc)
 end
-L0_0.ZoomClear = L1_1
-L0_0 = Camera
-function L1_1()
+
+function Camera.StartShake()
   System.StartShakeCamera()
 end
-L0_0.StartShake = L1_1
-L0_0 = Camera
-function L1_1()
+
+function Camera.EndShake()
   System.EndShakeCamera()
 end
-L0_0.EndShake = L1_1
-L0_0 = EventGraphics
-L0_0.DefaultFadeTime = 0.5
-L0_0 = {}
-Priority2D = L0_0
-L0_0 = Priority2D
-L0_0.MapFade = 5000
-L0_0 = Priority2D
-L0_0.EventGraphic = 7000
-L0_0 = Priority2D
-L0_0.MessageWindow = 10000
-L0_0 = Priority2D
-L0_0.SSA = 50000
-L0_0 = {}
-Priority3D = L0_0
-L0_0 = Priority3D
-L0_0.Cursor = 50800
-L0_0 = Priority3D
-L0_0.Marker = 150100
-L0_0 = Priority3D
-L0_0.SSA = 150200
-L0_0 = Priority3D
-L0_0.Explode = 202000
-L0_0 = {}
-MovieType = L0_0
-L0_0 = MovieType
-L0_0.Battle = 0
-L0_0 = MovieType
-L0_0.Event = 1
-L0_0 = {}
-MapWeaponEffectType = L0_0
-L0_0 = MapWeaponEffectType
-L0_0.Normal = 0
-L0_0 = MapWeaponEffectType
-L0_0.SelfExplosion = 1
-L0_0 = MapWeaponEffectType
-L0_0.Snipe = 2
-L0_0 = MapWeaponEffectType
-L0_0.SubRange = 3
-L0_0 = MapWeaponEffectType
-L0_0.Move = 4
+
+---
+-- Constants
+---
+
+EventGraphics.DefaultFadeTime = 0.5
+
+Priority2D = {
+  MapFade = 5000,
+  EventGraphic = 7000,
+  MessageWindow = 10000,
+  SSA = 50000
+}
+
+Priority3D = {
+  Cursor = 50800,
+  Marker = 150100,
+  SSA = 150200,
+  Explode = 202000
+}
+
+MovieType = {
+  Battle = 0,
+  Event = 1
+}
+
+MapWeaponEffectType = {
+  Normal = 0,
+  SelfExplosion = 1,
+  Snipe = 2,
+  SubRange = 3,
+  Move = 4
+}

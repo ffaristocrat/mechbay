@@ -1,607 +1,512 @@
-local L1_1
-L0_0 = {}
-Utility = L0_0
-L0_0 = Utility
-function L1_1(A0_2)
-  id = System.Wait(A0_2)
+Utility = {}
+
+function Utility.Wait(duration)
+  local id = System.Wait(duration)
   while System.FindProcedure(id) do
     coroutine.yield(0)
   end
 end
-L0_0.Wait = L1_1
-L0_0 = Utility
-function L1_1()
+
+function Utility.BreakScript()
   coroutine.yield(0)
 end
-L0_0.BreakScript = L1_1
-L0_0 = Utility
-function L1_1(A0_3)
-  while System.FindProcedure(A0_3) do
+
+function Utility.WaitProcedure(procId)
+  while System.FindProcedure(procId) do
     coroutine.yield(0)
   end
 end
-L0_0.WaitProcedure = L1_1
-L0_0 = Utility
-function L1_1(A0_4)
-  System.CheckTrophy(A0_4)
+
+function Utility.CheckTrophy(trophyId)
+  System.CheckTrophy(trophyId)
 end
-L0_0.CheckTrophy = L1_1
-L0_0 = Utility
-function L1_1()
+
+function Utility.IsSpecialSoundEdition()
   return System.IsSpecialSoundEdition()
 end
-L0_0.IsSpecialSoundEdition = L1_1
-L0_0 = Utility
-function L1_1()
+
+function Utility.GetLanguageType()
   return System.GetLanguageType()
 end
-L0_0.GetLanguageType = L1_1
-L0_0 = Utility
-function L1_1()
+
+function Utility.GetScreenSize()
   return System.GetScreenSize()
 end
-L0_0.GetScreenSize = L1_1
-L0_0 = Utility
-function L1_1(A0_5)
-  return System.DebugPrint(A0_5)
+
+function Utility.DebugPrint(message)
+  return System.DebugPrint(message)
 end
-L0_0.DebugPrint = L1_1
-L0_0 = Utility
-function L1_1()
+
+function Utility.GetElapsedTime()
   return System.GetElapsedTime()
 end
-L0_0.GetElapsedTime = L1_1
-L0_0 = {}
-Message = L0_0
-L0_0 = Message
-function L1_1(A0_6, ...)
+
+---
+-- Message
+---
+
+Message = {}
+
+function Message.ShowTelop(text, ...)
   while not System.IsReadyTelop() do
     coroutine.yield(0)
   end
-  System.ShowTelop(A0_6, ...)
+  System.ShowTelop(text, ...)
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.ShowTelop = L1_1
-L0_0 = Message
-function L1_1(A0_7, ...)
+
+function Message.ShowTelopCenter(text, ...)
   while not System.IsReadyTelop() do
     coroutine.yield(0)
   end
-  System.ShowTelopCenter(A0_7, ...)
+  System.ShowTelopCenter(text, ...)
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.ShowTelopCenter = L1_1
-L0_0 = Message
-function L1_1(A0_8, A1_9, ...)
+
+function Message.ShowTelopWithoutKeyWait(text, duration, ...)
   while not System.IsReadyTelop() do
     coroutine.yield(0)
   end
-  System.ShowTelopWithoutKeyWait(A0_8, A1_9, ...)
+  System.ShowTelopWithoutKeyWait(text, duration, ...)
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.ShowTelopWithoutKeyWait = L1_1
-L0_0 = Message
-function L1_1(A0_10, ...)
+
+function Message.ShowTelopWindow(text, ...)
   while not System.IsReadyTelopWindow() do
     coroutine.yield(0)
   end
-  System.ShowTelopWindow(A0_10, ...)
+  System.ShowTelopWindow(text, ...)
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.ShowTelopWindow = L1_1
-L0_0 = Message
-function L1_1(A0_11, A1_12, ...)
+
+function Message.ShowMessageWithCharacterId(text, charId, ...)
   while not System.IsReadyMessageWindow() do
     coroutine.yield(0)
   end
-  System.ShowMessageWithCharacterId(A0_11, A1_12, ...)
+  System.ShowMessageWithCharacterId(text, charId, ...)
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.ShowMessageWithCharacterId = L1_1
-L0_0 = Message
-function L1_1(A0_13, A1_14, A2_15, A3_16)
+
+function Message.ShowTwoMessage(text1, charId1, text2, charId2)
   while not System.IsReadyTwoMessageWindow() do
     coroutine.yield(0)
   end
-  System.ShowTwoMessage(A0_13, A1_14, A2_15, A3_16)
+  System.ShowTwoMessage(text1, charId1, text2, charId2)
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.ShowTwoMessage = L1_1
-L0_0 = Message
-function L1_1(A0_17, A1_18, ...)
+
+function Message.ShowMessageOnline(text, charId, ...)
   while not System.IsReadyMessageWindow() do
     coroutine.yield(0)
   end
-  System.ShowMessageOnline(A0_17, A1_18, false)
+  System.ShowMessageOnline(text, charId, false) -- 'false' is hardcoded in original
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.ShowMessageOnline = L1_1
-L0_0 = Message
-function L1_1(A0_19, A1_20, ...)
+
+function Message.ShowMessageVoiceOnly(text, charId, ...)
   while not System.IsReadyMessageWindow() do
     coroutine.yield(0)
   end
-  System.ShowMessageOnline(A0_19, A1_20, true)
+  System.ShowMessageOnline(text, charId, true) -- 'true' is hardcoded in original
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.ShowMessageVoiceOnly = L1_1
-L0_0 = Message
-function L1_1(A0_21, A1_22, ...)
+
+function Message.ShowMessageWithoutKeyWait(text, charId, ...)
   while not System.IsReadyMessageWindow() do
     coroutine.yield(0)
   end
-  System.ShowMessageWithCharacterId(A0_21, A1_22)
+  System.ShowMessageWithCharacterId(text, charId) -- '...' is passed but not used in original
 end
-L0_0.ShowMessageWithoutKeyWait = L1_1
-L0_0 = Message
-function L1_1()
+
+function Message.IsShowNextMessage()
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.IsShowNextMessage = L1_1
-L0_0 = Message
-function L1_1()
+
+function Message.CloseWindow()
   System.CloseMessageWindow()
   while not System.IsShowNextMessage() do
     coroutine.yield(0)
   end
 end
-L0_0.CloseWindow = L1_1
-L0_0 = Message
-function L1_1()
+
+function Message.CloseWindowRight()
   System.CloseMessageWindowRight()
   Message.CloseWindow()
 end
-L0_0.CloseWindowRight = L1_1
-L0_0 = Message
-function L1_1()
+
+function Message.CloseWindowFront()
   System.CloseMessageWindowFront()
   while not System.IsCloseMessageWindowFront() do
     coroutine.yield(0)
   end
 end
-L0_0.CloseWindowFront = L1_1
-L0_0 = Message
-function L1_1()
+
+function Message.CloseTelopWindow()
   Message.CloseWindow()
 end
-L0_0.CloseTelopWindow = L1_1
-L0_0 = {}
-SSA = L0_0
-L0_0 = SSA
-function L1_1(A0_23)
-  local L1_24
-  L1_24 = System
-  L1_24 = L1_24.CreateSSA
-  L1_24 = L1_24(A0_23)
-  while not System.IsReadySSA(L1_24) do
+
+---
+-- SSA (Special Screen Animation)
+---
+
+SSA = {}
+
+function SSA.CreateSSA(ssaId)
+  local ssaHandle = System.CreateSSA(ssaId)
+  while not System.IsReadySSA(ssaHandle) do
     coroutine.yield(0)
   end
-  return L1_24
+  return ssaHandle
 end
-L0_0.CreateSSA = L1_1
-L0_0 = SSA
-function L1_1(A0_25, A1_26)
-  System.LoopSSA(A0_25, A1_26)
+
+function SSA.Loop(ssaHandle, loop)
+  System.LoopSSA(ssaHandle, loop)
 end
-L0_0.Loop = L1_1
-L0_0 = SSA
-function L1_1(A0_27, A1_28)
-  System.VisibleSSA(A0_27, A1_28)
+
+function SSA.Visible(ssaHandle, visible)
+  System.VisibleSSA(ssaHandle, visible)
 end
-L0_0.Visible = L1_1
-L0_0 = SSA
-function L1_1(A0_29)
-  return System.IsPlayingSSA(A0_29)
+
+function SSA.IsPlaying(ssaHandle)
+  return System.IsPlayingSSA(ssaHandle)
 end
-L0_0.IsPlaying = L1_1
-L0_0 = SSA
-function L1_1(A0_30)
-  return System.CurrentTimeSSA(A0_30)
+
+function SSA.CurrentTime(ssaHandle)
+  return System.CurrentTimeSSA(ssaHandle)
 end
-L0_0.CurrentTime = L1_1
-L0_0 = SSA
-function L1_1(A0_31)
-  System.StopSSA(A0_31)
+
+function SSA.Stop(ssaHandle)
+  System.StopSSA(ssaHandle)
 end
-L0_0.Stop = L1_1
-L0_0 = SSA
-function L1_1(A0_32, A1_33)
-  System.PauseSSA(A0_32, A1_33)
+
+function SSA.Pause(ssaHandle, pause)
+  System.PauseSSA(ssaHandle, pause)
 end
-L0_0.Pause = L1_1
-L0_0 = SSA
-function L1_1(A0_34, A1_35)
-  System.PrioritySSA(A0_34, A1_35)
+
+function SSA.Priority(ssaHandle, priority)
+  System.PrioritySSA(ssaHandle, priority)
 end
-L0_0.Priority = L1_1
-L0_0 = SSA
-function L1_1(A0_36)
-  while not System.RemoveLoopPoint(A0_36) do
+
+function SSA.RemoveLoopPoint(ssaHandle)
+  while not System.RemoveLoopPoint(ssaHandle) do
     Utility.BreakScript()
   end
 end
-L0_0.RemoveLoopPoint = L1_1
-L0_0 = SSA
-function L1_1(A0_37, A1_38)
-  System.FlipVerticalSSA(A0_37, A1_38)
+
+function SSA.FlipVertical(ssaHandle, flip)
+  System.FlipVerticalSSA(ssaHandle, flip)
 end
-L0_0.FlipVertical = L1_1
-L0_0 = SSA
-function L1_1(A0_39, A1_40)
-  System.FlipHorizontalSSA(A0_39, A1_40)
+
+function SSA.FlipHorizontal(ssaHandle, flip)
+  System.FlipHorizontalSSA(ssaHandle, flip)
 end
-L0_0.FlipHorizontal = L1_1
-L0_0 = SSA
-function L1_1(A0_41, A1_42, A2_43, A3_44, A4_45)
-  System.SetColorSSA(A0_41, A1_42, A2_43, A3_44, A4_45)
+
+function SSA.SetColor(ssaHandle, r, g, b, a)
+  System.SetColorSSA(ssaHandle, r, g, b, a)
 end
-L0_0.SetColor = L1_1
-L0_0 = SSA
-function L1_1(A0_46, A1_47, A2_48)
-  local L3_49, L4_50
-  L3_49 = 0
-  while A1_47 > L3_49 do
-    L4_50 = L3_49 / A1_47
-    if not A2_48 then
-      L4_50 = 1 - L4_50
+
+function SSA.Fade(ssaHandle, duration, fadeIn)
+  local elapsed = 0
+  while duration > elapsed do
+    local alpha = elapsed / duration
+    if not fadeIn then
+      alpha = 1 - alpha
     end
-    SSA.SetColor(A0_46, 1, 1, 1, L4_50)
-    L3_49 = L3_49 + Utility.GetElapsedTime()
+    SSA.SetColor(ssaHandle, 1, 1, 1, alpha)
+    elapsed = elapsed + Utility.GetElapsedTime()
     Utility.BreakScript()
   end
+  -- Ensure final state
+  SSA.SetColor(ssaHandle, 1, 1, 1, fadeIn and 1 or 0)
 end
-L0_0.Fade = L1_1
-L0_0 = {}
-EventGraphics = L0_0
-L0_0 = EventGraphics
-function L1_1(A0_51, A1_52)
-  return System.CreateGraphic(A0_51, A1_52)
+
+---
+-- EventGraphics
+---
+
+EventGraphics = {}
+
+function EventGraphics.Create(graphicId, priority)
+  return System.CreateGraphic(graphicId, priority)
 end
-L0_0.Create = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_53, ...)
-  local L2_55
-  L1_54 = EventGraphics
-  L1_54 = L1_54.DefaultFadeTime
-  L2_55 = select
-  L2_55 = L2_55("#", ...)
-  if L2_55 >= 1 then
-    L2_55 = select
-    L2_55 = L2_55(1, ...)
-    L1_54 = L2_55
+
+function EventGraphics.FadeIn(graphicHandle, ...)
+  local fadeTime = EventGraphics.DefaultFadeTime
+  if select("#", ...) >= 1 then
+    fadeTime = select(1, ...)
   end
-  L2_55 = System
-  L2_55 = L2_55.FadeGraphic
-  L2_55(A0_53, L1_54, true)
-  L2_55 = true
+  
+  System.FadeGraphic(graphicHandle, fadeTime, true)
+  
+  local wait = true
   if select("#", ...) >= 2 then
-    L2_55 = select(2, ...)
+    wait = select(2, ...)
   end
-  if L2_55 then
-    while not System.IsCompletedFadeGraphic(A0_53) do
+  
+  if wait then
+    while not System.IsCompletedFadeGraphic(graphicHandle) do
       coroutine.yield(0)
     end
   end
 end
-L0_0.FadeIn = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_56, ...)
-  local L2_58
-  L1_57 = EventGraphics
-  L1_57 = L1_57.DefaultFadeTime
-  L2_58 = select
-  L2_58 = L2_58("#", ...)
-  if L2_58 >= 1 then
-    L2_58 = select
-    L2_58 = L2_58(1, ...)
-    L1_57 = L2_58
+
+function EventGraphics.FadeOut(graphicHandle, ...)
+  local fadeTime = EventGraphics.DefaultFadeTime
+  if select("#", ...) >= 1 then
+    fadeTime = select(1, ...)
   end
-  L2_58 = System
-  L2_58 = L2_58.FadeGraphic
-  L2_58(A0_56, L1_57, false)
-  L2_58 = true
+  
+  System.FadeGraphic(graphicHandle, fadeTime, false)
+  
+  local wait = true
   if select("#", ...) >= 2 then
-    L2_58 = select(2, ...)
+    wait = select(2, ...)
   end
-  if L2_58 then
-    while not System.IsCompletedFadeGraphic(A0_56) do
+  
+  if wait then
+    while not System.IsCompletedFadeGraphic(graphicHandle) do
       coroutine.yield(0)
     end
   end
 end
-L0_0.FadeOut = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_59)
-  return System.IsReadyGraphic(A0_59)
+
+function EventGraphics.IsReady(graphicHandle)
+  return System.IsReadyGraphic(graphicHandle)
 end
-L0_0.IsReady = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_60)
-  return System.IsCompletedFadeGraphic(A0_60)
+
+function EventGraphics.IsCompletedFade(graphicHandle)
+  return System.IsCompletedFadeGraphic(graphicHandle)
 end
-L0_0.IsCompletedFade = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_61, A1_62, A2_63, A3_64)
-  return System.SetGraphicColor(A0_61, A1_62, A2_63, A3_64)
+
+function EventGraphics.SetColor(graphicHandle, r, g, b)
+  return System.SetGraphicColor(graphicHandle, r, g, b)
 end
-L0_0.SetColor = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_65, A1_66, A2_67, A3_68)
-  local L4_69
-  L4_69 = System
-  L4_69 = L4_69.FadeScreen
-  L4_69 = L4_69(0, true, A0_65, A1_66, A2_67, A3_68)
-  while not System.IsCompletedFadeGraphic(L4_69) do
+
+function EventGraphics.FadeInScreen(duration, r, g, b)
+  local fadeHandle = System.FadeScreen(0, true, duration, r, g, b)
+  while not System.IsCompletedFadeGraphic(fadeHandle) do
     coroutine.yield(0)
   end
-  return L4_69
+  return fadeHandle
 end
-L0_0.FadeInScreen = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_70, A1_71)
-  System.FadeScreen(A0_70, false, A1_71, 0, 0, 0)
-  while not System.IsCompletedFadeGraphic(A0_70) do
+
+function EventGraphics.FadeOutScreen(fadeHandle, duration)
+  System.FadeScreen(fadeHandle, false, duration, 0, 0, 0)
+  while not System.IsCompletedFadeGraphic(fadeHandle) do
     coroutine.yield(0)
   end
 end
-L0_0.FadeOutScreen = L1_1
-L0_0 = EventGraphics
-function L1_1()
-  local L0_72
-  L0_72 = System
-  L0_72 = L0_72.FadeTelopScreen
-  L0_72 = L0_72(true)
-  while not System.IsCompletedFadeGraphic(L0_72) do
+
+function EventGraphics.FadeInTelopScreen()
+  local fadeHandle = System.FadeTelopScreen(true)
+  while not System.IsCompletedFadeGraphic(fadeHandle) do
     coroutine.yield(0)
   end
 end
-L0_0.FadeInTelopScreen = L1_1
-L0_0 = EventGraphics
-function L1_1()
-  local L0_73
-  L0_73 = System
-  L0_73 = L0_73.FadeTelopScreen
-  L0_73 = L0_73(false)
-  while not System.IsCompletedFadeGraphic(L0_73) do
+
+function EventGraphics.FadeOutTelopScreen()
+  local fadeHandle = System.FadeTelopScreen(false)
+  while not System.IsCompletedFadeGraphic(fadeHandle) do
     coroutine.yield(0)
   end
 end
-L0_0.FadeOutTelopScreen = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_74)
-  System.ShakeGraphic(A0_74, true)
+
+function EventGraphics.StartShake(graphicHandle)
+  System.ShakeGraphic(graphicHandle, true)
 end
-L0_0.StartShake = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_75)
-  System.ShakeGraphic(A0_75, false)
+
+function EventGraphics.StopShake(graphicHandle)
+  System.ShakeGraphic(graphicHandle, false)
 end
-L0_0.StopShake = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_76, A1_77, A2_78, A3_79, ...)
-  local L5_81, L6_82, L7_83, L8_84, L9_85
-  L4_80 = 1
-  L9_85 = ...
-  if L5_81 >= 1 then
-    L9_85 = ...
-    L4_80 = L5_81
+
+function EventGraphics.Move(graphicHandle, x, y, duration, ...)
+  local loopCount = 1
+  if select("#", ...) >= 1 then
+    loopCount = select(1, ...) -- Decompiler likely confused this
   end
-  for L8_84 = 1, L4_80 do
-    L9_85 = System
-    L9_85 = L9_85.MoveGraphic
-    L9_85 = L9_85(A0_76, A1_77, A2_78, A3_79)
-    Utility.WaitProcedure(L9_85)
+  
+  for i = 1, loopCount do
+    local proc = System.MoveGraphic(graphicHandle, x, y, duration)
+    Utility.WaitProcedure(proc)
     Utility.Wait(0.1)
   end
 end
-L0_0.Move = L1_1
-L0_0 = EventGraphics
-function L1_1(A0_86, A1_87, A2_88, ...)
-  local L5_90, L6_91, L7_92
-  L4_89 = System
-  L4_89 = L4_89.StartSlideShow
-  L5_90 = A0_86
-  L6_91 = A1_87
-  L7_92 = A2_88
-  L4_89(L5_90, L6_91, L7_92, ...)
+
+function EventGraphics.StartSlideShow(arg1, arg2, arg3, ...)
+  System.StartSlideShow(arg1, arg2, arg3, ...)
 end
-L0_0.StartSlideShow = L1_1
-L0_0 = EventGraphics
-function L1_1()
-  local L0_93
-  L0_93 = System
-  L0_93 = L0_93.EndSlideShow
-  L0_93 = L0_93()
-  Utility.WaitProcedure(L0_93)
+
+function EventGraphics.EndSlideShow()
+  local proc = System.EndSlideShow()
+  Utility.WaitProcedure(proc)
 end
-L0_0.EndSlideShow = L1_1
-L0_0 = {}
-BGM = L0_0
-L0_0 = BGM
-function L1_1(A0_94, ...)
-  L1_95 = 0.8
+
+---
+-- BGM
+---
+
+BGM = {}
+
+function BGM.Play(bgmId, ...)
+  local volume = 0.8
   if select("#", ...) >= 1 then
-    L1_95 = select(1, ...)
+    volume = select(1, ...)
   end
-  System.PlayBGM(A0_94, L1_95)
+  System.PlayBGM(bgmId, volume)
 end
-L0_0.Play = L1_1
-L0_0 = BGM
-function L1_1(...)
-  L1_96 = System
-  L1_96 = L1_96.StopBGM
-  L1_96(...)
+
+function BGM.Stop(...)
+  System.StopBGM(...)
 end
-L0_0.Stop = L1_1
-L0_0 = BGM
-function L1_1(A0_97)
-  System.EnableCrossfade(A0_97)
+
+function BGM.EnableCrossfade(enable)
+  System.EnableCrossfade(enable)
 end
-L0_0.EnableCrossfade = L1_1
-L0_0 = BGM
-function L1_1()
+
+function BGM.GetCurrentBgmNo()
   return System.GetCurrentBgmNo()
 end
-L0_0.GetCurrentBgmNo = L1_1
-L0_0 = {}
-Voice = L0_0
-L0_0 = Voice
-function L1_1(A0_98, ...)
-  local L2_100
-  L1_99 = false
-  L2_100 = false
+
+---
+-- Voice
+---
+
+Voice = {}
+
+function Voice.Play(voiceId, ...)
+  local arg1 = false
+  local arg2 = false
   if select("#", ...) >= 1 then
-    L1_99 = select(1, ...)
+    arg1 = select(1, ...)
   end
   if select("#", ...) >= 2 then
-    L2_100 = select(2, ...)
+    arg2 = select(2, ...)
   end
-  return System.PlayVoice(A0_98, L1_99, L2_100)
+  return System.PlayVoice(voiceId, arg1, arg2)
 end
-L0_0.Play = L1_1
-L0_0 = Voice
-function L1_1(A0_101, ...)
-  L1_102 = 0.2
+
+function Voice.Stop(voiceHandle, ...)
+  local fadeTime = 0.2
   if select("#", ...) >= 1 then
-    L1_102 = select(1, ...)
+    fadeTime = select(1, ...)
   end
-  System.StopVoice(A0_101, L1_102)
+  System.StopVoice(voiceHandle, fadeTime)
 end
-L0_0.Stop = L1_1
-L0_0 = Voice
-function L1_1()
+
+function Voice.StopAll()
   System.StopAllVoice()
 end
-L0_0.StopAll = L1_1
-L0_0 = Voice
-function L1_1(A0_103, A1_104)
-  System.PauseVoice(A0_103, A1_104)
+
+function Voice.Pause(voiceHandle, pause)
+  System.PauseVoice(voiceHandle, pause)
 end
-L0_0.Pause = L1_1
-L0_0 = Voice
-function L1_1(A0_105)
-  return System.IsPrepareVoice(A0_105)
+
+function Voice.IsPrepare(voiceId)
+  return System.IsPrepareVoice(voiceId)
 end
-L0_0.IsPrepare = L1_1
-L0_0 = Voice
-function L1_1(A0_106)
-  return System.IsPlayingVoice(A0_106)
+
+function Voice.IsPlaying(voiceHandle)
+  return System.IsPlayingVoice(voiceHandle)
 end
-L0_0.IsPlaying = L1_1
-L0_0 = {}
-SE = L0_0
-L0_0 = SE
-function L1_1(A0_107, ...)
-  local L2_109, L3_110
-  L1_108 = false
-  L2_109 = false
-  L3_110 = false
+
+---
+-- SE (Sound Effect)
+---
+
+SE = {}
+
+function SE.Play(seId, ...)
+  local arg1 = false
+  local arg2 = false
+  local arg3 = false
   if select("#", ...) >= 1 then
-    L1_108 = select(1, ...)
+    arg1 = select(1, ...)
   end
   if select("#", ...) >= 2 then
-    L2_109 = select(2, ...)
+    arg2 = select(2, ...)
   end
   if select("#", ...) >= 3 then
-    L3_110 = select(3, ...)
+    arg3 = select(3, ...)
   end
-  return System.PlaySE(A0_107, L1_108, L2_109, L3_110)
+  return System.PlaySE(seId, arg1, arg2, arg3)
 end
-L0_0.Play = L1_1
-L0_0 = SE
-function L1_1(A0_111, ...)
-  L1_112 = 0.2
+
+function SE.Stop(seHandle, ...)
+  local fadeTime = 0.2
   if select("#", ...) >= 1 then
-    L1_112 = select(1, ...)
+    fadeTime = select(1, ...)
   end
-  System.StopSE(A0_111, L1_112)
+  System.StopSE(seHandle, fadeTime)
 end
-L0_0.Stop = L1_1
-L0_0 = SE
-function L1_1()
+
+function SE.StopAll()
   System.StopAllSE()
 end
-L0_0.StopAll = L1_1
-L0_0 = SE
-function L1_1(A0_113, A1_114)
-  System.PauseSE(A0_113, A1_114)
+
+function SE.Pause(seHandle, pause)
+  System.PauseSE(seHandle, pause)
 end
-L0_0.Pause = L1_1
-L0_0 = SE
-function L1_1(A0_115)
-  return System.IsPrepareSE(A0_115)
+
+function SE.IsPrepare(seId)
+  return System.IsPrepareSE(seId)
 end
-L0_0.IsPrepare = L1_1
-L0_0 = SE
-function L1_1(A0_116)
-  return System.IsReadySE(A0_116)
+
+function SE.IsReady(seHandle)
+  return System.IsReadySE(seHandle)
 end
-L0_0.IsReady = L1_1
-L0_0 = SE
-function L1_1(A0_117)
-  return System.IsPlayingSE(A0_117)
+
+function SE.IsPlaying(seHandle)
+  return System.IsPlayingSE(seHandle)
 end
-L0_0.IsPlaying = L1_1
-L0_0 = SE
-function L1_1(A0_118)
-  System.ChangeSeVolume(A0_118)
+
+function SE.ChangeVolume(volume)
+  System.ChangeSeVolume(volume)
 end
-L0_0.ChangeVolume = L1_1
-L0_0 = {}
-LanguageType = L0_0
-L0_0 = LanguageType
-L0_0.Japanese = 0
-L0_0 = LanguageType
-L0_0.Hongkong = 1
-L0_0 = LanguageType
-L0_0.Taiwan = 2
-L0_0 = LanguageType
-L0_0.English = 3
-L0_0 = LanguageType
-L0_0.Chinese = 4
-L0_0 = LanguageType
-L0_0.Korean = 5
-L0_0 = {}
-WindowColor = L0_0
-L0_0 = WindowColor
-L0_0.Player = 0
-L0_0 = WindowColor
-L0_0.Friend = 1
-L0_0 = WindowColor
-L0_0.NPC = 2
-L0_0 = WindowColor
-L0_0.Enemy1 = 3
-L0_0 = WindowColor
-L0_0.Enemy2 = 4
-L0_0 = WindowColor
-L0_0.Secret = 5
-L0_0 = WindowColor
-L0_0.Master = 6
-L0_0 = {}
-Priority2D = L0_0
-L0_0 = Priority2D
-L0_0.MapFade = 5000
-L0_0 = Priority2D
-L0_0.EventGraphic = 7000
-L0_0 = Priority2D
-L0_0.MessageWindow = 10000
-L0_0 = Priority2D
-L0_0.SSA = 50000
+
+---
+-- Enums
+---
+
+LanguageType = {
+  Japanese = 0,
+  Hongkong = 1,
+  Taiwan = 2,
+  English = 3,
+  Chinese = 4,
+  Korean = 5
+}
+
+WindowColor = {
+  Player = 0,
+  Friend = 1,
+  NPC = 2,
+  Enemy1 = 3,
+  Enemy2 = 4,
+  Secret = 5,
+  Master = 6
+}
+
+Priority2D = {
+  MapFade = 5000,
+  EventGraphic = 7000,
+  MessageWindow = 10000,
+  SSA = 50000
+}

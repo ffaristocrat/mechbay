@@ -1,39 +1,39 @@
-L0_0 = {
+MSSupportPercent = {
   0,
   40,
   80,
   100
 }
-MSSupportPercent = L0_0
-L0_0 = {
+
+WSSupportPercent = {
   20,
   40,
   80,
   100
 }
-WSSupportPercent = L0_0
-L0_0 = {
+
+GroupAttackPercent = {
   0,
   20,
   60,
   100
 }
-GroupAttackPercent = L0_0
-L0_0 = {
+
+AttackPreferDamage = {
   100,
   50,
   20,
   0
 }
-AttackPreferDamage = L0_0
-L0_0 = {
+
+CounterPreferDamage = {
   100,
   50,
   20,
   0
 }
-CounterPreferDamage = L0_0
-L0_0 = {
+
+CharacterAddWeaponTrend = {
   20,
   40,
   20,
@@ -41,10 +41,9 @@ L0_0 = {
   40,
   0
 }
-CharacterAddWeaponTrend = L0_0
-L0_0 = {
+
+MSAddWeaponTrend = {
   20,
   20,
   20
 }
-MSAddWeaponTrend = L0_0

@@ -20,14 +20,15 @@ CorrectionEn_ReductionMax = 100
 CorrectionHP_RecoveryMax = 100
 CorrectionEN_Recovery_Max = 100
 CorrectionEWAC_Max = 15
-L0_0 = {
+
+CorrectionBloodTypes = {
   2,
   3,
   5,
   0,
   7
 }
-CorrectionBloodTypes = L0_0
+
 StartCapital = 50000
 MS_ListMax = 1000
 WS_ListMax = 100
